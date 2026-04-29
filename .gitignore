@@ -1,0 +1,32 @@
+# Build outputs
+bin/
+obj/
+dist/
+thunderstore/package/
+*.zip
+tmp/
+tmpbin/
+tmpobj/
+build_tmpobj/
+
+# Python test cache
+__pycache__/
+*.py[cod]
+
+# Local snapshots and external work folders
+backups/
+Assembly-CSharp/
+LC-FontPatcher-main/
+LeKAKiD-FontPatcher-1.2.4/
+build_font_project/
+tools/
+
+# Draft texture sources not consumed by the plugin build
+assets/textures/zh-CN/staging/
+hans testure/
+
+# IDE/editor noise
+.vs/
+.vscode/
+*.user
+*.suo

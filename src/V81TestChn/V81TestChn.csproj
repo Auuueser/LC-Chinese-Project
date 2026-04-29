@@ -1,0 +1,147 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>V81TestChn</AssemblyName>
+    <RootNamespace>V81TestChn</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GameDir>D:\Steam\steamapps\common\Lethal Company</GameDir>
+    <TestDeployDir>D:\1New R2modman modpacks\LethalCompany\profiles\test1\BepInEx\plugins\Aueser-LC_Chinese_Project\V81TestChn</TestDeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="build_tmpobj\**\*.cs" />
+    <Compile Remove="tmpobj\**\*.cs" />
+    <Compile Remove="obj\**\*.cs" />
+    <None Remove="build_tmpobj\**\*" />
+    <None Remove="tmpobj\**\*" />
+    <None Remove="obj\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>..\..\lib\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\lib\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreFontEngineModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Netcode.Runtime">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\Unity.Netcode.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VideoModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\translations\zh-CN.json" CopyToOutputDirectory="PreserveNewest" Link="translations\zh-CN.json" />
+    <None Include="..\..\translations-cfg\manifest.json" CopyToOutputDirectory="PreserveNewest" Link="translations-cfg\manifest.json" Condition="Exists('..\..\translations-cfg\manifest.json')" />
+    <None Include="..\..\translations-cfg\**\*.cfg" CopyToOutputDirectory="PreserveNewest" Link="translations-cfg\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\translations-cfg')" />
+    <None Include="..\..\fonts\zh-cn-tmp-font" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-tmp-font" Condition="Exists('..\..\fonts\zh-cn-tmp-font')" />
+    <None Include="..\..\fonts\OFL-1.1.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\OFL-1.1.txt" Condition="Exists('..\..\fonts\OFL-1.1.txt')" />
+    <None Include="..\..\fonts\zh-cn-charset.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-charset.txt" Condition="Exists('..\..\fonts\zh-cn-charset.txt')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png" CopyToOutputDirectory="PreserveNewest" Link="textures\AlertText [52CF932FDE-AB216CEFD9].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanel*.png" CopyToOutputDirectory="Always" Link="textures\%(Filename)%(Extension)" Condition="Exists('..\..\assets\textures\zh-CN\Texture')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\EndgameAllPlayersDeadOverlay.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameAllPlayersDeadOverlay.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameAllPlayersDeadOverlay.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsBoxesLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsBoxesLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsBoxesLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsDeceased.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsDeceased.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsDeceased.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsMissing.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsMissing.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsMissing.png')" />
+    <None Include="..\..\fonts\fontpatcher\default\*" CopyToOutputDirectory="PreserveNewest" Link="fontpatcher\default\%(Filename)%(Extension)" Condition="Exists('..\..\fonts\fontpatcher\default')" />
+    <None Include="..\..\LeKAKiD-FontPatcher-1.2.4\config\FontPatcher\default\*" CopyToOutputDirectory="PreserveNewest" Link="fontpatcher\default\%(Filename)%(Extension)" Condition="Exists('..\..\LeKAKiD-FontPatcher-1.2.4\config\FontPatcher\default')" />
+  </ItemGroup>
+
+  <Target Name="CleanOverlayArtifacts" AfterTargets="Build">
+    <ItemGroup>
+      <LocalOverlayArtifacts Include="$(TargetDir)textures\EnteringAtmosphereOverlay.png" />
+      <LocalOverlayArtifacts Include="$(TargetDir)overlays\zh-cn-overlays" />
+      <LocalOverlayArtifacts Include="$(TargetDir)overlays\zh-cn-overlays.manifest" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\EnteringAtmosphereOverlay.png" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays.manifest" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\EnteringAtmosphereOverlay.png" Condition="'$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays" Condition="'$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays.manifest" Condition="'$(TestDeployDir)' != ''" />
+    </ItemGroup>
+    <Delete Files="@(LocalOverlayArtifacts)" />
+    <Delete Files="@(DistOverlayArtifacts)" />
+    <Delete Files="@(TestOverlayArtifacts)" />
+    <RemoveDir Directories="$(TargetDir)overlays" Condition="Exists('$(TargetDir)overlays')" />
+    <RemoveDir Directories="..\..\dist\BepInEx\plugins\V81TestChn\overlays" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn\overlays')" />
+    <RemoveDir Directories="$(TestDeployDir)\overlays" Condition="'$(TestDeployDir)' != '' and Exists('$(TestDeployDir)\overlays')" />
+  </Target>
+
+  <Target Name="SyncPluginOutputToDist" AfterTargets="Build" Condition="Exists('..\..\dist\BepInEx\plugins')">
+    <ItemGroup>
+      <PluginOutput Include="$(TargetDir)**\*" />
+    </ItemGroup>
+    <MakeDir Directories="..\..\dist\BepInEx\plugins\V81TestChn" />
+    <Copy
+      SourceFiles="@(PluginOutput)"
+      DestinationFiles="@(PluginOutput->'..\..\dist\BepInEx\plugins\V81TestChn\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="SyncPluginOutputToTestDeploy" AfterTargets="Build" Condition="'$(TestDeployDir)' != ''">
+    <ItemGroup>
+      <PluginOutput Include="$(TargetDir)**\*" />
+    </ItemGroup>
+    <MakeDir Directories="$(TestDeployDir)" />
+    <Copy
+      SourceFiles="@(PluginOutput)"
+      DestinationFiles="@(PluginOutput->'$(TestDeployDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
+</Project>

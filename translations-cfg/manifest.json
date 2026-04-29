@@ -1,0 +1,77 @@
+{
+  "source_root": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations",
+  "files": [
+    {
+      "locale": "zh-CN",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-CN\\GuiText-Translate.cfg",
+      "target_relative_path": "zh-CN/GuiText-Translate.cfg",
+      "sha256": "e0de79aebafb79266db26ffc315df3eb109aaf6bdec7f69a68487a28ef9fc51a"
+    },
+    {
+      "locale": "zh-CN",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-CN\\HUD-Translate.cfg",
+      "target_relative_path": "zh-CN/HUD-Translate.cfg",
+      "sha256": "3f41ac6efdeb5a35b55542ffd1f1519ccabf34ee9896f592431bef9d0377b051"
+    },
+    {
+      "locale": "zh-CN",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-CN\\Item-Translate.cfg",
+      "target_relative_path": "zh-CN/Item-Translate.cfg",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "locale": "zh-CN",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-CN\\Normal-Translate.cfg",
+      "target_relative_path": "zh-CN/Normal-Translate.cfg",
+      "sha256": "f90766a4e439840dd21358e3c6b8dd31005a166269fc2b73ea8997d3891d1fe3"
+    },
+    {
+      "locale": "zh-CN",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-CN\\SpecialText-Translate.cfg",
+      "target_relative_path": "zh-CN/SpecialText-Translate.cfg",
+      "sha256": "7909ed7495222b7ca50765aafdc6dc8a270c70703a7f5891e621d1991e3b6e9a"
+    },
+    {
+      "locale": "zh-Hans",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-Hans\\GuiText-Translate.cfg",
+      "target_relative_path": "zh-Hans/GuiText-Translate.cfg",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "locale": "zh-Hans",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-Hans\\HUD-Translate.cfg",
+      "target_relative_path": "zh-Hans/HUD-Translate.cfg",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "locale": "zh-Hans",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-Hans\\InteractiveTerminalAPI-Translate.cfg",
+      "target_relative_path": "zh-Hans/InteractiveTerminalAPI-Translate.cfg",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "locale": "zh-Hans",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-Hans\\Item-Translate.cfg",
+      "target_relative_path": "zh-Hans/Item-Translate.cfg",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "locale": "zh-Hans",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-Hans\\Normal-Translate.cfg",
+      "target_relative_path": "zh-Hans/Normal-Translate.cfg",
+      "sha256": "3fa68bd8e65cde4db313fc332389f7d482fe8d4ecc245691df485a40c11c265f"
+    },
+    {
+      "locale": "zh-Hans",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-Hans\\SpecialText-Translate.cfg",
+      "target_relative_path": "zh-Hans/SpecialText-Translate.cfg",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "locale": "zh-Hans",
+      "source_path": "D:\\1New R2modman modpacks\\LethalCompany\\profiles\\V81 Test Version 1203a1\\BepInEx\\config\\translations\\zh-Hans\\Terminal-Translate.cfg",
+      "target_relative_path": "zh-Hans/Terminal-Translate.cfg",
+      "sha256": "befa9d8fdeaf1b46ca3855ecc2910e02696f5fc67d2d14da1c4c0ec286b40c17"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+* text=auto
+*.png binary
+*.dll binary
+fonts/zh-cn-tmp-font binary
+fonts/fontpatcher/default/* binary
