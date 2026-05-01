@@ -1,6 +1,6 @@
 {
   "name": "LC_Chinese_Project",
-  "version_number": "0.1.6",
+  "version_number": "0.1.7",
   "website_url": "https://github.com/Auuueser/LC-Chinese-Project",
   "description": "Simplified Chinese localization project for Lethal Company with independent runtime translation, localized UI textures, and embedded Chinese font fallback support.",
   "dependencies": [

@@ -5014,9 +5014,9 @@
     },
     {
       "source": "Ordered the Company Cruiser. Your new balance is [playerCredits].\n\nWe are so confident in the quality of this product, it comes with a life-time warranty! If your Cruiser is lost or destroyed, you can get one free replacement. Items cannot be purchased while the vehicle is en route.\n\n",
-      "target": "Ordered the Company Cruiser. Your new balance is [playerCredits].\n\nWe are so confident in the quality of this product, it comes with a life-time warranty! If your Cruiser is lost or destroyed, you can get one free replacement. Items cannot be purchased while the vehicle is en route.\n\n",
-      "mode": "preserve",
-      "note": "Garbled target repaired with safe fallback preserve."
+      "target": "已订购公司巡航车（Company Cruiser）。你的新余额为 [playerCredits]。\n\n公司对此产品质量非常有信心，因此提供终身保修！如果你的巡航车丢失或损坏，可以获得一次免费替换。在载具运送途中无法购买物品。\n\n",
+      "mode": "translate",
+      "note": "Terminal Company Cruiser order confirmation."
     },
     {
       "source": "You have requested to order extension ladders. Amount: [variableAmount]. \nTotal cost of items: [totalCost].\n\nPlease CONFIRM or DENY.\n\n",
@@ -5512,21 +5512,21 @@
     },
     {
       "source": "You have requested to order the signal translator.\nTotal cost of item: [totalCost].\n\nPlease CONFIRM or DENY.\n\n",
-      "target": "你请求订购 the signal translator。\n单件总价：[totalCost]\n\n请 CONFIRM 或 DENY。",
+      "target": "你请求订购信号翻译器（Signal Translator）。\n单件总价：[totalCost]。\n\n请 CONFIRM 或 DENY。",
       "mode": "translate",
       "note": "Garbled target repaired (request single template)."
     },
     {
       "source": "Ordered the signal translator! Your new balance is [playerCredits].\nPress [B] to rearrange objects in your ship and [V] to confirm.\n\n\nThe signal transmitter can be activated with the \"transmit\" command followed by any message under 10 letters.\n",
-      "target": "Ordered the signal translator! Your new balance is [playerCredits].\nPress [B] to rearrange objects in your ship and [V] to confirm.\n\n\nThe signal transmitter can be activated with the \"transmit\" command followed by any message under 10 letters.\n",
-      "mode": "preserve",
-      "note": "Garbled target repaired with safe fallback preserve."
+      "target": "已订购信号翻译器（Signal Translator）！你的新余额为 [playerCredits]。\n按 [B] 重新摆放飞船内物品，按 [V] 确认。\n\n\n信号发射器可通过 \"transmit\" 命令激活，后接不超过 10 个字符的消息。\n",
+      "mode": "translate",
+      "note": "Terminal signal translator order confirmation localized."
     },
     {
       "source": "\nUse the \"transmit\" command to broadcast a text message to all crewmates. The message must be under 10 letters. \n\n\n",
-      "target": "\nUse the \"transmit\" command to broadcast a text message to all crewmates. The message must be under 10 letters. \n\n\n",
-      "mode": "preserve",
-      "note": "Garbled target repaired with safe fallback preserve."
+      "target": "\n使用 \"transmit\" 命令向所有船员广播文本消息。消息必须少于 10 个字符。\n\n\n",
+      "mode": "translate",
+      "note": "Terminal signal translator info text localized."
     },
     {
       "source": "You have requested to order a sofa chair.\nTotal cost of item: [totalCost].\n\nPlease CONFIRM or DENY.\n\n",

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.TextCore.LowLevel;
@@ -12,12 +11,12 @@ namespace V81TestChn;
 
 internal static class FontFallbackService
 {
-    private static readonly Regex CjkRegex = new(@"[\u3400-\u9FFF]", RegexOptions.Compiled);
     private static readonly Dictionary<int, Color> BaselineColorByInstance = new();
     private static readonly HashSet<int> FinalRenderSubscribedIds = new();
     private static readonly HashSet<int> SpecialCaseTextIds = new();
     private static readonly HashSet<int> FinalRenderRepairLoggedIds = new();
     private static readonly HashSet<int> RenderAuditLoggedIds = new();
+    private static readonly HashSet<int> AppliedFallbackFontIds = new();
     private static int _renderAuditBudget = 80;
     private static int _finalRenderRepairLogBudget = 80;
     private static int _specialCaseLogBudget = 60;
@@ -233,7 +232,7 @@ internal static class FontFallbackService
             return;
         }
 
-        if (!CjkRegex.IsMatch(text.text))
+        if (!ContainsCjk(text.text))
         {
             return;
         }
@@ -291,7 +290,7 @@ internal static class FontFallbackService
         }
 
         var owner = subMesh.textComponent;
-        if (owner == null || string.IsNullOrWhiteSpace(owner.text) || !CjkRegex.IsMatch(owner.text))
+        if (owner == null || string.IsNullOrWhiteSpace(owner.text) || !ContainsCjk(owner.text))
         {
             return;
         }
@@ -321,7 +320,7 @@ internal static class FontFallbackService
         }
 
         var owner = subMesh.textComponent;
-        if (owner == null || string.IsNullOrWhiteSpace(owner.text) || !CjkRegex.IsMatch(owner.text))
+        if (owner == null || string.IsNullOrWhiteSpace(owner.text) || !ContainsCjk(owner.text))
         {
             return;
         }
@@ -363,7 +362,7 @@ internal static class FontFallbackService
             TryStoreHealthyBaseline(textId, text.color);
         }
 
-        var containsCjk = CjkRegex.IsMatch(displayedText);
+        var containsCjk = ContainsCjk(displayedText);
         if (!containsCjk)
         {
             TryStoreHealthyBaseline(textId, value);
@@ -420,6 +419,12 @@ internal static class FontFallbackService
             return;
         }
 
+        var fontId = fontAsset.GetInstanceID();
+        if (AppliedFallbackFontIds.Contains(fontId))
+        {
+            return;
+        }
+
         if (fontAsset.fallbackFontAssetTable == null)
         {
             fontAsset.fallbackFontAssetTable = new List<TMP_FontAsset>();
@@ -429,6 +434,8 @@ internal static class FontFallbackService
         {
             fontAsset.fallbackFontAssetTable.Add(_fallbackFont);
         }
+
+        AppliedFallbackFontIds.Add(fontId);
     }
 
     private static void WarmFallbackCharacters()
@@ -554,7 +561,7 @@ internal static class FontFallbackService
             TryStoreHealthyBaseline(textId, text.color);
         }
 
-        var containsCjk = CjkRegex.IsMatch(displayedText);
+        var containsCjk = ContainsCjk(displayedText);
         if (!containsCjk)
         {
             TryStoreHealthyBaseline(textId, text.color);
@@ -590,7 +597,7 @@ internal static class FontFallbackService
 
     private static void RepairReadableCjkTextLight(TMP_Text text, string stage)
     {
-        if (text == null || string.IsNullOrWhiteSpace(text.text) || !CjkRegex.IsMatch(text.text))
+        if (text == null || string.IsNullOrWhiteSpace(text.text) || !ContainsCjk(text.text))
         {
             return;
         }
@@ -697,7 +704,7 @@ internal static class FontFallbackService
             return;
         }
 
-        if (!CjkRegex.IsMatch(text.text))
+        if (!ContainsCjk(text.text))
         {
             return;
         }
@@ -1183,6 +1190,24 @@ internal static class FontFallbackService
     private static bool IsCjk(uint codePoint)
     {
         return codePoint >= 0x3400 && codePoint <= 0x9FFF;
+    }
+
+    private static bool ContainsCjk(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+
+        foreach (var ch in text)
+        {
+            if (ch >= 0x3400 && ch <= 0x9FFF)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool ShouldPreserveOriginalParentAlpha(Component? component)

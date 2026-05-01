@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.7 - Signal Translator HUD update
+
+- Added a cached and throttled Signal Translator HUD localization path to reduce repeated runtime text hierarchy traversal.
+- Enlarged the localized receiving-signal prompt while preserving original font sizes for later signal text.
+- Added or completed recent Cruiser, ship magnet, Signal Translator, and order-status terminal translations.
+- Updated the packaged `V81TestChn.dll`, manifest, and release resources from the current runtime build.
+
 ## 0.1.6 - V81 status text and lobby warning update
 
 - Added translations for V81 cadaver infection and air-filter status messages.

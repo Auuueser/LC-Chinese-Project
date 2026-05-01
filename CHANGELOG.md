@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.7 - Signal Translator HUD update
+
+- Added a cached and throttled Signal Translator HUD localization path to reduce repeated text hierarchy traversal during the short activation window.
+- Enlarged the localized `RECEIVING SIGNAL` display while preserving original font sizes for subsequent signal messages.
+- Completed translation coverage for recent Cruiser, ship magnet, Signal Translator, and order-status terminal text.
+- Rebuilt the Thunderstore payload from the current runtime build and synchronized GitHub release metadata.
+
 ## 0.1.6 - V81 status text and lobby warning update
 
 - Added V81 cadaver infection and air-filter status translations.

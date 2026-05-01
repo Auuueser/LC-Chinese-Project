@@ -13,6 +13,38 @@ namespace V81TestChn;
 internal static class TextPatches
 {
     private static readonly FieldInfo? TerminalModifyingTextField = AccessTools.Field(typeof(Terminal), "modifyingText");
+    private const float HudScannerLocalizationIntervalSeconds = 0.1f;
+    private const float HudScannerRootLocalizationIntervalSeconds = 0.5f;
+    private const float SignalTranslatorLocalizationWindowSeconds = 2.0f;
+    private const float SignalTranslatorLocalizationRetryIntervalSeconds = 0.05f;
+    private const float SignalTranslatorReceivingSignalFontScale = 1.25f;
+    private const string SignalTranslatorReceivingSignalEnglish = "RECEIVING SIGNAL";
+    private const string SignalTranslatorReceivingSignalChinese = "\u6b63\u5728\u63a5\u6536\u4fe1\u53f7";
+    private const int TextClassificationCacheLimit = 4096;
+    private static float _nextHudScannerLocalizationTime;
+    private static float _nextHudScannerRootLocalizationTime;
+    private static float _signalTranslatorLocalizationUntil;
+    private static float _nextSignalTranslatorLocalizationTime;
+    private static int _lastHudScannerRootId;
+    private static int _lastHudScannerTranslatedRootId;
+    private static int _signalTranslatorTextCacheRootId;
+    private static string? _lastHudScannerTotalText;
+    private static TMP_Text[] SignalTranslatorTextCache = Array.Empty<TMP_Text>();
+    private static readonly Dictionary<int, CachedTextClassification> InputFieldTextCache = new();
+    private static readonly Dictionary<int, CachedTextClassification> LobbySlotTextCache = new();
+    private static readonly Dictionary<int, float> SignalTranslatorReceivingSignalOriginalFontSizes = new();
+
+    private readonly struct CachedTextClassification
+    {
+        public CachedTextClassification(int parentId, bool value)
+        {
+            ParentId = parentId;
+            Value = value;
+        }
+
+        public int ParentId { get; }
+        public bool Value { get; }
+    }
 
     public static int Install(Harmony harmony)
     {
@@ -36,6 +68,8 @@ internal static class TextPatches
         PatchPostfix(harmony, typeof(StartOfRound), "SetMapScreenInfoToCurrentLevel", nameof(StartOfRoundSetMapScreenInfoPostfix), ref patched);
         PatchPrefix(harmony, typeof(GameNetworkManager), "SaveGame", nameof(GameNetworkManagerSaveGamePrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "Start", nameof(HudManagerStartPostfix), ref patched);
+        PatchPrefix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPrefix), ref patched);
+        PatchPostfix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "UpdateScanNodes", nameof(HudManagerUpdateScanNodesPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "DisplayCreditsEarning", nameof(HudManagerDisplayCreditsEarningPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "DisplayNewDeadline", nameof(HudManagerDisplayNewDeadlinePostfix), ref patched);
@@ -67,6 +101,9 @@ internal static class TextPatches
         PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TextMesh), nameof(TextMesh.text)), nameof(TextMeshSetTextPostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "TextPostProcess", nameof(TerminalTextPostProcessPostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "LoadNewNode", nameof(TerminalLoadNewNodePostfix), ref patched);
+        PatchPostfix(harmony, typeof(Terminal), "OnSubmit", nameof(TerminalOnSubmitPostfix), ref patched);
+        PatchPostfix(harmony, typeof(Terminal), "ParsePlayerSentence", nameof(TerminalParsePlayerSentencePostfix), ref patched);
+        PatchPostfix(harmony, typeof(Terminal), "loadTextAnimation", nameof(TerminalLoadTextAnimationPostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "BeginUsingTerminal", nameof(TerminalBeginUsingPostfix), ref patched);
         PatchPrefix(harmony, typeof(Terminal), "SetItemSales", nameof(TerminalSetItemSalesPrefix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "SetItemSales", nameof(TerminalSetItemSalesPostfix), ref patched);
@@ -419,11 +456,193 @@ internal static class TextPatches
         // Plugin.Log.LogInfo($"Patch entry HUDManager.Start loadingText={__instance.loadingText?.name ?? "<null>"} riskText={__instance.planetRiskLevelText?.name ?? "<null>"}");
     }
 
+    [HarmonyPatch(typeof(HUDManager), "UseSignalTranslatorClientRpc")]
+    [HarmonyPrefix]
+    private static void HudManagerUseSignalTranslatorClientRpcPrefix(HUDManager __instance)
+    {
+        BeginSignalTranslatorLocalizationWindow(__instance, "HUDManager.UseSignalTranslatorClientRpc.prefix");
+    }
+
+    [HarmonyPatch(typeof(HUDManager), "UseSignalTranslatorClientRpc")]
+    [HarmonyPostfix]
+    private static void HudManagerUseSignalTranslatorClientRpcPostfix(HUDManager __instance)
+    {
+        BeginSignalTranslatorLocalizationWindow(__instance, "HUDManager.UseSignalTranslatorClientRpc.postfix");
+    }
+
+    private static void BeginSignalTranslatorLocalizationWindow(HUDManager? hud, string reason)
+    {
+        if (hud == null)
+        {
+            return;
+        }
+
+        _signalTranslatorLocalizationUntil = Math.Max(
+            _signalTranslatorLocalizationUntil,
+            Time.unscaledTime + SignalTranslatorLocalizationWindowSeconds);
+        ApplySignalTranslatorHudLocalization(hud, reason);
+        _nextSignalTranslatorLocalizationTime = Time.unscaledTime + SignalTranslatorLocalizationRetryIntervalSeconds;
+    }
+
+    private static void ApplySignalTranslatorHudLocalization(HUDManager? hud, string reason)
+    {
+        if (hud == null)
+        {
+            return;
+        }
+
+        var translated = 0;
+        var seen = 0;
+        TranslateSignalTranslatorText(hud.signalTranslatorText, ref translated, ref seen);
+
+        var root = hud.signalTranslatorAnimator == null ? null : hud.signalTranslatorAnimator.gameObject;
+        if (root != null)
+        {
+            foreach (var text in GetSignalTranslatorTexts(root))
+            {
+                if (ReferenceEquals(text, hud.signalTranslatorText))
+                {
+                    continue;
+                }
+
+                TranslateSignalTranslatorText(text, ref translated, ref seen);
+            }
+        }
+
+        if (translated > 0)
+        {
+            Plugin.ReportTranslationHit();
+            // Plugin.Log.LogInfo($"{reason} translated signal translator HUD text: {translated}/{seen}");
+        }
+    }
+
+    private static TMP_Text[] GetSignalTranslatorTexts(GameObject root)
+    {
+        var rootId = root.GetInstanceID();
+        if (rootId == _signalTranslatorTextCacheRootId)
+        {
+            return SignalTranslatorTextCache;
+        }
+
+        _signalTranslatorTextCacheRootId = rootId;
+        SignalTranslatorTextCache = root.GetComponentsInChildren<TMP_Text>(true);
+        return SignalTranslatorTextCache;
+    }
+
+    private static void TranslateSignalTranslatorText(TMP_Text? text, ref int translated, ref int seen)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        seen++;
+        var original = text.text;
+        var isReceivingSignal = IsSignalTranslatorReceivingSignalText(original);
+        if (!TranslationService.TryTranslate(original, out var value) ||
+            string.Equals(original, value, StringComparison.Ordinal))
+        {
+            FontFallbackService.ApplyFallback(text, original);
+            ApplySignalTranslatorReceivingSignalFontSize(text, original, isReceivingSignal);
+            return;
+        }
+
+        text.text = value;
+        FontFallbackService.ApplyFallback(text, value);
+        ApplySignalTranslatorReceivingSignalFontSize(text, value, isReceivingSignal || IsSignalTranslatorReceivingSignalText(value));
+        translated++;
+    }
+
+    private static void ApplySignalTranslatorReceivingSignalFontSize(TMP_Text text, string value, bool isReceivingSignal)
+    {
+        var id = text.GetInstanceID();
+        if (isReceivingSignal || IsSignalTranslatorReceivingSignalText(value))
+        {
+            if (!SignalTranslatorReceivingSignalOriginalFontSizes.TryGetValue(id, out var originalSize))
+            {
+                originalSize = text.fontSize;
+                SignalTranslatorReceivingSignalOriginalFontSizes[id] = originalSize;
+            }
+
+            var targetSize = originalSize * SignalTranslatorReceivingSignalFontScale;
+            if (text.fontSize < targetSize)
+            {
+                text.fontSize = targetSize;
+            }
+
+            return;
+        }
+
+        if (SignalTranslatorReceivingSignalOriginalFontSizes.TryGetValue(id, out var storedSize))
+        {
+            text.fontSize = storedSize;
+            SignalTranslatorReceivingSignalOriginalFontSizes.Remove(id);
+        }
+    }
+
+    private static bool IsSignalTranslatorReceivingSignalText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = NormalizeSignalTranslatorText(value);
+        return string.Equals(normalized, SignalTranslatorReceivingSignalEnglish, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(normalized, SignalTranslatorReceivingSignalChinese, StringComparison.Ordinal);
+    }
+
+    private static string NormalizeSignalTranslatorText(string value)
+    {
+        var builder = new StringBuilder(value.Length);
+        var sawWhitespace = false;
+        foreach (var ch in value)
+        {
+            if (char.IsWhiteSpace(ch))
+            {
+                if (!sawWhitespace)
+                {
+                    builder.Append(' ');
+                    sawWhitespace = true;
+                }
+
+                continue;
+            }
+
+            builder.Append(ch);
+            sawWhitespace = false;
+        }
+
+        return builder.ToString().Trim();
+    }
+
     [HarmonyPatch(typeof(HUDManager), "UpdateScanNodes")]
     [HarmonyPostfix]
     private static void HudManagerUpdateScanNodesPostfix(HUDManager __instance)
     {
+        if (ShouldRetrySignalTranslatorLocalization())
+        {
+            ApplySignalTranslatorHudLocalization(__instance, "HUDManager.UpdateScanNodes.signal-translator-window");
+        }
+
         ApplyHudScannerLocalization(__instance, "HUDManager.UpdateScanNodes");
+    }
+
+    private static bool ShouldRetrySignalTranslatorLocalization()
+    {
+        var now = Time.unscaledTime;
+        if (now > _signalTranslatorLocalizationUntil)
+        {
+            return false;
+        }
+
+        if (Time.unscaledTime < _nextSignalTranslatorLocalizationTime)
+        {
+            return false;
+        }
+
+        _nextSignalTranslatorLocalizationTime = now + SignalTranslatorLocalizationRetryIntervalSeconds;
+        return true;
     }
 
     private static void ApplyHudScannerLocalization(HUDManager? hud, string reason)
@@ -434,8 +653,63 @@ internal static class TextPatches
         }
 
         var root = hud.scanInfoAnimator == null ? hud.totalValueText?.transform.parent?.gameObject : hud.scanInfoAnimator.gameObject;
-        TargetedUiTranslator.TranslateRoot(root, reason);
-        FontFallbackService.ApplyFallback(hud.totalValueText, hud.totalValueText?.text);
+        if (!ShouldSkipHudScannerLocalization(hud, root, reason))
+        {
+            ApplyDirectTextTranslation(hud.totalValueText, reason);
+        }
+
+        if (ShouldTranslateHudScannerRoot(root, reason))
+        {
+            TargetedUiTranslator.TranslateRoot(root, reason);
+        }
+    }
+
+    private static bool ShouldSkipHudScannerLocalization(HUDManager hud, GameObject? root, string reason)
+    {
+        if (!string.Equals(reason, "HUDManager.UpdateScanNodes", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var totalText = hud.totalValueText?.text ?? string.Empty;
+        var rootId = root == null ? 0 : root.GetInstanceID();
+        var changed = rootId != _lastHudScannerRootId ||
+                      !string.Equals(totalText, _lastHudScannerTotalText, StringComparison.Ordinal);
+        var now = Time.unscaledTime;
+        if (!changed && now < _nextHudScannerLocalizationTime)
+        {
+            return true;
+        }
+
+        _lastHudScannerRootId = rootId;
+        _lastHudScannerTotalText = totalText;
+        _nextHudScannerLocalizationTime = now + HudScannerLocalizationIntervalSeconds;
+        return false;
+    }
+
+    private static bool ShouldTranslateHudScannerRoot(GameObject? root, string reason)
+    {
+        if (root == null)
+        {
+            return false;
+        }
+
+        if (!string.Equals(reason, "HUDManager.UpdateScanNodes", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var rootId = root.GetInstanceID();
+        var changed = rootId != _lastHudScannerTranslatedRootId;
+        var now = Time.unscaledTime;
+        if (!changed && now < _nextHudScannerRootLocalizationTime)
+        {
+            return false;
+        }
+
+        _lastHudScannerTranslatedRootId = rootId;
+        _nextHudScannerRootLocalizationTime = now + HudScannerRootLocalizationIntervalSeconds;
+        return true;
     }
 
     [HarmonyPatch(typeof(HUDManager), "DisplayCreditsEarning")]
@@ -774,6 +1048,18 @@ internal static class TextPatches
             return;
         }
 
+        if (name == "transmitting" && ReferenceEquals(__instance, HUDManager.Instance.signalTranslatorAnimator))
+        {
+            if (value)
+            {
+                BeginSignalTranslatorLocalizationWindow(HUDManager.Instance, "Animator.SetBool.transmitting.true");
+            }
+            else
+            {
+                _signalTranslatorLocalizationUntil = 0f;
+            }
+        }
+
         if (name != "IsLoading" || !ReferenceEquals(__instance, HUDManager.Instance.LoadingScreen))
         {
             return;
@@ -886,7 +1172,30 @@ internal static class TextPatches
     private static void TerminalLoadNewNodePostfix(Terminal __instance)
     {
         Plugin.LogPatchEntry("Terminal.LoadNewNode");
+        ApplyTerminalCurrentTextTranslation(__instance, "Terminal.LoadNewNode.currentText");
         ApplyTerminalScreenTranslation(__instance, "Terminal.LoadNewNode");
+    }
+
+    [HarmonyPatch(typeof(Terminal), "OnSubmit")]
+    [HarmonyPostfix]
+    private static void TerminalOnSubmitPostfix(Terminal __instance)
+    {
+        ApplyTerminalCurrentTextTranslation(__instance, "Terminal.OnSubmit");
+        ApplyTerminalScreenTranslation(__instance, "Terminal.OnSubmit");
+    }
+
+    [HarmonyPatch(typeof(Terminal), "ParsePlayerSentence")]
+    [HarmonyPostfix]
+    private static void TerminalParsePlayerSentencePostfix(Terminal __instance)
+    {
+        ApplyTerminalCurrentTextTranslation(__instance, "Terminal.ParsePlayerSentence");
+    }
+
+    [HarmonyPatch(typeof(Terminal), "loadTextAnimation")]
+    [HarmonyPostfix]
+    private static void TerminalLoadTextAnimationPostfix(Terminal __instance)
+    {
+        ApplyTerminalCurrentTextTranslation(__instance, "Terminal.loadTextAnimation");
     }
 
     [HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
@@ -894,6 +1203,36 @@ internal static class TextPatches
     private static void TerminalBeginUsingPostfix(Terminal __instance)
     {
         ApplyTerminalScreenTranslation(__instance, "Terminal.BeginUsingTerminal");
+    }
+
+    private static void ApplyTerminalCurrentTextTranslation(Terminal? terminal, string reason)
+    {
+        if (terminal == null || string.IsNullOrEmpty(terminal.currentText))
+        {
+            return;
+        }
+
+        var original = terminal.currentText;
+        var translated = TranslationService.TranslateTerminalOutput(original);
+        if (string.Equals(original, translated, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        terminal.currentText = translated;
+        terminal.textAdded = 0;
+
+        if (terminal.screenText != null &&
+            string.Equals(terminal.screenText.text, original, StringComparison.Ordinal))
+        {
+            SetTerminalModifyingText(terminal, true);
+            terminal.screenText.text = translated;
+            terminal.screenText.caretPosition = translated.Length;
+            FontFallbackService.ApplyFallback(terminal.screenText.textComponent, translated);
+        }
+
+        Plugin.ReportTranslationHit();
+        // Plugin.Log.LogInfo($"{reason} translated terminal currentText: {original.Length}->{translated.Length}");
     }
 
     private static void ApplyTerminalScreenTranslation(Terminal? terminal, string reason)
@@ -942,13 +1281,21 @@ internal static class TextPatches
             return false;
         }
 
+        if (TryGetCachedTextClassification(text, InputFieldTextCache, out var cached))
+        {
+            return cached;
+        }
+
         var inputField = text.GetComponentInParent<TMP_InputField>(true);
         if (inputField == null)
         {
+            CacheTextClassification(text, InputFieldTextCache, false);
             return false;
         }
 
-        return ReferenceEquals(inputField.textComponent, text);
+        var result = ReferenceEquals(inputField.textComponent, text);
+        CacheTextClassification(text, InputFieldTextCache, result);
+        return result;
     }
 
     private static bool IsLobbySlotDynamicText(TMP_Text? text)
@@ -958,8 +1305,46 @@ internal static class TextPatches
             return false;
         }
 
+        if (TryGetCachedTextClassification(text, LobbySlotTextCache, out var cached))
+        {
+            return cached;
+        }
+
         var slot = text.GetComponentInParent<LobbySlot>(true);
-        return slot != null && (ReferenceEquals(slot.LobbyName, text) || ReferenceEquals(slot.playerCount, text));
+        var result = slot != null && (ReferenceEquals(slot.LobbyName, text) || ReferenceEquals(slot.playerCount, text));
+        CacheTextClassification(text, LobbySlotTextCache, result);
+        return result;
+    }
+
+    private static bool TryGetCachedTextClassification(
+        TMP_Text text,
+        Dictionary<int, CachedTextClassification> cache,
+        out bool value)
+    {
+        var parentId = GetParentInstanceId(text);
+        if (cache.TryGetValue(text.GetInstanceID(), out var cached) && cached.ParentId == parentId)
+        {
+            value = cached.Value;
+            return true;
+        }
+
+        value = false;
+        return false;
+    }
+
+    private static void CacheTextClassification(TMP_Text text, Dictionary<int, CachedTextClassification> cache, bool value)
+    {
+        if (cache.Count >= TextClassificationCacheLimit)
+        {
+            cache.Clear();
+        }
+
+        cache[text.GetInstanceID()] = new CachedTextClassification(GetParentInstanceId(text), value);
+    }
+
+    private static int GetParentInstanceId(TMP_Text text)
+    {
+        return text.transform.parent == null ? 0 : text.transform.parent.GetInstanceID();
     }
 
     [HarmonyPatch(typeof(TMP_Text), nameof(TMP_Text.SetText), typeof(string), typeof(bool))]

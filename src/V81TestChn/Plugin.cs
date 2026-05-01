@@ -12,7 +12,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "0.1.6";
+    public const string PluginVersion = "0.1.7";
 
     internal static ManualLogSource Log = null!;
 
@@ -34,7 +34,7 @@ public sealed class Plugin : BaseUnityPlugin
         RadiationWarningAuditService.Initialize(Config);
         RadiationWarningPlaybackService.Initialize(pluginDir, Config);
         EndGameLocalizationService.Initialize(pluginDir);
-        RuntimeTextCollector.Initialize(pluginDir);
+        RuntimeTextCollector.Initialize(pluginDir, Config);
 
         var manualPatchCount = TextPatches.Install(_harmony);
         // Verbose runtime marker; keep code available for future diagnostics without adding startup log noise.

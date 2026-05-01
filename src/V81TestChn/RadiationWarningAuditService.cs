@@ -22,8 +22,8 @@ internal static class RadiationWarningAuditService
         _enabled = config.Bind(
             "RadiationWarningAudit",
             "Enabled",
-            true,
-            "Enable bounded audit logging for the original radiation warning subtree.");
+            false,
+            "Enable bounded audit sampling for the original radiation warning subtree. Keep disabled outside diagnostics to avoid runtime subtree enumeration.");
         _sampleCount = config.Bind(
             "RadiationWarningAudit",
             "SampleCount",

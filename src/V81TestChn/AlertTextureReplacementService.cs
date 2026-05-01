@@ -9,6 +9,26 @@ namespace V81TestChn;
 
 internal static class AlertTextureReplacementService
 {
+    private enum NativeTextRole
+    {
+        None,
+        SystemOnline,
+        EnteringAtmosphere
+    }
+
+    private readonly struct CachedNativeTextRole
+    {
+        public CachedNativeTextRole(int parentId, NativeTextRole role)
+        {
+            ParentId = parentId;
+            Role = role;
+        }
+
+        public int ParentId { get; }
+        public NativeTextRole Role { get; }
+    }
+
+    private const int NativeTextRoleCacheLimit = 4096;
     private const string SystemOnlineTitleObjectName = "TipLeft1";
     private const string SystemOnlineTitleFullPath = "Systems/UI/Canvas/IngamePlayerHUD/BottomMiddle/SystemsOnline/TipLeft1";
     private const string SystemOnlineTitlePathSuffix = "IngamePlayerHUD/BottomMiddle/SystemsOnline/TipLeft1";
@@ -21,6 +41,7 @@ internal static class AlertTextureReplacementService
     private const string LifeSupportOfflineLocalizedText = "[\u751f\u547d\u7ef4\u6301\uff1a\u79bb\u7ebf]";
     private static Coroutine? _systemOnlineWatcher;
     private static Coroutine? _fixedSceneLabelWatcher;
+    private static readonly Dictionary<int, CachedNativeTextRole> NativeTextRoleCache = new();
     private static readonly Dictionary<string, string> FixedSceneLabels = new(StringComparer.Ordinal)
     {
         ["TO MEET PROFIT QUOTA"] = "\u4ee5\u8fbe\u5230\u5229\u6da6\u914d\u989d",
@@ -105,7 +126,7 @@ internal static class AlertTextureReplacementService
 
     public static void SyncEnteringAtmosphereOverlayState(TMP_Text? text, string stage)
     {
-        if (text == null || !IsEnteringAtmosphereTitleObject(text))
+        if (text == null || GetNativeTextRole(text) != NativeTextRole.EnteringAtmosphere)
         {
             return;
         }
@@ -170,13 +191,14 @@ internal static class AlertTextureReplacementService
             return;
         }
 
-        if (IsSystemOnlineObject(text))
+        var role = GetNativeTextRole(text);
+        if (role == NativeTextRole.SystemOnline)
         {
             ApplySystemOnlineNativeTranslation(text, stage);
             return;
         }
 
-        if (IsEnteringAtmosphereTitleObject(text))
+        if (role == NativeTextRole.EnteringAtmosphere)
         {
             ApplyEnteringAtmosphereNativeTranslation(text, stage);
             return;
@@ -418,7 +440,7 @@ internal static class AlertTextureReplacementService
 
     private static bool IsSystemOnlineObject(TMP_Text? text)
     {
-        return IsExactSystemOnlineTitle(text);
+        return GetNativeTextRole(text) == NativeTextRole.SystemOnline;
     }
 
     private static bool IsSystemOnlinePath(Transform? transform)
@@ -433,13 +455,7 @@ internal static class AlertTextureReplacementService
 
     private static bool IsEnteringAtmosphereTitleObject(TMP_Text? text)
     {
-        if (text == null)
-        {
-            return false;
-        }
-
-        return string.Equals(text.name, EnteringAtmosphereTitleObjectName, StringComparison.OrdinalIgnoreCase) &&
-               HasNamedAncestor(text.transform, "LoadingText");
+        return GetNativeTextRole(text) == NativeTextRole.EnteringAtmosphere;
     }
 
     private static bool IsHazardLevelTitle(string? text)
@@ -585,17 +601,68 @@ internal static class AlertTextureReplacementService
 
     private static bool IsExactSystemOnlineTitle(TMP_Text? text)
     {
+        return GetNativeTextRole(text) == NativeTextRole.SystemOnline;
+    }
+
+    private static NativeTextRole GetNativeTextRole(TMP_Text? text)
+    {
         if (text == null)
         {
-            return false;
+            return NativeTextRole.None;
         }
 
-        var path = BuildPath(text.transform);
-        if (path.EndsWith(SystemOnlineTitlePathSuffix, StringComparison.OrdinalIgnoreCase))
+        if (TryGetCachedNativeTextRole(text, out var role))
         {
+            return role;
+        }
+
+        role = ResolveNativeTextRole(text);
+        CacheNativeTextRole(text, role);
+        return role;
+    }
+
+    private static bool TryGetCachedNativeTextRole(TMP_Text text, out NativeTextRole role)
+    {
+        var parentId = GetParentInstanceId(text.transform);
+        if (NativeTextRoleCache.TryGetValue(text.GetInstanceID(), out var cached) && cached.ParentId == parentId)
+        {
+            role = cached.Role;
             return true;
         }
 
+        role = NativeTextRole.None;
         return false;
+    }
+
+    private static NativeTextRole ResolveNativeTextRole(TMP_Text text)
+    {
+        if (string.Equals(text.name, EnteringAtmosphereTitleObjectName, StringComparison.OrdinalIgnoreCase) &&
+            HasNamedAncestor(text.transform, "LoadingText"))
+        {
+            return NativeTextRole.EnteringAtmosphere;
+        }
+
+        if (string.Equals(text.name, SystemOnlineTitleObjectName, StringComparison.OrdinalIgnoreCase) &&
+            IsSystemOnlinePath(text.transform))
+        {
+            return NativeTextRole.SystemOnline;
+        }
+
+        return NativeTextRole.None;
+    }
+
+    private static void CacheNativeTextRole(TMP_Text text, NativeTextRole role)
+    {
+        if (NativeTextRoleCache.Count >= NativeTextRoleCacheLimit)
+        {
+            NativeTextRoleCache.Clear();
+        }
+
+        NativeTextRoleCache[text.GetInstanceID()] = new CachedNativeTextRole(GetParentInstanceId(text.transform), role);
+    }
+
+    private static int GetParentInstanceId(Transform? transform)
+    {
+        return transform?.parent == null ? 0 : transform.parent.GetInstanceID();
     }
 }

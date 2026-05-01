@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using BepInEx.Configuration;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,13 +13,29 @@ internal static class RuntimeTextCollector
 {
     private const int MaxTextLength = 2000;
     private static readonly Dictionary<string, RuntimeTextRecord> Records = new(StringComparer.Ordinal);
+    private static ConfigEntry<bool>? _enabled;
     private static string? _outputPath;
     private static bool _isInitialized;
 
     public static int Count => Records.Count;
+    public static bool IsEnabled => _enabled?.Value == true;
 
-    public static void Initialize(string pluginDir)
+    public static void Initialize(string pluginDir, ConfigFile config)
     {
+        _enabled = config.Bind(
+            "Diagnostics",
+            "CollectUntranslatedText",
+            false,
+            "Collect untranslated runtime text candidates into logs/untranslated-texts.csv. Disabled by default to avoid runtime overhead.");
+
+        if (!IsEnabled)
+        {
+            Records.Clear();
+            _outputPath = null;
+            _isInitialized = false;
+            return;
+        }
+
         try
         {
             var logDir = Path.Combine(pluginDir, "logs");
@@ -65,7 +82,7 @@ internal static class RuntimeTextCollector
 
     private static void Record(string componentType, GameObject gameObject, string fontName, string? source)
     {
-        if (!_isInitialized || string.IsNullOrEmpty(_outputPath) || !ShouldCollect(source))
+        if (!IsEnabled || !_isInitialized || string.IsNullOrEmpty(_outputPath) || !ShouldCollect(source))
         {
             return;
         }

@@ -1,84 +1,49 @@
 # LC Chinese Project
 
-Lethal Company 简体中文本地化模组，覆盖游戏内 UI、HUD、终端、商店、结算页面、部分提示文本、中文字体 fallback 和部分本地化 UI 贴图。
+Lethal Company 简体中文本地化模组，面向 V81 版本测试。当前版本仍处于持续整理阶段，重点是提高中文覆盖率、维持原版视觉风格，并减少与常见 UI/图标类模组的冲突。
 
-This is a Simplified Chinese localization mod for Lethal Company. It covers in-game UI, HUD, terminal pages, store pages, endgame screens, selected prompts, Chinese font fallback, and selected localized UI textures.
-
-## 当前状态 / Current Status
-
-本模组仍处于测试阶段。当前版本面向 V81 环境，重点是提高中文覆盖率、保持原版视觉风格，并减少与常见 UI/图标类模组的冲突。
-
-This mod is still in testing. The current release targets V81, focusing on wider Chinese coverage, preservation of the vanilla visual style, and reduced conflicts with common UI/icon mods.
+Simplified Chinese localization for Lethal Company, tested against V81. This release is still being refined; the current focus is broader Chinese coverage, vanilla-style presentation, and fewer conflicts with common UI/icon mods.
 
 ## 功能 / Features
 
-- 简体中文本地化：UI、HUD、终端、商店、结算、扫描提示和部分场景文本。
-- 中文字体 fallback：减少方块字、透明字和动态文本缺字问题。
-- 本地化 UI 贴图：包含 warning 警告动画、结算和提示类贴图。
-- 独立运行时实现：不依赖 GameTranslator。
-- 兼容 RuntimeIcons、RuntimeIcons_BetterRotations、HoneeItemIcons：保留原版英文物品 key 给图标匹配使用，中文仅在显示层处理。
-- 修复终端翻译页面的确认输入跟踪，避免购买或导航确认页中 `c` / `confirm` 失效。
-- 补全 V81 感染、空气过滤器和大厅修改版主机提示等文本；部分长提示已手动分行以改善布局。
-- 感染状态温度单位可配置，默认使用摄氏度。
-
-- Simplified Chinese localization for UI, HUD, terminal, store, endgame, scan prompts, and selected scene text.
-- Chinese font fallback to reduce missing glyphs, transparent glyphs, and dynamic text rendering issues.
-- Localized UI textures, including warning animation, endgame, and prompt textures.
-- Independent runtime implementation; GameTranslator is not required.
-- Compatibility with RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons by preserving vanilla English item keys for icon matching while translating display text separately.
-- Preserves terminal confirmation input tracking so `c` / `confirm` continue to work on translated purchase and route confirmation pages.
-- Covers newer V81 infection, air-filter, and modified-host lobby warning text; selected long prompts are manually wrapped for cleaner layout.
-- Infection status temperature units are configurable. Celsius is used by default.
+- 简体中文本地化：UI、HUD、终端、商店、结算、扫描提示、大厅提示和部分场景文本。 / Simplified Chinese localization for UI, HUD, terminal, store, endgame, scan prompts, lobby warnings, and selected scene text.
+- 中文字体 fallback：减少缺字、透明字和动态文本渲染问题。 / Chinese font fallback to reduce missing glyphs, transparent glyphs, and dynamic text rendering issues.
+- 本地化 UI 贴图：包含 warning 警告动画、结算页和部分提示贴图。 / Localized UI textures, including warning animation, endgame, and selected prompt textures.
+- 独立运行时实现：不需要 GameTranslator。 / Independent runtime implementation; GameTranslator is not required.
+- 终端确认输入保护：翻译后的购买、导航确认页面仍保留 `c` / `confirm` 行为。 / Terminal confirmation input protection so translated purchase and route pages keep `c` / `confirm` behavior.
+- V81 新增文本覆盖：感染、空气过滤器、修改版主机提示、飞船磁铁、信号翻译器等。 / V81 text coverage for infection, air-filter, modified-host warnings, ship magnet, Signal Translator, and related prompts.
+- 信号翻译器 HUD 优化：减少短时间重复遍历，并放大“正在接收信号”提示。 / Signal Translator HUD optimization with reduced repeated traversal and a larger localized receiving-signal prompt.
+- 兼容 RuntimeIcons、RuntimeIcons_BetterRotations、HoneeItemIcons：保留原版英文物品 key 给图标匹配使用，中文仅在显示层处理。 / Compatibility with RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons by preserving vanilla English item keys for icon matching while translating display text separately.
+- 感染状态温度单位可配置，默认摄氏度。 / Configurable infection status temperature unit. Celsius is the default.
 
 ## 安装 / Installation
 
 ### 使用模组管理器 / Mod Manager
 
-1. 通过 Thunderstore / r2modman 安装 `BepInExPack`。
+1. 安装 `BepInExPack`。
 2. 安装本模组。
 3. 启动游戏并在实机环境中检查中文显示。
 
-1. Install `BepInExPack` through Thunderstore / r2modman.
+1. Install `BepInExPack`.
 2. Install this mod.
 3. Launch the game and verify Chinese display in-game.
 
 ### 手动安装 / Manual Install
 
-如果手动安装 Thunderstore 下载的 zip，请将 zip 内的 `BepInEx` 文件夹合并到游戏或 profile 根目录。
+将压缩包根目录中的 `BepInEx` 文件夹合并到游戏或 profile 根目录。正确安装后应存在：
 
-If installing the Thunderstore zip manually, merge the `BepInEx` folder from the zip into the game or profile root.
-
-正确结果应包含：
+Merge the `BepInEx` folder from the zip root into the game or profile root. A correct install should contain:
 
 ```text
 BepInEx/plugins/V81TestChn/V81TestChn.dll
+BepInEx/plugins/V81TestChn/translations-cfg/
+BepInEx/plugins/V81TestChn/fonts/
+BepInEx/plugins/V81TestChn/textures/
 ```
 
-发布 zip 的根目录必须直接包含：
+不要把整个压缩包解压成 `BepInEx/plugins/package`，也不要在压缩包外再套一层 `package/` 文件夹。
 
-```text
-manifest.json
-README.md
-CHANGELOG.md
-icon.png
-BepInEx/
-```
-
-不要将整个 zip 解压成 `BepInEx/plugins/package`，也不要让发布包额外套一层 `package/` 文件夹。
-
-Do not install the package as `BepInEx/plugins/package`, and do not create a release zip with an extra top-level `package/` folder.
-
-## 兼容性与排查 / Compatibility And Troubleshooting
-
-- RuntimeIcons、RuntimeIcons_BetterRotations、HoneeItemIcons 兼容层只做运行时程序集检测和显示层避让；本包不打包、不引用、不复制这些第三方模组的代码或资源。
-- 运行时资源从 `V81TestChn.dll` 所在目录加载，因此请保持 `translations-cfg`、`fonts`、`fontpatcher`、`textures` 与 DLL 在同一插件目录内。
-- 如果日志出现 `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`，说明 DLL 已加载但资源没有被找到。通常需要检查安装目录或删除旧版本残留。
-- 当前版本仍可能存在少量未覆盖文本、其他模组生成文本、重复翻译或 UI 对齐问题。反馈时请附截图和触发场景。
-
-- The RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons compatibility layer only performs runtime assembly detection and display-layer avoidance; this package does not bundle, reference, or copy code or assets from those third-party mods.
-- Runtime resources are loaded from the directory containing `V81TestChn.dll`; keep `translations-cfg`, `fonts`, `fontpatcher`, and `textures` beside the DLL.
-- If the log says `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`, the DLL loaded but resources were not found. Check the install path or remove stale package remnants.
-- Some newly added text, text generated by other mods, duplicate translations, or minor UI alignment issues may still be uncovered. Please report screenshots and reproduction context.
+Do not install the package as `BepInEx/plugins/package`, and do not create a zip with an extra top-level `package/` folder.
 
 ## 配置 / Configuration
 
@@ -95,9 +60,9 @@ BepInEx/config/cn.codex.v81testchn.cfg
 TemperatureUnit = Celsius
 ```
 
-可选值为 `Celsius` 或 `Fahrenheit`。默认值为 `Celsius`。
+可选值为 `Celsius` 或 `Fahrenheit`，默认值为 `Celsius`。
 
-The config file is generated after the first launch:
+The config file is generated after first launch:
 
 ```text
 BepInEx/config/cn.codex.v81testchn.cfg
@@ -111,6 +76,13 @@ TemperatureUnit = Celsius
 ```
 
 Accepted values are `Celsius` and `Fahrenheit`. The default is `Celsius`.
+
+## 兼容性与排查 / Compatibility And Troubleshooting
+
+- 本包不打包、不引用、不复制 RuntimeIcons、RuntimeIcons_BetterRotations、HoneeItemIcons 的代码或资源。 / This package does not bundle, reference, or copy code or assets from RuntimeIcons, RuntimeIcons_BetterRotations, or HoneeItemIcons.
+- 运行时资源从 `V81TestChn.dll` 所在目录加载，请保持 `translations-cfg`、`fonts`、`fontpatcher`、`textures` 与 DLL 在同一插件目录内。 / Runtime resources are loaded from the directory containing `V81TestChn.dll`; keep `translations-cfg`, `fonts`, `fontpatcher`, and `textures` beside the DLL.
+- 如果日志出现 `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`，说明 DLL 已加载但资源未找到，通常是安装目录错误或旧版本残留。 / If logs show `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`, the DLL loaded but resources were not found. Check the install path or remove stale package remnants.
+- 当前版本仍可能存在少量未覆盖文本、其他模组生成文本、重复翻译或 UI 对齐问题。反馈时请附截图和触发场景。 / Some newly added text, text generated by other mods, duplicate translations, or minor UI alignment issues may still be uncovered. Please report screenshots and reproduction context.
 
 ## 许可与鸣谢 / License And Credits
 

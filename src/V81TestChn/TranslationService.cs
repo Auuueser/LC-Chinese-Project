@@ -48,6 +48,7 @@ internal static class TranslationService
     private static readonly List<RegexEntry> RegexEntries = new();
     private static readonly HashSet<string> RegexPatternSet = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, string?> TranslationResultCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, string> CompositeTranslationResultCache = new(StringComparer.Ordinal);
     private const int MaxTranslationResultCache = 8000;
     private const string TemperatureUnitCelsius = "Celsius";
     private const string TemperatureUnitFahrenheit = "Fahrenheit";
@@ -58,6 +59,17 @@ internal static class TranslationService
     private static readonly Regex HighFeverFahrenheitRegex = new(
         @"^(?<prefix>\s*)HIGH\s+FEVER\s+DETECTED!\s+REACHING\s+(?<fahrenheit>-?\d+)°F(?<suffix>\s*)$",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex OrderedTerminalItemConfirmationRegex = new(
+        @"^Ordered(?: the)? (?<item>.+?)[.!] Your new balance is (?<credits>.+?)\.(?<rest>[\s\S]*)$",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex TerminalCruiserWarrantyRegex = new(
+        @"We\s+are\s+so\s+confident\s+in\s+the\s+quality\s+of\s+this\s+product,\s*it\s+comes\s+with\s+a\s+life-time\s+warranty!\s+If\s+your\s+(?:Company\s+)?Cruiser\s+is\s+lost\s+or\s+destroyed,\s+you\s+can\s+get\s+one\s+free\s+replacement\.\s+Items\s+cannot\s+be\s+purchased\s+while\s+the\s+vehicle\s+is\s+en\s+route\.",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex SignalTransmitterInstructionsRegex = new(
+        @"The signal transmitter can be activated with the\s+[""\u201c\u201d]transmit[""\u201c\u201d]\s+command followed by any message under\s+10\s+letters\.",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private const string TerminalCruiserWarrantyLocalizedText =
+        "\u516c\u53f8\u5bf9\u6b64\u4ea7\u54c1\u8d28\u91cf\u975e\u5e38\u6709\u4fe1\u5fc3\uff0c\u56e0\u6b64\u63d0\u4f9b\u7ec8\u8eab\u4fdd\u4fee\uff01\u5982\u679c\u4f60\u7684\u5de1\u822a\u8f66\u4e22\u5931\u6216\u635f\u574f\uff0c\u53ef\u4ee5\u83b7\u5f97\u4e00\u6b21\u514d\u8d39\u66ff\u6362\u3002\u5728\u8f7d\u5177\u8fd0\u9001\u9014\u4e2d\u65e0\u6cd5\u8d2d\u4e70\u7269\u54c1\u3002";
     private const string BootSplashCanonicalText =
         "      BG IG, A System-Act Ally\n" +
         "      Copyright (C) 2084-2108, Halden Electronics Inc.\n" +
@@ -210,6 +222,7 @@ internal static class TranslationService
         ["Jetpack"] = "\u55b7\u6c14\u80cc\u5305",
         ["Lock-picker"] = "\u5f00\u9501\u5668",
         ["Mapper tool"] = "\u6d4b\u7ed8\u5de5\u5177",
+        ["Company Cruiser"] = "\u516c\u53f8\u5de1\u822a\u8f66",
         ["Cruiser"] = "\u8d27\u8f66",
         ["Cupboard"] = "\u6a71\u67dc",
         ["Extension ladder"] = "\u4f38\u7f29\u68af",
@@ -271,6 +284,11 @@ internal static class TranslationService
         new("ENTERING THE ATMOSPHERE...", "\u6b63\u5728\u8fdb\u5165\u5927\u6c14\u5c42\u2026"),
         new("Entering the atmosphere...", "\u6b63\u5728\u8fdb\u5165\u5927\u6c14\u5c42\u2026"),
         new("Autosaving...", "\u81ea\u52a8\u4fdd\u5b58\u4e2d..."),
+        new("RECEIVING SIGNAL", "\u6b63\u5728\u63a5\u6536\u4fe1\u53f7"),
+        new("Light Switch", "\u7535\u706f\u5f00\u5173"),
+        new("Light switch", "\u7535\u706f\u5f00\u5173"),
+        new("Ship Magnet Activated", "\u98de\u8239\u78c1\u5438\u5df2\u542f\u7528"),
+        new("Ship Magnet Deactivated", "\u98de\u8239\u78c1\u5438\u5df2\u505c\u7528"),
         new("Toggle Sprint", "\u5207\u6362\u51b2\u523a"),
         new("Toggle \u51b2\u523a", "\u5207\u6362\u51b2\u523a"),
         new("Head Bobbing", "\u955c\u5934\u6643\u52a8"),
@@ -349,6 +367,7 @@ internal static class TranslationService
         RegexEntries.Clear();
         RegexPatternSet.Clear();
         TranslationResultCache.Clear();
+        CompositeTranslationResultCache.Clear();
 
         var loadedSources = new List<string>();
 
@@ -374,8 +393,15 @@ internal static class TranslationService
             return false;
         }
 
-        if (TryPreserveBootSplashText(source, out translated))
+        if (MayBeHighFeverFahrenheitStatus(source) && TryTranslateHighFeverFahrenheitStatus(source, out translated))
         {
+            translated = SanitizeTranslatedText(translated);
+            return true;
+        }
+
+        if (TryTranslateExact(source, out translated))
+        {
+            translated = SanitizeTranslatedText(translated);
             if (!string.Equals(translated, source, StringComparison.Ordinal))
             {
                 CacheTranslationResult(source, translated);
@@ -386,21 +412,14 @@ internal static class TranslationService
             return false;
         }
 
-        if (TryTranslateHighFeverFahrenheitStatus(source, out translated))
-        {
-            translated = SanitizeTranslatedText(translated);
-            return true;
-        }
-
         if (TryGetCachedTranslation(source, out var cached, out var hasTranslation))
         {
             translated = cached;
             return hasTranslation;
         }
 
-        if (TryTranslateExact(source, out translated))
+        if (TryPreserveBootSplashText(source, out translated))
         {
-            translated = SanitizeTranslatedText(translated);
             if (!string.Equals(translated, source, StringComparison.Ordinal))
             {
                 CacheTranslationResult(source, translated);
@@ -530,12 +549,8 @@ internal static class TranslationService
 
         if (TryPreserveBootSplashText(source, out var preservedBootSplash))
         {
+            CacheCompositeTranslationResult(source, preservedBootSplash);
             return preservedBootSplash;
-        }
-
-        if (TryTranslateExact(source, out var exact))
-        {
-            return exact;
         }
 
         if (TryTranslateHighFeverFahrenheitStatus(source, out var highFeverFahrenheit))
@@ -543,18 +558,32 @@ internal static class TranslationService
             return SanitizeTranslatedText(highFeverFahrenheit);
         }
 
+        if (TryGetCachedCompositeTranslation(source, out var cachedComposite))
+        {
+            return cachedComposite;
+        }
+
+        if (TryTranslateExact(source, out var exact))
+        {
+            CacheCompositeTranslationResult(source, exact);
+            return exact;
+        }
+
         if (TryTranslateControlTipItemName(source, out var controlTipItemName))
         {
+            CacheCompositeTranslationResult(source, controlTipItemName);
             return controlTipItemName;
         }
 
         if (TryTranslateRegex(source, out var regex))
         {
+            CacheCompositeTranslationResult(source, regex);
             return regex;
         }
 
         if (TryTranslateForcedPhraseExact(source, out var forcedExact))
         {
+            CacheCompositeTranslationResult(source, forcedExact);
             return forcedExact;
         }
 
@@ -588,7 +617,9 @@ internal static class TranslationService
             }
         }
 
-        return SanitizeTranslatedText(translated);
+        translated = SanitizeTranslatedText(translated);
+        CacheCompositeTranslationResult(source, translated);
+        return translated;
     }
 
     private static bool TryTranslateHighFeverFahrenheitStatus(string? source, out string translated)
@@ -619,6 +650,13 @@ internal static class TranslationService
         var celsius = (int)Math.Round((fahrenheit - 32d) * 5d / 9d, MidpointRounding.AwayFromZero);
         translated = $"{match.Groups["prefix"].Value}检测到高烧！\n体温达到 {celsius}°C{match.Groups["suffix"].Value}";
         return true;
+    }
+
+    private static bool MayBeHighFeverFahrenheitStatus(string source)
+    {
+        return source.IndexOf("HIGH", StringComparison.OrdinalIgnoreCase) >= 0 &&
+               source.IndexOf("FEVER", StringComparison.OrdinalIgnoreCase) >= 0 &&
+               source.IndexOf("°F", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private static bool UseFahrenheitTemperature()
@@ -704,6 +742,16 @@ internal static class TranslationService
             return true;
         }
 
+        if (TryTranslateOrderedTerminalItemConfirmation(source, out translated))
+        {
+            return true;
+        }
+
+        if (TryTranslateSignalTransmitterInstructions(source, out translated))
+        {
+            return true;
+        }
+
         translated = Regex.Replace(
             source,
             @"Press\s+[""\u201c\u201d]\s*/\s*[""\u201c\u201d]\s+to\s+talk\.?",
@@ -719,6 +767,63 @@ internal static class TranslationService
             @"^Equip\s+to\s+belt\s*:\s*\[E\]$",
             "\u88c5\u5907\u5230\u8170\u5e26\uff1a[E]",
             RegexOptions.IgnoreCase);
+        return !string.Equals(translated, source, StringComparison.Ordinal);
+    }
+
+    private static bool TryTranslateOrderedTerminalItemConfirmation(string source, out string translated)
+    {
+        translated = source;
+        var match = OrderedTerminalItemConfirmationRegex.Match(source);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(match.Groups["item"].Value.Trim()));
+        var credits = match.Groups["credits"].Value.Trim();
+        var rest = match.Groups["rest"].Value.Trim();
+        if (rest.Length == 0)
+        {
+            translated = $"\u5df2\u8ba2\u8d2d {item}\uff01\u4f60\u7684\u65b0\u4f59\u989d\u4e3a {credits}\u3002";
+            return true;
+        }
+
+        var normalizedRest = TranslateTerminalOrderDetail(rest);
+        translated = $"\u5df2\u8ba2\u8d2d {item}\uff01\u4f60\u7684\u65b0\u4f59\u989d\u4e3a {credits}\u3002\n\n{normalizedRest}";
+        return true;
+    }
+
+    private static string StandardizeTerminalCruiserWarrantyText(string source)
+    {
+        return string.IsNullOrEmpty(source)
+            ? source
+            : TerminalCruiserWarrantyRegex.Replace(source, TerminalCruiserWarrantyLocalizedText);
+    }
+
+    private static string TranslateTerminalOrderDetail(string source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return string.Empty;
+        }
+
+        var normalized = Regex.Replace(source, @"\s+", " ").Trim();
+        var warranty = StandardizeTerminalCruiserWarrantyText(normalized);
+        if (!string.Equals(warranty, normalized, StringComparison.Ordinal))
+        {
+            return SanitizeTranslatedText(warranty);
+        }
+
+        var translated = TranslateTerminalOutputBody(normalized);
+        translated = StandardizeTerminalCruiserWarrantyText(translated);
+        return SanitizeTranslatedText(translated);
+    }
+
+    private static bool TryTranslateSignalTransmitterInstructions(string source, out string translated)
+    {
+        translated = SignalTransmitterInstructionsRegex.Replace(
+            source,
+            "\u4fe1\u53f7\u53d1\u5c04\u5668\u53ef\u901a\u8fc7 \"transmit\" \u547d\u4ee4\u6fc0\u6d3b\uff0c\u540e\u63a5\u4e0d\u8d85\u8fc7 10 \u4e2a\u5b57\u7b26\u7684\u6d88\u606f\u3002");
         return !string.Equals(translated, source, StringComparison.Ordinal);
     }
 
@@ -994,6 +1099,8 @@ internal static class TranslationService
         }
 
         var translated = TranslateTerminalOutputBody(source);
+        translated = StandardizeTerminalCruiserWarrantyText(translated);
+        translated = StandardizeTerminalSignalTranslatorText(translated);
         translated = StandardizeTerminalMoonsIntro(translated);
         translated = StandardizeTerminalStoreDecorNotice(translated);
         translated = StandardizeTerminalPageTitles(translated);
@@ -1009,6 +1116,13 @@ internal static class TranslationService
         translated = StandardizeTerminalStoreTransactions(translated);
         translated = StandardizeTerminalGeneralStatus(translated);
         return SanitizeTranslatedText(translated);
+    }
+
+    private static string StandardizeTerminalSignalTranslatorText(string source)
+    {
+        return TryTranslateSignalTransmitterInstructions(source, out var translated)
+            ? translated
+            : source;
     }
 
     private static string StandardizeTerminalMoonsIntro(string source)
@@ -1887,6 +2001,17 @@ internal static class TranslationService
 
         updated = Regex.Replace(
             updated,
+            @"^(?<count>\d+)\s+purchased items on route:\s*\n\s*-\s*(?<item>.+?)\s*$",
+            m =>
+            {
+                var count = m.Groups["count"].Value.Trim();
+                var item = BuildChineseFirstBilingual(ToSingularTerminalItem(m.Groups["item"].Value.Trim()));
+                return $"\u6709 {count} \u4ef6\u5df2\u8d2d\u5546\u54c1\u6b63\u5728\u8fd0\u9001\u9014\u4e2d\uff1a\n- {item}";
+            },
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        updated = Regex.Replace(
+            updated,
             @"^(?<count>\d+)\s+purchased items on route\.$",
             "\u6709 ${count} \u4ef6\u5df2\u8d2d\u7269\u54c1\u6b63\u5728\u8fd0\u9001\u9014\u4e2d\u3002",
             RegexOptions.Multiline | RegexOptions.IgnoreCase);
@@ -1911,11 +2036,24 @@ internal static class TranslationService
 
         updated = Regex.Replace(
             updated,
+            @"^You have requested to order (?<item>.+?)\.\s*(?<detail>[\s\S]*?)Total cost of items?: (?<cost>.+?)\.\s*Please CONFIRM or DENY\.\s*$",
+            m =>
+            {
+                var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(m.Groups["item"].Value.Trim()));
+                var detail = TranslateTerminalOrderDetail(m.Groups["detail"].Value);
+                var cost = m.Groups["cost"].Value.Trim();
+                var detailBlock = detail.Length == 0 ? string.Empty : $"\n{detail}\n";
+                return $"\u4f60\u8bf7\u6c42\u8ba2\u8d2d {item}\u3002{detailBlock}\n\u7269\u54c1\u603b\u4ef7\uff1a{cost}\u3002\n\n\u8bf7\u8f93\u5165 CONFIRM \u6216 DENY\u3002";
+            },
+            RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        updated = Regex.Replace(
+            updated,
             @"^You have requested to order (?<item>.+?), which (?<detail>.+?)\.\s*Total cost of item: (?<cost>.+?)\.\s*Please CONFIRM or DENY\.\s*$",
             m =>
             {
                 var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(m.Groups["item"].Value.Trim()));
-                var detail = TranslateTerminalOutputBody(m.Groups["detail"].Value.Trim());
+                var detail = TranslateTerminalOrderDetail(m.Groups["detail"].Value.Trim());
                 var cost = m.Groups["cost"].Value.Trim();
                 return $"\u4f60\u8bf7\u6c42\u8ba2\u8d2d {item}\uff0c{detail}\u3002\n\u5355\u4ef6\u603b\u4ef7\uff1a{cost}\u3002\n\n\u8bf7\u8f93\u5165 CONFIRM \u6216 DENY\u3002";
             },
@@ -1947,7 +2085,26 @@ internal static class TranslationService
 
         updated = Regex.Replace(
             updated,
-            @"^Ordered the (?<item>.+?)! Your new balance is (?<credits>.+?)\.(?<rest>[\s\S]*)$",
+            @"^Ordered the (?<item>Company Cruiser|Cruiser)[.!] Your new balance is (?<credits>.+?)\.(?<rest>[\s\S]*)$",
+            m =>
+            {
+                var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(m.Groups["item"].Value.Trim()));
+                var credits = m.Groups["credits"].Value.Trim();
+                var rest = m.Groups["rest"].Value.Trim();
+                if (rest.Length == 0)
+                {
+                    return $"\u5df2\u8ba2\u8d2d {item}\u3002\u4f60\u7684\u65b0\u4f59\u989d\u4e3a {credits}\u3002";
+                }
+
+                var normalizedRest = TranslateTerminalOrderDetail(rest);
+
+                return $"\u5df2\u8ba2\u8d2d {item}\u3002\u4f60\u7684\u65b0\u4f59\u989d\u4e3a {credits}\u3002\n\n{normalizedRest}";
+            },
+            RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+        updated = Regex.Replace(
+            updated,
+            @"^Ordered the (?<item>.+?)[.!] Your new balance is (?<credits>.+?)\.(?<rest>[\s\S]*)$",
             m =>
             {
                 var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(m.Groups["item"].Value.Trim()));
@@ -1958,9 +2115,7 @@ internal static class TranslationService
                     return $"\u5df2\u8ba2\u8d2d {item}\uff01\u4f60\u7684\u65b0\u4f59\u989d\u4e3a {credits}\u3002";
                 }
 
-                var normalizedRest = Regex.Replace(rest, @"\s+", " ").Trim();
-                normalizedRest = TranslateTerminalOutputBody(normalizedRest);
-                normalizedRest = SanitizeTranslatedText(normalizedRest);
+                var normalizedRest = TranslateTerminalOrderDetail(rest);
                 return $"\u5df2\u8ba2\u8d2d {item}\uff01\u4f60\u7684\u65b0\u4f59\u989d\u4e3a {credits}\u3002\n\n{normalizedRest}";
             },
             RegexOptions.Multiline | RegexOptions.IgnoreCase);
@@ -2830,6 +2985,33 @@ internal static class TranslationService
         }
 
         TranslationResultCache[source] = translated;
+    }
+
+    private static bool TryGetCachedCompositeTranslation(string source, out string translated)
+    {
+        if (CompositeTranslationResultCache.TryGetValue(source, out var cached))
+        {
+            translated = cached;
+            return true;
+        }
+
+        translated = source;
+        return false;
+    }
+
+    private static void CacheCompositeTranslationResult(string source, string translated)
+    {
+        if (source.Length > 512 || CompositeTranslationResultCache.ContainsKey(source))
+        {
+            return;
+        }
+
+        if (CompositeTranslationResultCache.Count >= MaxTranslationResultCache)
+        {
+            CompositeTranslationResultCache.Clear();
+        }
+
+        CompositeTranslationResultCache[source] = translated;
     }
 }
 
