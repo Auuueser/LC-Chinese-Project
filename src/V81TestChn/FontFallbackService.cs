@@ -13,6 +13,7 @@ internal static class FontFallbackService
 {
     private static readonly Dictionary<int, Color> BaselineColorByInstance = new();
     private static readonly HashSet<int> FinalRenderSubscribedIds = new();
+    private static readonly Dictionary<int, TMP_Text> FinalRenderSubscribedTexts = new();
     private static readonly HashSet<int> SpecialCaseTextIds = new();
     private static readonly HashSet<int> FinalRenderRepairLoggedIds = new();
     private static readonly HashSet<int> RenderAuditLoggedIds = new();
@@ -26,9 +27,57 @@ internal static class FontFallbackService
     private static int _runtimeCjkSweepLogBudget = 180;
     private static int _canvasGroupBypassLogBudget = 80;
     private static TMP_FontAsset? _fallbackFont;
+    private static AssetBundle? _fallbackFontBundle;
+    private static bool _ownsFallbackFont;
     private static string? _pluginDir;
     private static bool _globalFallbackApplied;
     public static bool HasFallbackFont => _fallbackFont != null;
+
+    public static void Shutdown()
+    {
+        foreach (var text in FinalRenderSubscribedTexts.Values)
+        {
+            if (text == null)
+            {
+                continue;
+            }
+
+            text.OnPreRenderText -= OnPreRenderText;
+        }
+
+        FinalRenderSubscribedTexts.Clear();
+        FinalRenderSubscribedIds.Clear();
+        BaselineColorByInstance.Clear();
+        SpecialCaseTextIds.Clear();
+        FinalRenderRepairLoggedIds.Clear();
+        RenderAuditLoggedIds.Clear();
+        AppliedFallbackFontIds.Clear();
+
+        if (_fallbackFont != null)
+        {
+            TMP_Settings.fallbackFontAssets?.Remove(_fallbackFont);
+            foreach (var fontAsset in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
+            {
+                fontAsset?.fallbackFontAssetTable?.Remove(_fallbackFont);
+            }
+        }
+
+        if (_ownsFallbackFont && _fallbackFont != null)
+        {
+            UnityEngine.Object.Destroy(_fallbackFont);
+        }
+
+        _fallbackFont = null;
+        _ownsFallbackFont = false;
+        if (_fallbackFontBundle != null)
+        {
+            _fallbackFontBundle.Unload(true);
+            _fallbackFontBundle = null;
+        }
+
+        _pluginDir = null;
+        _globalFallbackApplied = false;
+    }
 
     public static void TryLoadFontAsset(string pluginDir)
     {
@@ -68,6 +117,8 @@ internal static class FontFallbackService
                 _fallbackFont = bundle.LoadAsset<TMP_FontAsset>(assetName);
                 if (_fallbackFont != null)
                 {
+                    _fallbackFontBundle = bundle;
+                    _ownsFallbackFont = true;
                     NormalizeFallbackFontMaterials();
                     Plugin.Log.LogInfo($"Loaded Chinese fallback font: {_fallbackFont.name} from {bundlePath}");
                     ApplyFallbackGlobally();
@@ -75,6 +126,7 @@ internal static class FontFallbackService
                 }
             }
 
+            bundle.Unload(false);
             Plugin.Log.LogWarning($"No TMP_FontAsset found in Chinese font bundle: {bundlePath}");
             TryLoadSystemFontAsset();
         }
@@ -169,6 +221,7 @@ internal static class FontFallbackService
         }
 
         _fallbackFont.name = $"V81TestChn_SystemFallback_{label}";
+        _ownsFallbackFont = true;
         _fallbackFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
         NormalizeFallbackFontMaterials();
         WarmFallbackCharacters();
@@ -767,6 +820,7 @@ internal static class FontFallbackService
             return;
         }
 
+        FinalRenderSubscribedTexts[id] = text;
         text.OnPreRenderText += OnPreRenderText;
     }
 

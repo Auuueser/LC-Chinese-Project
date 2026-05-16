@@ -1,104 +1,185 @@
-本项目仍处于测试阶段，目标是整理为可独立发布的 Lethal Company 简体中文本地化模组。 / This project is still in testing and is being prepared as an independently released Simplified Chinese localization mod for Lethal Company.
-
 # LC Chinese Project
 
-## 项目概述 / Overview
+## 中文说明
 
-LC Chinese Project 为 Lethal Company 提供简体中文本地化、中文 TMP 字体 fallback、部分 UI 贴图替换，以及面向 V81 运行环境的兼容处理。项目不依赖 GameTranslator 运行；文本、字体和贴图替换均由本插件在 BepInEx 运行时完成。
+LC Chinese Project 是面向 **Lethal Company V81 测试环境**维护的简体中文本地化项目。项目提供运行时文本汉化、中文 TextMeshPro 字体 fallback、部分 UI 贴图本地化，以及针对常见 UI/图标类模组的兼容处理。
 
-LC Chinese Project provides Simplified Chinese localization, Chinese TMP font fallback, selected UI texture replacement, and V81 runtime compatibility handling for Lethal Company. It does not require GameTranslator at runtime; text, font, and texture replacement are handled by this BepInEx plugin.
+本项目不依赖 GameTranslator 运行时。文本翻译、动态 UI 处理、字体 fallback、贴图替换和兼容逻辑均由本插件在 BepInEx 环境中完成。
 
-## 覆盖范围 / Scope
+### 功能范围
 
-- 游戏内 UI、HUD、终端、商店、结算、扫描提示、房间列表、大厅提示和部分场景文本本地化。 / Localizes in-game UI, HUD, terminal, store, endgame, scan prompts, lobby browser text, lobby warnings, and selected scene text.
-- 内置中文字体 fallback，降低缺字、透明字和动态文本渲染问题。 / Provides Chinese font fallback to reduce missing glyphs, transparent glyphs, and dynamic text rendering issues.
-- 本地化部分 UI 贴图，包括 warning 警告动画、结算页和提示类贴图。 / Replaces selected UI textures, including warning animation, endgame, and prompt textures.
-- 保留终端确认输入的原版行为，避免翻译页面影响 `c`、`confirm` 等命令。 / Preserves vanilla terminal confirmation behavior so translated pages do not interfere with `c`, `confirm`, and related commands.
-- 覆盖 V81 感染、空气过滤器、修改版主机提示、飞船磁铁、信号翻译器等新增文本。 / Covers V81 infection, air-filter, modified-host warning, ship magnet, signal translator, and related new text.
-- 信号翻译器 HUD 使用缓存与短窗口重试，降低重复遍历；“正在接收信号”使用更清晰的字号。 / Uses cached HUD references and a short retry window for Signal Translator text, with a larger localized “receiving signal” display.
-- 提供感染温度单位配置，默认摄氏度，可切换为华氏度。 / Provides a configurable infection temperature unit. Celsius is the default, and Fahrenheit remains available.
-- 兼容 RuntimeIcons、RuntimeIcons_BetterRotations、HoneeItemIcons：保留原版英文物品 key 给图标类模组使用，中文仅在显示层处理。 / Supports RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons by preserving vanilla English item keys for icon matching while translating display text separately.
+- 汉化游戏内 UI、HUD、终端、商店、扫描提示、飞船显示屏、星球信息、结算界面、大厅提示和部分场景文本。
+- 针对终端订单、星球信息、扫描价值、聊天系统消息、投票、截止日期、重量单位、服装切换提示和载具交互提示等动态文本提供专用处理。
+- 保留终端输入、聊天输入、玩家名、大厅动态名和确认命令的原版行为。
+- 提供中文 TMP 字体 fallback，降低缺字、透明字和动态文本渲染问题。
+- 提供部分本地化 UI 贴图资源。
+- 兼容 RuntimeIcons、RuntimeIcons_BetterRotations 和 HoneeItemIcons，保留原版英文物品 key 供图标匹配使用，仅在显示层处理中文。
+- 支持自定义本地化条目，便于为其他英文模组或个人偏好补充显示文本。
 
-## 目录结构 / Repository Layout
+### 自定义本地化教程
 
-- `src/V81TestChn/`: BepInEx 插件源码。 / BepInEx plugin source code.
-- `translations/`: JSON 翻译数据，用于兼容和旧查找路径。 / JSON translation data for compatibility and legacy lookup.
-- `translations-cfg/`: 插件运行时加载的 cfg 翻译目录。 / cfg translation catalogs loaded at runtime.
-- `assets/textures/`: 运行时贴图替换使用的本地化资源。 / Localized texture resources used by runtime replacement.
-- `fonts/`: 中文 TMP 字体与 fallback/fontpatcher 资源。 / Chinese TMP font and fallback/fontpatcher resources.
-- `lib/`: 本地构建引用。 / Local build references.
-- `thunderstore/`: Thunderstore 发布根目录。 / Thunderstore release root.
-- `thunderstore-tools/`: 本地构建与发布包校验脚本。 / Local package build and validation scripts.
-- `github/V81-CHN/`: 最小化 GitHub 发布源码镜像。 / Minimal GitHub source mirror.
-
-## 构建 / Build
-
-```powershell
-dotnet build .\src\V81TestChn\V81TestChn.csproj -c Release -p:TestDeployDir=
-```
-
-构建 Thunderstore 发布目录：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\thunderstore-tools\build-package.ps1"
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\thunderstore-tools\validate-package.ps1"
-```
-
-`thunderstore/` 是发布前的压缩根目录。发布 zip 的根目录必须直接包含 `manifest.json`、`README.md`、`CHANGELOG.md`、`icon.png`、`LICENSE`、`THIRD_PARTY_LICENSES.md` 和 `BepInEx/`，不能额外套一层 `package/`。
-
-`thunderstore/` is the pre-zip release root. The release zip root must directly contain `manifest.json`, `README.md`, `CHANGELOG.md`, `icon.png`, `LICENSE`, `THIRD_PARTY_LICENSES.md`, and `BepInEx/`; do not add an extra top-level `package/` folder.
-
-## 安装与排查 / Installation And Troubleshooting
-
-- 使用模组管理器安装时，Thunderstore/r2modman 会按发布包结构自动放置 `BepInEx/` 内容。 / When installed through a mod manager, Thunderstore/r2modman places the `BepInEx/` content according to the package layout.
-- 手动安装时，将 zip 根目录中的 `BepInEx` 文件夹合并到游戏或 profile 根目录。 / For manual installation, merge the `BepInEx` folder from the zip into the game or profile root.
-- 不要把整个发布目录放入 `BepInEx/plugins/package`。 / Do not place the entire release directory under `BepInEx/plugins/package`.
-- 运行时资源从 `V81TestChn.dll` 所在目录解析，以兼容 Thunderstore/r2modman 的嵌套安装路径。 / Runtime resources are resolved from the directory containing `V81TestChn.dll` to support nested Thunderstore/r2modman install paths.
-- 如日志出现 `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`，通常说明 DLL 已加载但资源路径错误，请检查旧版本残留和安装目录。 / If logs show `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`, the DLL loaded but resources were not found. Check stale package remnants and the install path.
-
-## 配置 / Configuration
-
-插件首次运行后会生成：
+插件会在以下目录中查找自定义 `.cfg` 文件：
 
 ```text
-BepInEx/config/cn.codex.v81testchn.cfg
+BepInEx/plugins/V81TestChn/custom-localization/
+BepInEx/config/V81TestChn/custom-localization/
+BepInEx/config/V81TestChn/custom-translations/
+BepInEx/config/translations/custom/
 ```
 
-感染状态温度单位位于 `[InfectionStatus]`：
+推荐优先使用 `BepInEx/config/V81TestChn/custom-localization/`。该目录不会随插件更新被覆盖，适合保存个人规则或其他英文模组的补充汉化。
+
+自定义规则示例：
 
 ```ini
-[InfectionStatus]
-TemperatureUnit = Celsius
+# 精确匹配
+exact:Company Cruiser=公司巡航车
+Bee Suit=蜜蜂套装
+
+# 忽略大小写匹配
+ignorecase:Pull switch=拉动开关
+i:Push=推动
+
+# 正则匹配，默认不会启用
+regex:^(\d+) lb$=$1 磅
+r:^\s*Random seed:\s*(\d+)\s*$=随机种子：$1
+
+# 样式规则
+style:exact:WARNING|color=#FF4D4D|fontSize=28|richText=true
+style:ignorecase:discount|color=#FFD447
 ```
 
-`TemperatureUnit` 支持 `Celsius` 和 `Fahrenheit`。默认值为 `Celsius`。
+规则前缀说明：
 
-The plugin creates the following config file after first launch:
+- 无前缀或 `exact:`：区分大小写的精确匹配。
+- `ignorecase:` 或 `i:`：忽略大小写的精确匹配。
+- `regex:` 或 `r:`：正则替换。该功能默认关闭，需要在配置中显式启用。
+- `style:`：对匹配到的文本组件应用样式，可设置 `color`、`fontSize`、`richText`。
+
+自定义本地化配置项位于：
+
+```ini
+[CustomLocalization]
+Enabled = true
+PreferCustomTranslations = false
+EnableRegex = false
+MaxLoadedFiles = 32
+MaxConfigFileBytes = 262144
+MaxExactRules = 4096
+MaxIgnoreCaseRules = 4096
+MaxRegexRules = 64
+MaxStyleRules = 64
+```
+
+使用建议：
+
+- 优先使用 exact 或 ignore-case 规则，它们开销最低，也最稳定。
+- 仅在确有必要时启用 regex，并控制规则数量和表达式复杂度。
+- regex 发生超时后会被禁用，并只记录一次警告。
+- `fontSize` 会限制在 `4..128` 范围内。
+- `color` 支持 HTML 颜色格式，例如 `#FFCC00` 或 `#FFCC00FF`。
+- 如果规则中需要字面量 `=`、`|` 或反斜杠，请写作 `\=`、`\|`、`\\`。
+- TMP rich text 标签内的 `=` 不会被当作规则分隔符。
+
+### 安装与排查
+
+- 运行时资源从 `V81TestChn.dll` 所在目录解析，兼容 Thunderstore 和 r2modman 的嵌套安装方式。
+- 如果日志显示 `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`，通常说明插件 DLL 已加载但资源目录未被找到。
+- 如果输入文本被错误翻译，请优先检查终端输入、聊天输入、玩家名和大厅动态文本保护逻辑。
+- 如果自定义本地化规则导致性能问题，请先禁用 regex，并逐步缩小规则范围。
+
+### 许可与鸣谢
+
+本项目以 MIT 协议发布。项目包含或改编了部分第三方 MIT 内容，并分发基于 OFL 字体生成的 TextMeshPro 字体资源。详细归属与分发说明见 `THIRD_PARTY_LICENSES.md`。
+
+## English
+
+LC Chinese Project is a Simplified Chinese localization project maintained for the **Lethal Company V81 test environment**. It provides runtime text localization, Chinese TextMeshPro font fallback, selected localized UI textures, and compatibility handling for common UI and icon mods.
+
+The project does not require GameTranslator at runtime. Text translation, dynamic UI handling, font fallback, texture replacement, and compatibility logic are implemented by this BepInEx plugin.
+
+### Scope
+
+- Localizes in-game UI, HUD, terminal pages, store pages, scan prompts, ship monitor text, planet information, endgame screens, lobby warnings, and selected scene text.
+- Provides targeted dynamic handling for terminal orders, planet information, scanner values, chat system messages, votes, deadlines, weight units, suit-change prompts, and vehicle/control hints.
+- Preserves vanilla behavior for terminal input, chat input, player names, lobby dynamic names, and confirmation commands.
+- Provides Chinese TMP font fallback to reduce missing glyphs, transparent glyphs, and dynamic text rendering issues.
+- Includes selected localized UI texture resources.
+- Keeps RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons compatible by preserving vanilla English item keys for icon matching while translating display text separately.
+- Supports custom localization entries for additional English mods or personal display-text preferences.
+
+### Custom Localization Guide
+
+The plugin loads custom `.cfg` files from these directories:
 
 ```text
-BepInEx/config/cn.codex.v81testchn.cfg
+BepInEx/plugins/V81TestChn/custom-localization/
+BepInEx/config/V81TestChn/custom-localization/
+BepInEx/config/V81TestChn/custom-translations/
+BepInEx/config/translations/custom/
 ```
 
-The infection status temperature unit is configured under `[InfectionStatus]`:
+`BepInEx/config/V81TestChn/custom-localization/` is recommended for personal rules because it is not overwritten by plugin updates.
+
+Example rules:
 
 ```ini
-[InfectionStatus]
-TemperatureUnit = Celsius
+# Exact match
+exact:Company Cruiser=公司巡航车
+Bee Suit=蜜蜂套装
+
+# Case-insensitive exact match
+ignorecase:Pull switch=拉动开关
+i:Push=推动
+
+# Regex replacement, disabled by default
+regex:^(\d+) lb$=$1 磅
+r:^\s*Random seed:\s*(\d+)\s*$=随机种子：$1
+
+# Style rules
+style:exact:WARNING|color=#FF4D4D|fontSize=28|richText=true
+style:ignorecase:discount|color=#FFD447
 ```
 
-`TemperatureUnit` accepts `Celsius` or `Fahrenheit`. The default is `Celsius`.
+Rule prefixes:
 
-## 第三方内容与许可 / Third-Party Content And Licenses
+- No prefix or `exact:`: case-sensitive exact match.
+- `ignorecase:` or `i:`: case-insensitive exact match.
+- `regex:` or `r:`: regex replacement. This is disabled by default and must be enabled explicitly.
+- `style:`: applies component style to matching text. Supported keys are `color`, `fontSize`, and `richText`.
 
-本仓库自身以 MIT 协议发布。项目包含或改编了部分第三方 MIT 内容，并包含基于 OFL 字体生成的 TMP 字体资源；详细说明见 `THIRD_PARTY_LICENSES.md`。
+Custom localization options:
 
-This repository is licensed under MIT. It includes or adapts some third-party MIT content and includes TMP font assets generated from OFL-licensed fonts; see `THIRD_PARTY_LICENSES.md` for details.
+```ini
+[CustomLocalization]
+Enabled = true
+PreferCustomTranslations = false
+EnableRegex = false
+MaxLoadedFiles = 32
+MaxConfigFileBytes = 262144
+MaxExactRules = 4096
+MaxIgnoreCaseRules = 4096
+MaxRegexRules = 64
+MaxStyleRules = 64
+```
 
-### 已使用或改编的内容 / Used Or Adapted Content
+Guidance:
 
-- `LethalCompany_Chinese_Localized_Translation`: 包含从本地 `BepInEx/config/translations` 导入并继续维护的部分中文翻译配置，以及若干本地化贴图资源；运行时加载和替换逻辑由本项目自主实现。许可：MIT。来源：https://github.com/CoolLKKPS/LethalCompany_Chinese_Localized_Translation
-- `LC-FontPatcher`: 包含 `fonts/fontpatcher/default/*` 字体包，并在 `EmbeddedFontPatcherService` 中内置和改编了 FontPatcher 风格的字体包加载、TMP fallback 注入和字体匹配行为。许可：MIT。来源：https://github.com/lekakid/LC-FontPatcher
+- Prefer exact or ignore-case rules. They are the lowest-cost and most predictable options.
+- Enable regex only when needed, and keep patterns simple and bounded.
+- A regex rule is disabled after a timeout and logs one warning.
+- `fontSize` is clamped to `4..128`.
+- `color` accepts HTML color values such as `#FFCC00` or `#FFCC00FF`.
+- Use `\=`, `\|`, and `\\` for literal `=`, `|`, and backslash characters.
+- `=` characters inside TMP rich text tags are not treated as rule separators.
 
-### 参考思路 / Conceptual Reference
+### Installation And Troubleshooting
 
-- `GameTranslator`: 本项目曾审查其贴图翻译思路，但运行时实现没有依赖、复制或打包 GameTranslator 代码。许可：MIT。来源：https://github.com/CoolLKKPS/GameTranslator
+- Runtime resources are resolved from the directory containing `V81TestChn.dll`, which supports Thunderstore and r2modman nested install layouts.
+- If logs show `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`, the plugin DLL loaded but the resource folders were not found.
+- If input text is translated unexpectedly, check terminal input, chat input, player-name, and lobby dynamic-text protections first.
+- If custom localization rules cause performance issues, disable regex first and narrow the affected rules gradually.
+
+### License And Credits
+
+The project is released under the MIT License. It includes or adapts selected third-party MIT content and distributes TextMeshPro font assets generated from OFL-licensed fonts. See `THIRD_PARTY_LICENSES.md` for attribution and distribution notes.

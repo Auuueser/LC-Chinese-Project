@@ -16,6 +16,7 @@ internal static class RadiationWarningPlaybackService
     private const string PanelObjectName = "Panel";
     private const float OriginalClipDurationSeconds = 103f / 60f;
     private const float DefaultFollowDurationSeconds = 1.85f;
+    private const long MaxTextureBytes = 8L * 1024L * 1024L;
 
     private static readonly Dictionary<string, string[]> OriginalSpriteFrameFiles = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -87,8 +88,8 @@ internal static class RadiationWarningPlaybackService
 
         if (_activePlaybackCoroutine != null)
         {
-            Plugin.Log.LogInfo($"RadiationPlayback[{stage}] action=duplicate-trigger-ignored mode=animator-follow");
-            return;
+            Plugin.Log.LogInfo($"RadiationPlayback[{stage}] action=duplicate-trigger-restart mode=animator-follow");
+            CleanupActivePlayback(stage, "duplicate-restart");
         }
 
         var root = FindWarningRoot(hudManager);
@@ -119,6 +120,7 @@ internal static class RadiationWarningPlaybackService
     public static void Shutdown()
     {
         CleanupActivePlayback("Shutdown", "shutdown");
+        ClearCachedAssets();
     }
 
     public static void ResetForHudLifecycle(HUDManager hudManager, string stage)
@@ -499,6 +501,14 @@ internal static class RadiationWarningPlaybackService
 
         try
         {
+            var fileInfo = new FileInfo(path);
+            if (fileInfo.Length > MaxTextureBytes)
+            {
+                Plugin.Log.LogWarning($"RadiationPlayback[Texture] action=file-too-large file={fileName} bytes={fileInfo.Length} max={MaxTextureBytes}");
+                TextureCache[fileName] = null;
+                return null;
+            }
+
             var data = File.ReadAllBytes(path);
             var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!ImageConversion.LoadImage(texture, data, false))
@@ -519,6 +529,45 @@ internal static class RadiationWarningPlaybackService
             TextureCache[fileName] = null;
             return null;
         }
+    }
+
+    private static void ClearCachedAssets()
+    {
+        var destroyedSpriteIds = new HashSet<int>();
+        foreach (var sprite in SpriteCache.Values)
+        {
+            if (sprite == null || !destroyedSpriteIds.Add(sprite.GetInstanceID()))
+            {
+                continue;
+            }
+
+            UnityEngine.Object.Destroy(sprite);
+        }
+
+        var destroyedTextureIds = new HashSet<int>();
+        foreach (var texture in TextureCache.Values)
+        {
+            DestroyTextureOnce(texture, destroyedTextureIds);
+        }
+
+        foreach (var texture in ResolvedFrameTextureCache.Values)
+        {
+            DestroyTextureOnce(texture, destroyedTextureIds);
+        }
+
+        SpriteCache.Clear();
+        TextureCache.Clear();
+        ResolvedFrameTextureCache.Clear();
+    }
+
+    private static void DestroyTextureOnce(Texture2D? texture, HashSet<int> destroyedTextureIds)
+    {
+        if (texture == null || !destroyedTextureIds.Add(texture.GetInstanceID()))
+        {
+            return;
+        }
+
+        UnityEngine.Object.Destroy(texture);
     }
 
     private static string NormalizeSpriteName(string? spriteName)

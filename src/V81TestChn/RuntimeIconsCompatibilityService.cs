@@ -1,14 +1,19 @@
 using System;
-using System.Collections.Generic;
+using System.Reflection;
+using BepInEx.Bootstrap;
 using UnityEngine;
 
 namespace V81TestChn;
 
 internal static class RuntimeIconsCompatibilityService
 {
-    private static readonly Dictionary<int, string> OriginalItemNames = new();
-    private static bool? _runtimeIconsLoaded;
+    private static bool _runtimeIconsLoaded;
     private static bool _preserveLogWritten;
+
+    static RuntimeIconsCompatibilityService()
+    {
+        AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+    }
 
     public static int TranslateResourceItemName(Item? item)
     {
@@ -22,7 +27,8 @@ internal static class RuntimeIconsCompatibilityService
             return false;
         }
 
-        var originalName = CaptureOriginalItemName(item);
+        OriginalResourceStateService.CaptureItem(item);
+        var originalName = OriginalResourceStateService.GetOriginalItemName(item);
         if (ShouldPreserveItemNames())
         {
             RestoreItemName(item, originalName);
@@ -36,18 +42,6 @@ internal static class RuntimeIconsCompatibilityService
         }
 
         return false;
-    }
-
-    private static string CaptureOriginalItemName(Item item)
-    {
-        var id = item.GetInstanceID();
-        if (!OriginalItemNames.TryGetValue(id, out var originalName))
-        {
-            originalName = item.itemName ?? string.Empty;
-            OriginalItemNames[id] = originalName;
-        }
-
-        return originalName;
     }
 
     private static void RestoreItemName(Item item, string originalName)
@@ -76,27 +70,78 @@ internal static class RuntimeIconsCompatibilityService
 
     private static bool IsRuntimeIconsLoaded()
     {
-        if (_runtimeIconsLoaded.HasValue)
+        if (_runtimeIconsLoaded)
         {
-            return _runtimeIconsLoaded.Value;
+            return true;
+        }
+
+        if (IsRuntimeIconsPluginInfoLoaded())
+        {
+            _runtimeIconsLoaded = true;
+            return true;
         }
 
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
-            var name = assembly.GetName().Name;
-            if (string.IsNullOrEmpty(name))
-            {
-                continue;
-            }
-
-            if (name.IndexOf("RuntimeIcons", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (IsRuntimeIconsAssembly(assembly))
             {
                 _runtimeIconsLoaded = true;
                 return true;
             }
         }
 
-        _runtimeIconsLoaded = false;
         return false;
+    }
+
+    public static void Clear()
+    {
+        _runtimeIconsLoaded = default;
+        _preserveLogWritten = false;
+    }
+
+    private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
+    {
+        if (IsRuntimeIconsAssembly(args.LoadedAssembly))
+        {
+            _runtimeIconsLoaded = true;
+        }
+    }
+
+    private static bool IsRuntimeIconsPluginInfoLoaded()
+    {
+        try
+        {
+            foreach (var pluginInfo in Chainloader.PluginInfos)
+            {
+                if (IsKnownIconProvider(pluginInfo.Key) ||
+                    IsKnownIconProvider(pluginInfo.Value.Metadata.GUID) ||
+                    IsKnownIconProvider(pluginInfo.Value.Metadata.Name))
+                {
+                    return true;
+                }
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private static bool IsRuntimeIconsAssembly(Assembly? assembly)
+    {
+        return IsKnownIconProvider(assembly?.GetName().Name);
+    }
+
+    private static bool IsKnownIconProvider(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        return name.IndexOf("RuntimeIcons", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            name.IndexOf("HoneeItemIcons", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }

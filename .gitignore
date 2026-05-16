@@ -3,6 +3,7 @@ bin/
 obj/
 dist/
 thunderstore/package/
+thunderstore/BepInEx/
 *.zip
 tmp/
 tmpbin/
@@ -19,7 +20,15 @@ Assembly-CSharp/
 LC-FontPatcher-main/
 LeKAKiD-FontPatcher-1.2.4/
 build_font_project/
+tools/pydeps/
+
+# Local-only engineering, validation, and release tooling
+docs/engineering/
+lib/
+tests/
 tools/
+thunderstore/
+thunderstore-tools/
 
 # Draft texture sources not consumed by the plugin build
 assets/textures/zh-CN/staging/

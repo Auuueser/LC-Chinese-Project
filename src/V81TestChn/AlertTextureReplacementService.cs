@@ -41,6 +41,8 @@ internal static class AlertTextureReplacementService
     private const string LifeSupportOfflineLocalizedText = "[\u751f\u547d\u7ef4\u6301\uff1a\u79bb\u7ebf]";
     private static Coroutine? _systemOnlineWatcher;
     private static Coroutine? _fixedSceneLabelWatcher;
+    private static HUDManager? _systemOnlineWatcherOwner;
+    private static HUDManager? _fixedSceneLabelWatcherOwner;
     private static readonly Dictionary<int, CachedNativeTextRole> NativeTextRoleCache = new();
     private static readonly Dictionary<string, string> FixedSceneLabels = new(StringComparer.Ordinal)
     {
@@ -83,6 +85,7 @@ internal static class AlertTextureReplacementService
             return;
         }
 
+        _systemOnlineWatcherOwner = hudManager;
         _systemOnlineWatcher = hudManager.StartCoroutine(WaitForSystemOnlineTitle(hudManager, stage));
     }
 
@@ -181,7 +184,27 @@ internal static class AlertTextureReplacementService
             return;
         }
 
+        _fixedSceneLabelWatcherOwner = hudManager;
         _fixedSceneLabelWatcher = hudManager.StartCoroutine(WaitForFixedSceneLabels(stage));
+    }
+
+    public static void Shutdown()
+    {
+        if (_systemOnlineWatcher != null && _systemOnlineWatcherOwner != null)
+        {
+            _systemOnlineWatcherOwner.StopCoroutine(_systemOnlineWatcher);
+        }
+
+        if (_fixedSceneLabelWatcher != null && _fixedSceneLabelWatcherOwner != null)
+        {
+            _fixedSceneLabelWatcherOwner.StopCoroutine(_fixedSceneLabelWatcher);
+        }
+
+        _systemOnlineWatcher = null;
+        _fixedSceneLabelWatcher = null;
+        _systemOnlineWatcherOwner = null;
+        _fixedSceneLabelWatcherOwner = null;
+        NativeTextRoleCache.Clear();
     }
 
     public static void TryReplaceSystemOnlineText(TMP_Text? text, string stage)
@@ -278,6 +301,7 @@ internal static class AlertTextureReplacementService
             {
                 ApplySystemOnlineNativeTranslation(direct!, $"{stage}.watcher");
                 _systemOnlineWatcher = null;
+                _systemOnlineWatcherOwner = null;
                 yield break;
             }
 
@@ -287,6 +311,7 @@ internal static class AlertTextureReplacementService
 
         Plugin.Log.LogWarning($"NativeRelay[{stage}.watcher] target=SystemOnline action=timeout");
         _systemOnlineWatcher = null;
+        _systemOnlineWatcherOwner = null;
     }
 
     private static IEnumerator WaitForFixedSceneLabels(string stage)
@@ -301,6 +326,7 @@ internal static class AlertTextureReplacementService
             if (appliedCount > 0)
             {
                 _fixedSceneLabelWatcher = null;
+                _fixedSceneLabelWatcherOwner = null;
                 yield break;
             }
 
@@ -310,6 +336,7 @@ internal static class AlertTextureReplacementService
 
         Plugin.Log.LogWarning($"NativeRelay[{stage}.relay-scene] target=FixedSceneLabel action=timeout");
         _fixedSceneLabelWatcher = null;
+        _fixedSceneLabelWatcherOwner = null;
     }
 
     private static void ApplyEnteringAtmosphereNativeTranslation(TMP_Text text, string stage)

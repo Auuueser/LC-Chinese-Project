@@ -6,8 +6,10 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <GameDir>D:\Steam\steamapps\common\Lethal Company</GameDir>
-    <TestDeployDir>D:\1New R2modman modpacks\LethalCompany\profiles\test1\BepInEx\plugins\Aueser-LC_Chinese_Project\V81TestChn</TestDeployDir>
+    <GameDir Condition="'$(GameDir)' == ''">$(LETHAL_COMPANY_DIR)</GameDir>
+    <TestDeployDir Condition="'$(TestDeployDir)' == ''"></TestDeployDir>
+    <EnableTestDeploy Condition="'$(EnableTestDeploy)' == ''">false</EnableTestDeploy>
+    <EnableDistSync Condition="'$(EnableDistSync)' == ''">false</EnableDistSync>
   </PropertyGroup>
 
   <ItemGroup>
@@ -103,27 +105,31 @@
     <None Include="..\..\LeKAKiD-FontPatcher-1.2.4\config\FontPatcher\default\*" CopyToOutputDirectory="PreserveNewest" Link="fontpatcher\default\%(Filename)%(Extension)" Condition="Exists('..\..\LeKAKiD-FontPatcher-1.2.4\config\FontPatcher\default')" />
   </ItemGroup>
 
+  <Target Name="RequireGameDir" BeforeTargets="ResolveReferences" Condition="'$(GameDir)' == ''">
+    <Error Text="GameDir is required. Pass -p:GameDir=&quot;D:\Steam\steamapps\common\Lethal Company&quot; or set LETHAL_COMPANY_DIR." />
+  </Target>
+
   <Target Name="CleanOverlayArtifacts" AfterTargets="Build">
     <ItemGroup>
       <LocalOverlayArtifacts Include="$(TargetDir)textures\EnteringAtmosphereOverlay.png" />
       <LocalOverlayArtifacts Include="$(TargetDir)overlays\zh-cn-overlays" />
       <LocalOverlayArtifacts Include="$(TargetDir)overlays\zh-cn-overlays.manifest" />
-      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\EnteringAtmosphereOverlay.png" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
-      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
-      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays.manifest" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
-      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\EnteringAtmosphereOverlay.png" Condition="'$(TestDeployDir)' != ''" />
-      <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays" Condition="'$(TestDeployDir)' != ''" />
-      <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays.manifest" Condition="'$(TestDeployDir)' != ''" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\EnteringAtmosphereOverlay.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays.manifest" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\EnteringAtmosphereOverlay.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays.manifest" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
     </ItemGroup>
     <Delete Files="@(LocalOverlayArtifacts)" />
     <Delete Files="@(DistOverlayArtifacts)" />
     <Delete Files="@(TestOverlayArtifacts)" />
     <RemoveDir Directories="$(TargetDir)overlays" Condition="Exists('$(TargetDir)overlays')" />
-    <RemoveDir Directories="..\..\dist\BepInEx\plugins\V81TestChn\overlays" Condition="Exists('..\..\dist\BepInEx\plugins\V81TestChn\overlays')" />
-    <RemoveDir Directories="$(TestDeployDir)\overlays" Condition="'$(TestDeployDir)' != '' and Exists('$(TestDeployDir)\overlays')" />
+    <RemoveDir Directories="..\..\dist\BepInEx\plugins\V81TestChn\overlays" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn\overlays')" />
+    <RemoveDir Directories="$(TestDeployDir)\overlays" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != '' and Exists('$(TestDeployDir)\overlays')" />
   </Target>
 
-  <Target Name="SyncPluginOutputToDist" AfterTargets="Build" Condition="Exists('..\..\dist\BepInEx\plugins')">
+  <Target Name="SyncPluginOutputToDist" AfterTargets="Build" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins')">
     <ItemGroup>
       <PluginOutput Include="$(TargetDir)**\*" />
     </ItemGroup>
@@ -134,7 +140,7 @@
       SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="SyncPluginOutputToTestDeploy" AfterTargets="Build" Condition="'$(TestDeployDir)' != ''">
+  <Target Name="SyncPluginOutputToTestDeploy" AfterTargets="Build" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''">
     <ItemGroup>
       <PluginOutput Include="$(TargetDir)**\*" />
     </ItemGroup>

@@ -15,6 +15,7 @@ internal static class GameResourceTranslator
                 continue;
             }
 
+            OriginalResourceStateService.CaptureTerminalNode(node);
             translated += Translate(ref node.displayText);
             translated += Translate(ref node.creatureName);
         }
@@ -26,6 +27,7 @@ internal static class GameResourceTranslator
                 continue;
             }
 
+            OriginalResourceStateService.CaptureItem(item);
             translated += RuntimeIconsCompatibilityService.TranslateResourceItemName(item);
             if (item.toolTips == null)
             {
@@ -45,6 +47,7 @@ internal static class GameResourceTranslator
                 continue;
             }
 
+            OriginalResourceStateService.CaptureSelectableLevel(level);
             translated += Translate(ref level.PlanetName);
             translated += Translate(ref level.LevelDescription);
             translated += Translate(ref level.riskLevel);
@@ -58,6 +61,7 @@ internal static class GameResourceTranslator
                 continue;
             }
 
+            OriginalResourceStateService.CaptureEnemyType(enemy);
             translated += Translate(ref enemy.enemyName);
         }
 

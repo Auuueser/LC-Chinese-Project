@@ -18,12 +18,19 @@ internal static class EndGameLocalizationService
     private const string EndgameStatsBoxesTextureFile = "EndgameStatsBoxesLocalized.png";
     private const string EndgameStatsDeceasedTextureFile = "EndgameStatsDeceased.png";
     private const string EndgameStatsMissingTextureFile = "EndgameStatsMissing.png";
+    private const long MaxTextureBytes = 8L * 1024L * 1024L;
     private static string? _textureDirectory;
     private static readonly Dictionary<string, Sprite?> SpriteCache = new(StringComparer.OrdinalIgnoreCase);
 
     public static void Initialize(string pluginDir)
     {
         _textureDirectory = Path.Combine(pluginDir, TextureSubfolder);
+    }
+
+    public static void Shutdown()
+    {
+        ClearCachedSprites();
+        _textureDirectory = null;
     }
 
     public static void ApplyHudEndGameLocalization(HUDManager? hudManager, string stage)
@@ -34,7 +41,8 @@ internal static class EndGameLocalizationService
         }
 
         CleanupLegacyEndGameOverlays(hudManager.statsUIElements);
-        LocalizeRuntimeDeadTexts(stage);
+        LocalizePenaltyTexts(hudManager.statsUIElements, stage);
+        LocalizeRuntimeDeadTexts(hudManager, stage);
         LocalizePlayerStateBadges(hudManager.statsUIElements, stage);
         LocalizeAllPlayersDeadOverlayImage(hudManager.statsUIElements, stage);
         LocalizeStatsBoxesImage(hudManager.statsUIElements, stage);
@@ -47,7 +55,34 @@ internal static class EndGameLocalizationService
             return;
         }
 
-        LocalizeSpectateDeadTexts(stage);
+        LocalizeSpectateDeadTexts(hudManager, stage);
+        LocalizeSpectateBoxTexts(hudManager, stage);
+    }
+
+    public static void ApplyPlayersFiredStatsLocalization(HUDManager? hudManager, string stage)
+    {
+        if (hudManager == null)
+        {
+            return;
+        }
+
+        TryApplyKnownDynamicText(hudManager.EndOfRunStatsText, stage, "PlayersFiredStatsText");
+        if (hudManager.playersFiredAnimator == null)
+        {
+            return;
+        }
+
+        foreach (var text in hudManager.playersFiredAnimator.GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (text == null ||
+                ReferenceEquals(text, hudManager.EndOfRunStatsText) ||
+                !LooksLikePlayersFiredStatsText(text.text))
+            {
+                continue;
+            }
+
+            TryApplyKnownDynamicText(text, stage, "PlayersFiredStatsFallback");
+        }
     }
 
     public static void ApplyChallengeSlotLocalization(ChallengeLeaderboardSlot? slot, string stage)
@@ -66,9 +101,9 @@ internal static class EndGameLocalizationService
         }
     }
 
-    private static void LocalizeRuntimeDeadTexts(string stage)
+    private static void LocalizeRuntimeDeadTexts(HUDManager hudManager, string stage)
     {
-        foreach (var text in Resources.FindObjectsOfTypeAll<TMP_Text>())
+        foreach (var text in hudManager.GetComponentsInChildren<TMP_Text>(true))
         {
             if (text == null || string.IsNullOrWhiteSpace(text.text))
             {
@@ -76,7 +111,11 @@ internal static class EndGameLocalizationService
             }
 
             var trimmed = text.text.Trim();
-            if (string.Equals(trimmed, "(Dead)", StringComparison.Ordinal))
+            if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.EndGame, text.text, out var rewritten))
+            {
+                ApplyLocalizedText(text, rewritten, stage, "EndGameStatusLabel");
+            }
+            else if (string.Equals(trimmed, "(Dead)", StringComparison.Ordinal))
             {
                 ApplyLocalizedText(text, DeadLocalizedText, stage, "EndGameDeadLabel");
             }
@@ -87,6 +126,40 @@ internal static class EndGameLocalizationService
         }
     }
 
+    private static void LocalizePenaltyTexts(EndOfGameStatUIElements elements, string stage)
+    {
+        TryApplyKnownDynamicText(elements.penaltyAddition, stage, "EndGamePenaltyAddition");
+        TryApplyKnownDynamicText(elements.penaltyTotal, stage, "EndGamePenaltyTotal");
+    }
+
+    private static void TryApplyKnownDynamicText(TMP_Text? text, string stage, string target)
+    {
+        if (text == null || string.IsNullOrWhiteSpace(text.text))
+        {
+            return;
+        }
+
+        if (!TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.EndGame, text.text, out var rewritten))
+        {
+            return;
+        }
+
+        ApplyLocalizedText(text, rewritten, stage, target);
+    }
+
+    private static bool LooksLikePlayersFiredStatsText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        return value.IndexOf("Days on the job", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               value.IndexOf("Scrap value collected", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               value.IndexOf("Deaths", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               value.IndexOf("Steps taken", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     public static void TryRewriteSpectateDeadValue(TMP_Text? text, ref string value, string stage)
     {
         if (text == null || string.IsNullOrWhiteSpace(value) || !IsSpectateDeadLabel(text.transform))
@@ -95,7 +168,12 @@ internal static class EndGameLocalizationService
         }
 
         var trimmed = value.Trim();
-        if (string.Equals(trimmed, "(Dead)", StringComparison.Ordinal))
+        if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.SpectateStatus, value, out var rewritten))
+        {
+            value = rewritten;
+            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SpectateStatusLabel action=rewrite path={BuildPath(text.transform)} value={value}");
+        }
+        else if (string.Equals(trimmed, "(Dead)", StringComparison.Ordinal))
         {
             value = DeadLocalizedText;
             Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SpectateDeadLabel action=rewrite path={BuildPath(text.transform)} value={value}");
@@ -115,7 +193,11 @@ internal static class EndGameLocalizationService
         }
 
         var trimmed = text.text.Trim();
-        if (string.Equals(trimmed, "(Dead)", StringComparison.Ordinal))
+        if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.SpectateStatus, text.text, out var rewritten))
+        {
+            ApplyLocalizedText(text, rewritten, stage, "SpectateStatusLabel");
+        }
+        else if (string.Equals(trimmed, "(Dead)", StringComparison.Ordinal))
         {
             ApplyLocalizedText(text, DeadLocalizedText, stage, "SpectateDeadLabel");
         }
@@ -125,11 +207,32 @@ internal static class EndGameLocalizationService
         }
     }
 
-    private static void LocalizeSpectateDeadTexts(string stage)
+    private static void LocalizeSpectateDeadTexts(HUDManager hudManager, string stage)
     {
-        foreach (var text in Resources.FindObjectsOfTypeAll<TMP_Text>())
+        foreach (var text in hudManager.GetComponentsInChildren<TMP_Text>(true))
         {
             TryLocalizeSpectateDeadLabel(text, stage);
+        }
+    }
+
+    private static void LocalizeSpectateBoxTexts(HUDManager hudManager, string stage)
+    {
+        if (hudManager.SpectateBoxesContainer == null)
+        {
+            return;
+        }
+
+        foreach (var text in hudManager.SpectateBoxesContainer.GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (text == null || string.IsNullOrWhiteSpace(text.text))
+            {
+                continue;
+            }
+
+            if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.SpectateStatus, text.text, out var rewritten))
+            {
+                ApplyLocalizedText(text, rewritten, stage, "SpectateBoxStatusLabel");
+            }
         }
     }
 
@@ -584,6 +687,14 @@ internal static class EndGameLocalizationService
 
         try
         {
+            var fileInfo = new FileInfo(path);
+            if (fileInfo.Length > MaxTextureBytes)
+            {
+                Plugin.Log.LogWarning($"NativeRelay[EndGameTexture] action=file-too-large file={fileName} bytes={fileInfo.Length} max={MaxTextureBytes}");
+                SpriteCache[cacheKey] = null;
+                return null;
+            }
+
             var data = File.ReadAllBytes(path);
             var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!ImageConversion.LoadImage(texture, data, false))
@@ -611,6 +722,28 @@ internal static class EndGameLocalizationService
             SpriteCache[cacheKey] = null;
             return null;
         }
+    }
+
+    private static void ClearCachedSprites()
+    {
+        var destroyedSpriteIds = new HashSet<int>();
+        var destroyedTextureIds = new HashSet<int>();
+        foreach (var sprite in SpriteCache.Values)
+        {
+            if (sprite == null || !destroyedSpriteIds.Add(sprite.GetInstanceID()))
+            {
+                continue;
+            }
+
+            var texture = sprite.texture;
+            UnityEngine.Object.Destroy(sprite);
+            if (texture != null && destroyedTextureIds.Add(texture.GetInstanceID()))
+            {
+                UnityEngine.Object.Destroy(texture);
+            }
+        }
+
+        SpriteCache.Clear();
     }
 
     private static string BuildSpriteCacheKey(string fileName, Sprite? templateSprite)
