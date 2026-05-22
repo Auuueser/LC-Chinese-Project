@@ -9,6 +9,7 @@
 - 修复增强观战和结算界面中玩家名与死亡状态文本的边界识别，避免玩家名被状态翻译逻辑误处理。
 - 加强退出、场景切换和插件销毁阶段的运行时清理，降低残留 patch 或审计协程在销毁期间触发异常的风险。
 - 补充 `Cookie pan` 物品名和 host 关闭房间后说明文本的汉化覆盖。
+- 优化断线、连接失败和大厅状态类弹窗文案，改为更短的无标点排版，并主动换行以减少自动折行造成的显示割裂。
 
 ### 0.2.0 - 自定义本地化与运行时稳定性更新
 
@@ -36,6 +37,7 @@
 - Fixed boundary detection between player names and dead-status labels in enhanced spectate and endgame screens, preventing player names from being processed as status text.
 - Strengthened runtime cleanup during quit, scene transition, and plugin teardown, reducing the chance of leftover patches or audit coroutines running during destruction.
 - Added localization coverage for the `Cookie pan` item name and the host closed-lobby explanation.
+- Refined disconnect, connection failure, and lobby status popup wording with shorter punctuation-free lines and explicit line breaks to reduce awkward automatic wrapping.
 
 ### 0.2.0 - Custom localization and runtime stability update
 
