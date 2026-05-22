@@ -18,7 +18,7 @@
     {
       "locale": "zh-CN",
       "target_relative_path": "zh-CN/Normal-Translate.cfg",
-      "sha256": "0a94014d3e796cf9edf53aa57bcb1db42ef843f36f18508201c240a86ac2204a"
+      "sha256": "6cf2f13e7112a74aab4d2a15ce1bcabaa911d42b199a2efe2bbecf0ca0ec361f"
     },
     {
       "locale": "zh-CN",
@@ -48,7 +48,7 @@
     {
       "locale": "zh-Hans",
       "target_relative_path": "zh-Hans/Normal-Translate.cfg",
-      "sha256": "6b52f539ecdbee67d0ea147f1b09718ba9f6e4aaf2c841ac0ba462d30429c737"
+      "sha256": "e22bbb71fd55b8d31fd955b8a7b40511c696d21a53f54cbbdadac147bf808992"
     },
     {
       "locale": "zh-Hans",
