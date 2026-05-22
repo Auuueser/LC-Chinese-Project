@@ -2,6 +2,15 @@
 
 ## 中文
 
+### 0.2.1 - 运行时性能与发布整理更新
+
+- 优化全局文本保护路径，缓存输入框、聊天输出、大厅动态文本等组件分类，减少高频 setter 中的重复层级查询。
+- 对 HUD 扫描源节点翻译增加节流，降低右键扫描和富文本刷新场景下的短暂卡顿风险。
+- 调整插件销毁与清理顺序，在正式 shutdown 时优先移除 Harmony patch，并补充辐射警告审计协程的停止路径。
+- 收窄增强观战和结算 UI 的死亡状态翻译范围，避免将真实玩家名误判为可翻译状态文本。
+- 补充 `Cookie pan` 和 host 关闭房间说明的汉化规则。
+- 同步 GitHub 与 Thunderstore 文档、版本号和发布元数据，保持发布集合克制、清晰。
+
 ### 0.2.0 - 自定义本地化与运行时稳定性更新
 
 - 新增自定义本地化支持：可通过独立 `.cfg` 文件扩展文本替换规则。
@@ -12,43 +21,23 @@
 - 补全服装切换光标提示中的服装名汉化，例如 `Change: Bee Suit` 可显示为中文服装名。
 - 保持终端输入、聊天输入、玩家名、大厅动态名和图标类模组物品 key 的保护逻辑，减少误翻译和兼容性问题。
 
-### 0.1.7 - 信号翻译器 HUD 更新
+### 0.1.7 - Signal Translator HUD 更新
 
 - 增加缓存和节流后的 Signal Translator HUD 汉化路径，减少短窗口内的重复文本层级遍历。
 - 放大本地化后的“正在接收信号”提示，同时保留后续信号文本的原始字号。
 - 补全 Cruiser、飞船磁铁、信号翻译器和订单状态相关终端文本。
 - 使用当前运行时构建刷新 Thunderstore 包体和 GitHub 发布元数据。
 
-### 0.1.6 - V81 状态文本和大厅警告更新
-
-- 增加 V81 尸体感染和空气过滤器状态文本。
-- 增加感染温度单位配置，默认摄氏度，可在配置文件中切换为华氏度。
-- 汉化加入房间时的修改版主机警告，并调整换行以贴近原版提示布局。
-- 刷新发布元数据和 Thunderstore 包体。
-
-### 0.1.5 - 终端确认输入修复
-
-- 修复终端页面翻译改写导致原版输入跟踪被破坏的问题。
-- 恢复购买和导航确认页面中的 `c` / `confirm` 行为。
-- 增加终端页面改写和玩家输入跟踪的静态回归覆盖。
-- 重新构建 Thunderstore 运行时包体。
-
-### 0.1.4 - RuntimeIcons 兼容更新
-
-- 兼容 RuntimeIcons、RuntimeIcons_BetterRotations 和 HoneeItemIcons，保留原版英文物品 key 用于图标匹配。
-- 为丢弃提示和相关 HUD 文本增加显示层物品名汉化，不修改底层物品定义。
-- 说明兼容层不打包、不引用、不复制第三方图标模组代码或资源。
-- 兼容诊断默认关闭，避免重复日志噪音。
-
-### 0.1.3 - V81 打包结构更新
-
-- 说明 Thunderstore zip 根目录结构，避免额外套一层 `package/`。
-- 补充手动安装和模组管理器安装的区别。
-- 说明运行时资源必须从 `V81TestChn.dll` 所在目录解析，以兼容管理器嵌套安装路径。
-- 增加 `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).` 的排查说明。
-- 增加旧错误包目录如 `BepInEx/plugins/package` 的清理说明。
-
 ## English
+
+### 0.2.1 - Runtime performance and release cleanup update
+
+- Optimized global text guard paths by caching component classification for inputs, chat output, lobby dynamic text, and related UI components.
+- Added throttling for HUD scanner source-node localization to reduce short stutter risk during right-click scanning and rich-text refreshes.
+- Adjusted plugin shutdown order so Harmony patches are removed first during real shutdown, and added a shutdown path for the radiation warning audit coroutine.
+- Narrowed enhanced spectate and endgame dead-status localization so real player names are not treated as translatable status text.
+- Added localization coverage for `Cookie pan` and the host closed-lobby explanation.
+- Synchronized GitHub and Thunderstore documentation, version metadata, and release structure with a more restrained publish set.
 
 ### 0.2.0 - Custom localization and runtime stability update
 
@@ -66,32 +55,3 @@
 - Enlarged the localized `RECEIVING SIGNAL` display while preserving original font sizes for subsequent signal messages.
 - Completed translation coverage for recent Cruiser, ship magnet, Signal Translator, and order-status terminal text.
 - Rebuilt the Thunderstore payload from the current runtime build and synchronized GitHub release metadata.
-
-### 0.1.6 - V81 status text and lobby warning update
-
-- Added V81 cadaver infection and air-filter status translations.
-- Added configurable infection temperature display; Celsius is used by default, with Fahrenheit available through the plugin config.
-- Localized the join-lobby modified-host warning and manually wrapped it to better match the vanilla tooltip layout.
-- Updated release metadata and rebuilt the Thunderstore payload from the current runtime build.
-
-### 0.1.5 - Terminal confirmation input fix
-
-- Fixed terminal screen translation rewrites so vanilla input tracking is preserved after translated terminal pages load.
-- Restored confirmation shortcut behavior for terminal purchase and route confirmation pages, including `c` / `confirm` flows.
-- Added static regression coverage for terminal screen rewrites and player input tracking.
-- Rebuilt the Thunderstore payload from the current runtime build.
-
-### 0.1.4 - Runtime icon compatibility update
-
-- Added compatibility handling for RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons by preserving vanilla English item keys for icon matching while translating display text separately.
-- Added display-only item-name translation for drop prompts and related HUD text without mutating the underlying item definition.
-- Documented that the compatibility layer does not bundle, reference, or copy third-party mod code or assets.
-- Kept compatibility diagnostics disabled by default to avoid repeated runtime log noise.
-
-### 0.1.3 - V81 packaging update
-
-- Documented the required Thunderstore zip root layout to avoid accidental `package/` nesting.
-- Documented manual install and mod-manager install differences.
-- Documented the resource-root requirement: runtime assets must be resolved from the `V81TestChn.dll` directory because mod managers may use nested install folders.
-- Added troubleshooting notes for `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`
-- Added cleanup notes for old broken-package remnants such as `BepInEx/plugins/package`.

@@ -43,12 +43,12 @@
     {
       "locale": "zh-Hans",
       "target_relative_path": "zh-Hans/Item-Translate.cfg",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sha256": "6e87e55f371f1aa97916710251fd3032ed3855f7c1ffff9e2bb8584e8ef87ccc"
     },
     {
       "locale": "zh-Hans",
       "target_relative_path": "zh-Hans/Normal-Translate.cfg",
-      "sha256": "3fa68bd8e65cde4db313fc332389f7d482fe8d4ecc245691df485a40c11c265f"
+      "sha256": "e8b0a2f96840eb4ccd55bd1fa5cc709dcbebaf8916011a20c6b55c67f2160a2f"
     },
     {
       "locale": "zh-Hans",

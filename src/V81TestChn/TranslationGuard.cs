@@ -10,8 +10,31 @@ namespace V81TestChn;
 internal static class TranslationGuard
 {
     private const int MaxGlobalSetterTextLength = 1024;
+    private const int ComponentClassificationCacheLimit = 4096;
     private static readonly HashSet<int> LoggedSkipComponents = new();
+    private static readonly Dictionary<int, CachedComponentClassification> ComponentClassificationCache = new();
     private static ConfigEntry<bool>? _logTranslationGuardSkips;
+
+    private enum ComponentDecision
+    {
+        None,
+        Skip,
+        Allow
+    }
+
+    private readonly struct CachedComponentClassification
+    {
+        public CachedComponentClassification(int parentId, ComponentDecision decision, string reason)
+        {
+            ParentId = parentId;
+            Decision = decision;
+            Reason = reason;
+        }
+
+        public int ParentId { get; }
+        public ComponentDecision Decision { get; }
+        public string Reason { get; }
+    }
 
     private static readonly string[] ExcludedNameTokens =
     {
@@ -32,6 +55,7 @@ internal static class TranslationGuard
     public static void Clear()
     {
         LoggedSkipComponents.Clear();
+        ComponentClassificationCache.Clear();
         _logTranslationGuardSkips = null;
     }
 
@@ -142,15 +166,23 @@ internal static class TranslationGuard
 
     private static bool TryGetComponentSkipReason(Component component, string? value, out string reason)
     {
+        if (TryGetCachedComponentDecision(component, out var cachedDecision, out var cachedReason))
+        {
+            reason = cachedReason;
+            return cachedDecision == ComponentDecision.Skip;
+        }
+
         if (IsChatInput(component))
         {
             reason = "Chat input";
+            CacheComponentDecision(component, ComponentDecision.Skip, reason);
             return true;
         }
 
         if (IsTerminalInput(component))
         {
             reason = "Terminal input";
+            CacheComponentDecision(component, ComponentDecision.Skip, reason);
             return true;
         }
 
@@ -158,12 +190,14 @@ internal static class TranslationGuard
             component.GetComponentInParent<InputField>(true) != null)
         {
             reason = "InputField";
+            CacheComponentDecision(component, ComponentDecision.Skip, reason);
             return true;
         }
 
         if (IsLobbyDynamicText(component))
         {
             reason = "LobbySlot dynamic text";
+            CacheComponentDecision(component, ComponentDecision.Skip, reason);
             return true;
         }
 
@@ -171,6 +205,7 @@ internal static class TranslationGuard
         if (IsChatOutput(component))
         {
             reason = string.Empty;
+            CacheComponentDecision(component, ComponentDecision.Allow, reason);
             return false;
         }
 
@@ -183,11 +218,51 @@ internal static class TranslationGuard
         if (TryGetExcludedNameToken(component.transform, out var token))
         {
             reason = $"name token: {token}";
+            CacheComponentDecision(component, ComponentDecision.Skip, reason);
             return true;
         }
 
         reason = string.Empty;
         return false;
+    }
+
+    private static bool TryGetCachedComponentDecision(Component component, out ComponentDecision decision, out string reason)
+    {
+        var id = component.GetInstanceID();
+        var parentId = GetParentInstanceId(component);
+        if (ComponentClassificationCache.TryGetValue(id, out var cached) && cached.ParentId == parentId)
+        {
+            decision = cached.Decision;
+            reason = cached.Reason;
+            return decision != ComponentDecision.None;
+        }
+
+        decision = ComponentDecision.None;
+        reason = string.Empty;
+        return false;
+    }
+
+    private static void CacheComponentDecision(Component component, ComponentDecision decision, string reason)
+    {
+        if (decision == ComponentDecision.None)
+        {
+            return;
+        }
+
+        if (ComponentClassificationCache.Count >= ComponentClassificationCacheLimit)
+        {
+            ComponentClassificationCache.Clear();
+        }
+
+        ComponentClassificationCache[component.GetInstanceID()] = new CachedComponentClassification(
+            GetParentInstanceId(component),
+            decision,
+            reason);
+    }
+
+    private static int GetParentInstanceId(Component component)
+    {
+        return component.transform.parent == null ? 0 : component.transform.parent.GetInstanceID();
     }
 
     private static bool TryGetExcludedNameToken(Transform? transform, out string matchedToken)

@@ -30,6 +30,7 @@ internal static class TextPatches
     private static float _nextHudScannerLocalizationTime;
     private static float _nextHudScannerElementLocalizationTime;
     private static float _nextHudScannerRootLocalizationTime;
+    private static float _nextHudScannerSourceNodeLocalizationTime;
     private static float _signalTranslatorLocalizationUntil;
     private static float _nextSignalTranslatorLocalizationTime;
     private static int _lastHudScannerRootId;
@@ -206,6 +207,7 @@ internal static class TextPatches
         _nextHudScannerLocalizationTime = 0f;
         _nextHudScannerElementLocalizationTime = 0f;
         _nextHudScannerRootLocalizationTime = 0f;
+        _nextHudScannerSourceNodeLocalizationTime = 0f;
         _signalTranslatorLocalizationUntil = 0f;
         _nextSignalTranslatorLocalizationTime = 0f;
         _lastHudScannerRootId = 0;
@@ -742,7 +744,15 @@ internal static class TextPatches
     [HarmonyPostfix]
     private static void HudManagerUpdateScanNodesPostfix(HUDManager __instance)
     {
-        TranslateHudScannerSourceNodes(__instance, "HUDManager.UpdateScanNodes.scan-node-source");
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        if (ShouldTranslateHudScannerSourceNodes("HUDManager.UpdateScanNodes.scan-node-source"))
+        {
+            TranslateHudScannerSourceNodes(__instance, "HUDManager.UpdateScanNodes.scan-node-source");
+        }
 
         if (ShouldRetrySignalTranslatorLocalization())
         {
@@ -750,6 +760,23 @@ internal static class TextPatches
         }
 
         ApplyHudScannerLocalization(__instance, "HUDManager.UpdateScanNodes");
+    }
+
+    private static bool ShouldTranslateHudScannerSourceNodes(string reason)
+    {
+        if (!string.Equals(reason, "HUDManager.UpdateScanNodes.scan-node-source", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var now = Time.unscaledTime;
+        if (now < _nextHudScannerSourceNodeLocalizationTime)
+        {
+            return false;
+        }
+
+        _nextHudScannerSourceNodeLocalizationTime = now + HudScannerLocalizationIntervalSeconds;
+        return true;
     }
 
     private static bool ShouldRetrySignalTranslatorLocalization()
@@ -1582,6 +1609,11 @@ internal static class TextPatches
     [HarmonyPrefix]
     private static void TmpSetTextPrefix(TMP_Text __instance, ref string value)
     {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
         if (IsInputFieldTextComponent(__instance))
         {
             return;
@@ -1589,7 +1621,6 @@ internal static class TextPatches
 
         if (ReferenceEquals(__instance, StartOfRound.Instance?.screenLevelDescription))
         {
-            var start = DateTime.UtcNow;
             // Plugin.Log.LogInfo($"RoomCreateProbe TmpMapScreenSetText prefix enter len={value?.Length ?? -1}");
             ApplyMapScreenTypography(__instance);
             FontFallbackService.ApplyFallback(__instance, value);
@@ -1650,6 +1681,11 @@ internal static class TextPatches
     [HarmonyPriority(Priority.Last)]
     private static void TmpSetTextPostfix(TMP_Text __instance)
     {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
         if (IsInputFieldTextComponent(__instance))
         {
             return;
@@ -1837,6 +1873,11 @@ internal static class TextPatches
     [HarmonyPrefix]
     private static void UiTextSetTextPrefix(Text __instance, ref string value)
     {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
         TranslateUiText(__instance, ref value);
         FontFallbackService.ApplySystemOnlineProbeFix(__instance, "UI.Text.set_text", value);
     }
@@ -1844,6 +1885,11 @@ internal static class TextPatches
     [HarmonyPriority(Priority.Last)]
     private static void UiTextSetTextPostfix(Text __instance)
     {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
         FontFallbackService.ApplySystemOnlineProbeFix(__instance, "UI.Text.post_set_text");
         AlertTextureReplacementService.TryReplaceSystemOnlineText(__instance, "UI.Text.post_set_text");
         if (CustomLocalizationExtensionService.HasGlobalStyleRules)
@@ -1875,6 +1921,11 @@ internal static class TextPatches
     [HarmonyPrefix]
     private static void TextMeshSetTextPrefix(TextMesh __instance, ref string value)
     {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
         if (!TranslationGuard.ShouldTranslateGlobalText(__instance, value))
         {
             FontFallbackService.ApplySystemOnlineProbeFix(__instance, "TextMesh.set_text", value);
@@ -1898,6 +1949,11 @@ internal static class TextPatches
     [HarmonyPriority(Priority.Last)]
     private static void TextMeshSetTextPostfix(TextMesh __instance)
     {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
         FontFallbackService.ApplySystemOnlineProbeFix(__instance, "TextMesh.post_set_text");
         AlertTextureReplacementService.TryReplaceSystemOnlineText(__instance, "TextMesh.post_set_text");
         if (CustomLocalizationExtensionService.HasGlobalStyleRules)

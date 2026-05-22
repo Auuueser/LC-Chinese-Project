@@ -111,6 +111,11 @@ internal static class EndGameLocalizationService
             }
 
             var trimmed = text.text.Trim();
+            if (IsKnownPlayerUsernameText(trimmed))
+            {
+                continue;
+            }
+
             if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.EndGame, text.text, out var rewritten))
             {
                 ApplyLocalizedText(text, rewritten, stage, "EndGameStatusLabel");
@@ -224,7 +229,12 @@ internal static class EndGameLocalizationService
 
         foreach (var text in hudManager.SpectateBoxesContainer.GetComponentsInChildren<TMP_Text>(true))
         {
-            if (text == null || string.IsNullOrWhiteSpace(text.text))
+            if (text == null || string.IsNullOrWhiteSpace(text.text) || !IsSpectateDeadLabel(text.transform))
+            {
+                continue;
+            }
+
+            if (IsKnownPlayerUsernameText(text.text.Trim()))
             {
                 continue;
             }
@@ -857,5 +867,32 @@ internal static class EndGameLocalizationService
 
         return transform.name.IndexOf("DeadOrAlive", StringComparison.OrdinalIgnoreCase) >= 0
             || path.EndsWith("/DeadOrAlive", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsKnownPlayerUsernameText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var players = StartOfRound.Instance?.allPlayerScripts;
+        if (players == null)
+        {
+            return false;
+        }
+
+        var trimmed = value.Trim();
+        foreach (var player in players)
+        {
+            var username = player?.playerUsername;
+            if (!string.IsNullOrWhiteSpace(username) &&
+                string.Equals(trimmed, username.Trim(), StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

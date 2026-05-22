@@ -13,18 +13,24 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "0.2.0";
+    public const string PluginVersion = "0.2.1";
 
     internal static ManualLogSource Log = null!;
 
     private readonly Harmony _harmony = new(PluginGuid);
     private static int _translationHits;
     private static bool _isShuttingDown;
+    private static bool _cleanupInProgress;
+    private static bool _runtimeShutDown;
     private bool _cleanupCompleted;
+
+    internal static bool IsRuntimeShuttingDown => _cleanupInProgress || _runtimeShutDown;
 
     private void Awake()
     {
         Log = Logger;
+        _runtimeShutDown = false;
+        _cleanupInProgress = false;
         DontDestroyOnLoad(gameObject);
         Application.quitting += OnUnityQuitting;
 
@@ -97,6 +103,9 @@ public sealed class Plugin : BaseUnityPlugin
 
         _cleanupCompleted = true;
         Application.quitting -= OnUnityQuitting;
+        _cleanupInProgress = true;
+        _runtimeShutDown = true;
+        TryCleanup("Harmony.UnpatchSelf", _harmony.UnpatchSelf);
         TryCleanup("OriginalResourceStateService.RestoreAll", () => { OriginalResourceStateService.RestoreAll(); });
         TryCleanup("RuntimeIconsCompatibilityService.Clear", () => { RuntimeIconsCompatibilityService.Clear(); });
         TryCleanup("TextPatches.Clear", () => { TextPatches.Clear(); });
@@ -107,10 +116,11 @@ public sealed class Plugin : BaseUnityPlugin
         TryCleanup("FontFallbackService.Shutdown", () => { FontFallbackService.Shutdown(); });
         TryCleanup("EmbeddedFontPatcherService.Shutdown", () => { EmbeddedFontPatcherService.Shutdown(); });
         TryCleanup("AlertTextureReplacementService.Shutdown", () => { AlertTextureReplacementService.Shutdown(); });
+        TryCleanup("RadiationWarningAuditService.Shutdown", () => { RadiationWarningAuditService.Shutdown(); });
         TryCleanup("RadiationWarningPlaybackService.Shutdown", () => { RadiationWarningPlaybackService.Shutdown(); });
         TryCleanup("EndGameLocalizationService.Shutdown", () => { EndGameLocalizationService.Shutdown(); });
         TryCleanup("RuntimeTextCollector.Shutdown", () => { RuntimeTextCollector.Shutdown(); });
-        TryCleanup("Harmony.UnpatchSelf", _harmony.UnpatchSelf);
+        _cleanupInProgress = false;
     }
 
     private static void TryInitialize(string name, Action initialize)

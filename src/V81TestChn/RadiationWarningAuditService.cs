@@ -36,6 +36,29 @@ internal static class RadiationWarningAuditService
             "Seconds between bounded subtree audit samples after the radiation warning trigger.");
     }
 
+    public static void Shutdown()
+    {
+        try
+        {
+            if (_activeAuditCoroutine != null && _activeHudManager != null)
+            {
+                _activeHudManager.StopCoroutine(_activeAuditCoroutine);
+            }
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"RadiationWarningAuditService shutdown failed while stopping coroutine: {ex.GetType().Name}: {ex.Message}");
+        }
+        finally
+        {
+            _activeAuditCoroutine = null;
+            _activeHudManager = null;
+            _enabled = null;
+            _sampleCount = null;
+            _sampleIntervalSeconds = null;
+        }
+    }
+
     public static void OnRadiationWarningTriggered(HUDManager hudManager, string stage)
     {
         if (hudManager == null || _enabled?.Value != true)
