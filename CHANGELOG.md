@@ -2,14 +2,13 @@
 
 ## 中文
 
-### 0.2.1 - 运行时性能与发布整理更新
+### 0.2.1 - 性能、观战状态与文本覆盖更新
 
-- 优化全局文本保护路径，缓存输入框、聊天输出、大厅动态文本等组件分类，减少高频 setter 中的重复层级查询。
-- 对 HUD 扫描源节点翻译增加节流，降低右键扫描和富文本刷新场景下的短暂卡顿风险。
-- 调整插件销毁与清理顺序，在正式 shutdown 时优先移除 Harmony patch，并补充辐射警告审计协程的停止路径。
-- 收窄增强观战和结算 UI 的死亡状态翻译范围，避免将真实玩家名误判为可翻译状态文本。
-- 补充 `Cookie pan` 和 host 关闭房间说明的汉化规则。
-- 同步 GitHub 与 Thunderstore 文档、版本号和发布元数据，保持发布集合克制、清晰。
+- 降低右键扫描、富文本消息刷新和高频 UI 文本更新时的短暂卡顿风险，减少全局文本路径中的重复组件分类与 HUD 扫描源节点处理。
+- 改进全局文本保护逻辑，使终端输入、聊天输入、玩家名、大厅动态文本和聊天输出等场景的识别更稳定。
+- 修复增强观战和结算界面中玩家名与死亡状态文本的边界识别，避免玩家名被状态翻译逻辑误处理。
+- 加强退出、场景切换和插件销毁阶段的运行时清理，降低残留 patch 或审计协程在销毁期间触发异常的风险。
+- 补充 `Cookie pan` 物品名和 host 关闭房间后说明文本的汉化覆盖。
 
 ### 0.2.0 - 自定义本地化与运行时稳定性更新
 
@@ -30,14 +29,13 @@
 
 ## English
 
-### 0.2.1 - Runtime performance and release cleanup update
+### 0.2.1 - Performance, spectate status, and text coverage update
 
-- Optimized global text guard paths by caching component classification for inputs, chat output, lobby dynamic text, and related UI components.
-- Added throttling for HUD scanner source-node localization to reduce short stutter risk during right-click scanning and rich-text refreshes.
-- Adjusted plugin shutdown order so Harmony patches are removed first during real shutdown, and added a shutdown path for the radiation warning audit coroutine.
-- Narrowed enhanced spectate and endgame dead-status localization so real player names are not treated as translatable status text.
-- Added localization coverage for `Cookie pan` and the host closed-lobby explanation.
-- Synchronized GitHub and Thunderstore documentation, version metadata, and release structure with a more restrained publish set.
+- Reduced short stutter risk during right-click scanning, rich-text message refreshes, and high-frequency UI text updates by cutting repeated component classification and HUD scanner source-node work.
+- Improved global text protection so terminal input, chat input, player names, lobby dynamic text, and chat output are classified more reliably.
+- Fixed boundary detection between player names and dead-status labels in enhanced spectate and endgame screens, preventing player names from being processed as status text.
+- Strengthened runtime cleanup during quit, scene transition, and plugin teardown, reducing the chance of leftover patches or audit coroutines running during destruction.
+- Added localization coverage for the `Cookie pan` item name and the host closed-lobby explanation.
 
 ### 0.2.0 - Custom localization and runtime stability update
 
