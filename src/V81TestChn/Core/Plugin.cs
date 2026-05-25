@@ -13,7 +13,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "0.2.2";
+    public const string PluginVersion = "0.2.3";
 
     internal static ManualLogSource Log = null!;
 

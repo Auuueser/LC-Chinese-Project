@@ -2,6 +2,10 @@
 
 ## 中文
 
+### 0.2.3 - 修复 0.2.2 必要运行时文件缺失
+
+- 修复 0.2.2 发布包中缺失的必要运行时文件，该问题可能导致插件部分功能异常或无法正常加载。
+
 ### 0.2.2 - 菜单稳定性、配置可读性与文本覆盖更新
 
 - 改进快捷菜单、游戏设置和退出确认界面的本地化时机，减少首次打开或反复打开时的峰值卡顿，并降低首帧短暂显示英文原文的概率。
@@ -37,6 +41,10 @@
 - 使用当前运行时构建刷新 Thunderstore 包体和 GitHub 发布元数据。
 
 ## English
+
+### 0.2.3 - Fix missing required runtime files from 0.2.2
+
+- Fixed missing required runtime files in the 0.2.2 release package, which could cause partial plugin malfunction or failure to load.
 
 ### 0.2.2 - Menu stability, readable configuration, and text coverage update
 
