@@ -9,10 +9,33 @@ internal static class RuntimeIconsCompatibilityService
 {
     private static bool _runtimeIconsLoaded;
     private static bool _preserveLogWritten;
+    private static bool _assemblyLoadSubscribed;
 
     static RuntimeIconsCompatibilityService()
     {
+        Initialize();
+    }
+
+    public static void Initialize()
+    {
+        if (_assemblyLoadSubscribed)
+        {
+            return;
+        }
+
         AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+        _assemblyLoadSubscribed = true;
+    }
+
+    public static void Shutdown()
+    {
+        if (_assemblyLoadSubscribed)
+        {
+            AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+            _assemblyLoadSubscribed = false;
+        }
+
+        Clear();
     }
 
     public static int TranslateResourceItemName(Item? item)
@@ -142,6 +165,7 @@ internal static class RuntimeIconsCompatibilityService
         }
 
         return name.IndexOf("RuntimeIcons", StringComparison.OrdinalIgnoreCase) >= 0 ||
-            name.IndexOf("HoneeItemIcons", StringComparison.OrdinalIgnoreCase) >= 0;
+            name.IndexOf("HoneeItemIcons", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            name.IndexOf("BetterRotations", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }

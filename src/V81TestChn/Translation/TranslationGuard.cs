@@ -46,17 +46,22 @@ internal static class TranslationGuard
     public static void Initialize(ConfigFile config)
     {
         _logTranslationGuardSkips = config.Bind(
-            "Diagnostics",
+            ConfigSections.DiagnosticsGeneral,
             "LogTranslationGuardSkips",
             false,
-            "Log one TranslationGuard skip per component with path, reason, and text summary.");
+            "记录 TranslationGuard 跳过文本的原因、对象路径和文本摘要。默认关闭，避免刷日志。");
     }
 
     public static void Clear()
     {
+        ClearRuntimeCaches();
+        _logTranslationGuardSkips = null;
+    }
+
+    public static void ClearRuntimeCaches()
+    {
         LoggedSkipComponents.Clear();
         ComponentClassificationCache.Clear();
-        _logTranslationGuardSkips = null;
     }
 
     public static bool ShouldTranslateGlobalText(TMP_Text? text, string? value)
@@ -223,6 +228,11 @@ internal static class TranslationGuard
         }
 
         reason = string.Empty;
+        if (CanCacheAllowDecision(component))
+        {
+            CacheComponentDecision(component, ComponentDecision.Allow, reason);
+        }
+
         return false;
     }
 
@@ -286,6 +296,13 @@ internal static class TranslationGuard
         return false;
     }
 
+    private static bool CanCacheAllowDecision(Component component)
+    {
+        // Player-name components are value-sensitive: "Aueser" must be skipped,
+        // while "Aueser (Dead)" is allowed so only the status suffix is localized.
+        return !IsPlayerNamePath(component);
+    }
+
     private static bool IsChatInput(Component component)
     {
         if (component.GetComponentInParent<TMP_InputField>(true) == null &&
@@ -312,11 +329,7 @@ internal static class TranslationGuard
 
     private static bool IsPlayerNameOnly(Component component, string? value)
     {
-        if (!TransformPathContains(component.transform, "PlayerName") &&
-            !TransformPathContains(component.transform, "Player Name") &&
-            !TransformPathContains(component.transform, "Username") &&
-            !TransformPathContains(component.transform, "UserName") &&
-            !TransformPathContains(component.transform, "SteamName"))
+        if (!IsPlayerNamePath(component))
         {
             return false;
         }
@@ -333,6 +346,15 @@ internal static class TranslationGuard
         }
 
         return trimmed.Length <= 64 && trimmed.IndexOf('\n') < 0 && trimmed.IndexOf('\r') < 0;
+    }
+
+    private static bool IsPlayerNamePath(Component component)
+    {
+        return TransformPathContains(component.transform, "PlayerName") ||
+               TransformPathContains(component.transform, "Player Name") ||
+               TransformPathContains(component.transform, "Username") ||
+               TransformPathContains(component.transform, "UserName") ||
+               TransformPathContains(component.transform, "SteamName");
     }
 
     private static bool IsLobbyDynamicText(Component component)
@@ -401,6 +423,7 @@ internal static class TranslationGuard
                IsRandomSeedText(value) ||
                IsEndgameStatText(value) ||
                IsControlTipText(value) ||
+               IsShipLeaveEarlyWarningText(value) ||
                IsClockText(value) ||
                IsShipMonitorText(value) ||
                IsPlanetInfoText(value) ||
@@ -411,6 +434,11 @@ internal static class TranslationGuard
     private static bool IsHostModWarningText(string? value)
     {
         return TranslationService.LooksLikeHostModWarningTextCheap(value);
+    }
+
+    private static bool IsShipLeaveEarlyWarningText(string? value)
+    {
+        return TranslationService.LooksLikeShipLeaveEarlyWarningTextCheap(value);
     }
 
     private static bool IsChatSystemMessageCheap(string? value)

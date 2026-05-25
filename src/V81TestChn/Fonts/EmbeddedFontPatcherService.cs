@@ -82,19 +82,19 @@ internal static class EmbeddedFontPatcherService
             return;
         }
 
-        _enabled = config.Bind("EmbeddedFontPatcher", "Enable", true, "Enable embedded FontPatcher compatibility behavior.");
-        _fontAssetsPath = config.Bind("EmbeddedFontPatcher", "FontAssetsPath", @"fontpatcher\default", "Relative directory for font bundles.");
-        _normalRegexPattern = config.Bind("EmbeddedFontPatcher", "NormalFontNameRegex", @"^(b|DialogueText).*$", "Regex used to detect normal UI fonts.");
-        _transmitRegexPattern = config.Bind("EmbeddedFontPatcher", "TransmitFontNameRegex", @"^.*$", "Regex used to detect signal/transmit fonts.");
-        _useVanillaNormal = config.Bind("EmbeddedFontPatcher", "UseVanillaNormalFont", true, "Keep vanilla normal font characters in addition to bundle fallback fonts.");
-        _useVanillaTransmit = config.Bind("EmbeddedFontPatcher", "UseVanillaTransmitFont", true, "Keep vanilla transmit font characters in addition to bundle fallback fonts.");
-        _debugLog = config.Bind("EmbeddedFontPatcher", "DebugLog", false, "Enable verbose embedded FontPatcher logs.");
-        _applyMaterialTweaks = config.Bind("EmbeddedFontPatcher", "ApplyMaterialTweaks", false, "Apply FontPatcher-like material underlay tweaks.");
+        _enabled = config.Bind(ConfigSections.FontCompatibility, "Enable", true, "启用内置 FontPatcher 兼容逻辑。通常保持开启，用于兼容字体包 fallback。");
+        _fontAssetsPath = config.Bind(ConfigSections.FontCompatibility, "FontAssetsPath", @"fontpatcher\default", "字体 bundle 的相对目录。拒绝绝对路径和路径穿越。");
+        _normalRegexPattern = config.Bind(ConfigSections.FontCompatibility, "NormalFontNameRegex", @"^(b|DialogueText).*$", "用于识别普通界面字体名称的正则。");
+        _transmitRegexPattern = config.Bind(ConfigSections.FontCompatibility, "TransmitFontNameRegex", @"^.*$", "用于识别信号发射器等传输字体名称的正则。普通字体优先，不会被重复判定。");
+        _useVanillaNormal = config.Bind(ConfigSections.FontCompatibility, "UseVanillaNormalFont", true, "普通界面字体是否保留原版字符表。默认保留，降低字体回退风险。");
+        _useVanillaTransmit = config.Bind(ConfigSections.FontCompatibility, "UseVanillaTransmitFont", true, "传输字体是否保留原版字符表。默认保留，降低字体回退风险。");
+        _debugLog = config.Bind(ConfigSections.FontCompatibility, "DebugLog", false, "输出详细字体兼容日志。默认关闭，避免刷日志和影响排查。");
+        _applyMaterialTweaks = config.Bind(ConfigSections.FontCompatibility, "ApplyMaterialTweaks", false, "应用类似 FontPatcher 的材质 underlay 调整。默认关闭，避免文字颜色或透明度漂移。");
         _bundleNameRegexPattern = config.Bind(
-            "EmbeddedFontPatcher",
+            ConfigSections.FontCompatibility,
             "BundleNameRegex",
             @"^(00 default|cn|zh.*)$",
-            "Only bundles whose file name matches this regex will be loaded. Prevents unintended style drift from unrelated language bundles.");
+            "只加载文件名匹配此正则的字体 bundle，用于避免无关语言包造成样式漂移。");
 
         UpgradeLegacyRegexDefaultsIfNeeded();
         _normalRegex = CreateRegex(_normalRegexPattern.Value, @"^(b|DialogueText).*$");
@@ -246,9 +246,11 @@ internal static class EmbeddedFontPatcherService
                     continue;
                 }
 
+                AssetBundle? bundle = null;
+                var bundleTracked = false;
                 try
                 {
-                    var bundle = AssetBundle.LoadFromFile(file.FullName);
+                    bundle = AssetBundle.LoadFromFile(file.FullName);
                     if (bundle == null)
                     {
                         continue;
@@ -265,11 +267,13 @@ internal static class EmbeddedFontPatcherService
                     if (normal != null)
                     {
                         normal.name = $"{file.Name}(Normal)";
+                        FontFallbackService.NormalizePluginFallbackFontMaterial(normal);
                     }
 
                     if (transmit != null)
                     {
                         transmit.name = $"{file.Name}(Transmit)";
+                        FontFallbackService.NormalizePluginFallbackFontMaterial(transmit);
                     }
 
                     LoadedBundles.Add(new FontBundlePair
@@ -279,6 +283,7 @@ internal static class EmbeddedFontPatcherService
                         Transmit = transmit
                     });
                     LoadedAssetBundles.Add(bundle);
+                    bundleTracked = true;
 
                     loadedFromDir++;
                     if (_debugLog!.Value)
@@ -289,6 +294,13 @@ internal static class EmbeddedFontPatcherService
                 catch (Exception ex)
                 {
                     Plugin.Log.LogWarning($"EmbeddedFontPatcher failed loading '{file.FullName}': {ex.GetType().Name}: {ex.Message}");
+                }
+                finally
+                {
+                    if (!bundleTracked && bundle != null)
+                    {
+                        bundle.Unload(false);
+                    }
                 }
             }
 

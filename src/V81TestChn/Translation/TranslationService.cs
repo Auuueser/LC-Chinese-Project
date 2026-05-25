@@ -233,6 +233,7 @@ internal static partial class TranslationService
         ["building?"] = "\u5927\u697c\uff1f",
         ["Happy [currentDay]."] = "\u4eca\u5929\u662f [currentDay]\u3002",
         ["Sent transmission."] = "\u5df2\u53d1\u9001\u4f20\u8f93\u3002",
+        ["Entered broadcast code."] = "\u5df2\u8f93\u5165\u5e7f\u64ad\u4ee3\u7801\u3002",
         ["Switched radar to player."] = "\u5df2\u5c06\u96f7\u8fbe\u5207\u6362\u5230\u73a9\u5bb6\u3002",
         ["Switching radar cam view."] = "\u6b63\u5728\u5207\u6362\u96f7\u8fbe\u6444\u50cf\u5934\u89c6\u89d2\u3002",
         ["Toggling radar cam"] = "\u6b63\u5728\u5207\u6362\u96f7\u8fbe\u6444\u50cf\u5934\u3002",
@@ -263,7 +264,13 @@ internal static partial class TranslationService
         ["Push"] = "\u63a8",
         ["Pull up"] = "\u62c9\u8d77",
         ["Pull switch"] = "\u62c9\u52a8\u5f00\u5173",
+        ["Squeeze"] = "\u6324\u538b",
+        ["Set strap"] = "\u8bbe\u7f6e\u6263\u5e26",
+        ["Set straps"] = "\u8bbe\u7f6e\u6263\u5e26",
+        ["Use fridge"] = "\u4f7f\u7528\u51b0\u7bb1",
+        ["Sit"] = "\u5750\u4e0b",
         ["Sit down"] = "\u5750\u4e0b",
+        ["Ship in motion"] = "\u98de\u8239\u79fb\u52a8\u4e2d",
         ["Switch headlight"] = "\u5207\u6362\u8f66\u706f",
         ["Switch headlights"] = "\u5207\u6362\u8f66\u706f",
         ["Toggle cabin window"] = "\u5f00\u5173\u9a7e\u9a76\u5ba4\u8f66\u7a97",
@@ -291,6 +298,21 @@ internal static partial class TranslationService
         ["Brass bell"] = "\u9ec4\u94dc\u949f",
         ["Brush"] = "\u5237\u5b50",
         ["Chemical jug"] = "\u5316\u5b66\u7f50",
+        ["Data chip"] = "\u6570\u636e\u82af\u7247",
+        ["Cookie pan"] = "\u997c\u5e72\u70e4\u76d8",
+        ["Box"] = "\u76d2\u5b50",
+        ["Safe Box"] = "\u4fdd\u9669\u7bb1",
+        ["Toolbox"] = "\u5de5\u5177\u7bb1",
+        ["Feiopar"] = "\u9ed1\u8c79",
+        ["Cadaver Bloom"] = "\u5c38\u82b1",
+        ["Cadaver Blooms"] = "\u5c38\u82b1",
+        ["Cadaver Growth"] = "\u5c38\u4f53\u751f\u957f\u4f53",
+        ["Cadaver Growths"] = "\u5c38\u4f53\u751f\u957f\u4f53",
+        ["Cadavers"] = "\u5c38\u4f53\u751f\u957f\u4f53",
+        ["Stingray"] = "\u9b5f\u9c7c",
+        ["Backwater Gunkfish"] = "\u6b7b\u6c34\u81ed\u9c7c",
+        ["Gunkfish"] = "\u81ed\u9c7c",
+        ["CarStealer"] = "\u751f\u6210\u8f66\u8f86",
         ["Flashlight"] = "\u624b\u7535\u7b52",
         ["Pro flashlight"] = "\u4e13\u4e1a\u624b\u7535\u7b52",
         ["Jetpack"] = "\u55b7\u6c14\u80cc\u5305",
@@ -428,15 +450,15 @@ internal static partial class TranslationService
     public static void Initialize(ConfigFile config)
     {
         _temperatureUnit = config.Bind(
-            "InfectionStatus",
+            ConfigSections.InfectionStatus,
             "TemperatureUnit",
             TemperatureUnitCelsius,
-            "Temperature unit for infection high-fever status prompts. Use Celsius or Fahrenheit. Invalid values fall back to Celsius.");
+            "感染高烧提示使用的温度单位。可填写 Celsius 或 Fahrenheit；无效值会回退为 Celsius。");
         _logKnownDynamicHits = config.Bind(
-            "Diagnostics",
+            ConfigSections.DiagnosticsGeneral,
             "LogKnownDynamicTranslationHits",
             false,
-            "Log a small budget of known dynamic translation hits such as votes, random seed, control tips, and chat system messages.");
+            "记录少量已知动态文本命中，例如投票、随机种子、交互提示和聊天系统消息。默认关闭。");
     }
 
     public static int EntryCount => ExactMap.Count + RegexEntries.Count;
@@ -1859,7 +1881,8 @@ internal static partial class TranslationService
         translated = string.Empty;
         var trimmed = source.TrimEnd();
         if (EndsWithTerminalStatus(trimmed, "Cancelled order.", "\u5df2\u53d6\u6d88\u8ba2\u5355\u3002", out translated) ||
-            EndsWithTerminalStatus(trimmed, "You have cancelled the order.", "\u4f60\u5df2\u53d6\u6d88\u8ba2\u5355\u3002", out translated))
+            EndsWithTerminalStatus(trimmed, "You have cancelled the order.", "\u4f60\u5df2\u53d6\u6d88\u8ba2\u5355\u3002", out translated) ||
+            EndsWithTerminalStatus(trimmed, "Entered broadcast code.", "\u5df2\u8f93\u5165\u5e7f\u64ad\u4ee3\u7801\u3002", out translated))
         {
             translated = "\n\n\n" + translated;
             return true;

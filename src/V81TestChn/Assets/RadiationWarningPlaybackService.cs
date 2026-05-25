@@ -16,7 +16,9 @@ internal static class RadiationWarningPlaybackService
     private const string PanelObjectName = "Panel";
     private const float OriginalClipDurationSeconds = 103f / 60f;
     private const float DefaultFollowDurationSeconds = 1.85f;
+    private const float MaxFollowDurationSeconds = 5f;
     private const long MaxTextureBytes = 8L * 1024L * 1024L;
+    private const long MaxTexturePixels = 4096L * 4096L;
 
     private static readonly Dictionary<string, string[]> OriginalSpriteFrameFiles = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -61,15 +63,15 @@ internal static class RadiationWarningPlaybackService
     {
         _textureDirectory = Path.Combine(pluginDir, TextureSubfolder);
         _enabled = config.Bind(
-            "RadiationWarningPlayback",
+            ConfigSections.RadiationWarning,
             "Enabled",
             true,
-            "Enable Animator-following radiation warning sprite substitution.");
+            "启用跟随原版动画的辐射警告贴图替换。");
         _followDurationSeconds = config.Bind(
-            "RadiationWarningPlayback",
+            ConfigSections.RadiationWarning,
             "FollowDurationSeconds",
             DefaultFollowDurationSeconds,
-            "Seconds to follow the original RadiationIncreaseWarning Animator clip and substitute localized sprites.");
+            "跟随原版 RadiationIncreaseWarning 动画并替换本地化贴图的持续时间，单位为秒。");
 
         foreach (var originalSpriteName in OriginalSpriteFrameFiles.Keys)
         {
@@ -140,7 +142,7 @@ internal static class RadiationWarningPlaybackService
 
     private static IEnumerator FollowAnimatorSpriteCurve(PlaybackState playbackState, string stage)
     {
-        var duration = Mathf.Max(OriginalClipDurationSeconds, _followDurationSeconds?.Value ?? DefaultFollowDurationSeconds);
+        var duration = GetFollowDurationSeconds();
         var endTime = Time.realtimeSinceStartup + duration;
 
         Plugin.Log.LogInfo(
@@ -165,6 +167,17 @@ internal static class RadiationWarningPlaybackService
         {
             CleanupPlaybackState(playbackState, stage, "finally");
         }
+    }
+
+    private static float GetFollowDurationSeconds()
+    {
+        var configured = _followDurationSeconds?.Value ?? DefaultFollowDurationSeconds;
+        if (float.IsNaN(configured) || float.IsInfinity(configured))
+        {
+            configured = DefaultFollowDurationSeconds;
+        }
+
+        return Mathf.Clamp(configured, OriginalClipDurationSeconds, MaxFollowDurationSeconds);
     }
 
     private static void ApplyCurrentAnimatorSpriteSubstitution(PlaybackState playbackState, string stage)
@@ -499,6 +512,7 @@ internal static class RadiationWarningPlaybackService
             return null;
         }
 
+        Texture2D? texture = null;
         try
         {
             var fileInfo = new FileInfo(path);
@@ -510,10 +524,22 @@ internal static class RadiationWarningPlaybackService
             }
 
             var data = File.ReadAllBytes(path);
-            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!ImageConversion.LoadImage(texture, data, false))
             {
                 UnityEngine.Object.Destroy(texture);
+                texture = null;
+                TextureCache[fileName] = null;
+                return null;
+            }
+
+            if (IsDecodedTextureTooLarge(texture))
+            {
+                Plugin.Log.LogWarning(
+                    $"RadiationPlayback[Texture] action=decoded-texture-too-large file={fileName} " +
+                    $"width={texture.width} height={texture.height} pixels={(long)texture.width * texture.height} maxPixels={MaxTexturePixels}");
+                UnityEngine.Object.Destroy(texture);
+                texture = null;
                 TextureCache[fileName] = null;
                 return null;
             }
@@ -521,10 +547,17 @@ internal static class RadiationWarningPlaybackService
             texture.name = Path.GetFileNameWithoutExtension(fileName);
             texture.wrapMode = TextureWrapMode.Clamp;
             TextureCache[fileName] = texture;
-            return texture;
+            var loadedTexture = texture;
+            texture = null;
+            return loadedTexture;
         }
         catch (Exception ex)
         {
+            if (texture != null)
+            {
+                UnityEngine.Object.Destroy(texture);
+            }
+
             Plugin.Log.LogWarning($"RadiationPlayback[Texture] action=load-failed file={fileName} error={ex.GetType().Name}: {ex.Message}");
             TextureCache[fileName] = null;
             return null;
@@ -558,6 +591,16 @@ internal static class RadiationWarningPlaybackService
         SpriteCache.Clear();
         TextureCache.Clear();
         ResolvedFrameTextureCache.Clear();
+    }
+
+    private static bool IsDecodedTextureTooLarge(Texture2D texture)
+    {
+        if (texture.width <= 0 || texture.height <= 0)
+        {
+            return true;
+        }
+
+        return (long)texture.width * texture.height > MaxTexturePixels;
     }
 
     private static void DestroyTextureOnce(Texture2D? texture, HashSet<int> destroyedTextureIds)

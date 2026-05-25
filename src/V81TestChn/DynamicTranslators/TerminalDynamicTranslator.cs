@@ -23,6 +23,7 @@ internal static partial class TranslationService
                    looksLikeOrderedConfirmation ||
                    trimmed.StartsWith("The Company is buying", System.StringComparison.OrdinalIgnoreCase) ||
                    trimmed.Equals("Cancelled order.", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.Equals("Entered broadcast code.", System.StringComparison.OrdinalIgnoreCase) ||
                    trimmed.Equals("You have cancelled the order.", System.StringComparison.OrdinalIgnoreCase);
         }
 
@@ -54,6 +55,12 @@ internal static partial class TranslationService
             if (trimmed.Equals("You have cancelled the order.", System.StringComparison.OrdinalIgnoreCase))
             {
                 translated = "\u4f60\u5df2\u53d6\u6d88\u8ba2\u5355\u3002";
+                return true;
+            }
+
+            if (trimmed.Equals("Entered broadcast code.", System.StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "\u5df2\u8f93\u5165\u5e7f\u64ad\u4ee3\u7801\u3002";
                 return true;
             }
 

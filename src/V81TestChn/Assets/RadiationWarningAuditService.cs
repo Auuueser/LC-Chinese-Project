@@ -20,20 +20,20 @@ internal static class RadiationWarningAuditService
     public static void Initialize(ConfigFile config)
     {
         _enabled = config.Bind(
-            "RadiationWarningAudit",
+            ConfigSections.RadiationWarningAudit,
             "Enabled",
             false,
-            "Enable bounded audit sampling for the original radiation warning subtree. Keep disabled outside diagnostics to avoid runtime subtree enumeration.");
+            "启用辐射警告原始 UI 子树的限量采样诊断。默认关闭，避免运行时枚举 UI 子树。");
         _sampleCount = config.Bind(
-            "RadiationWarningAudit",
+            ConfigSections.RadiationWarningAudit,
             "SampleCount",
             5,
-            "Number of bounded subtree samples to capture after the radiation warning trigger.");
+            "辐射警告触发后采样的次数上限。");
         _sampleIntervalSeconds = config.Bind(
-            "RadiationWarningAudit",
+            ConfigSections.RadiationWarningAudit,
             "SampleIntervalSeconds",
             0.2f,
-            "Seconds between bounded subtree audit samples after the radiation warning trigger.");
+            "两次辐射警告诊断采样之间的间隔，单位为秒。");
     }
 
     public static void Shutdown()

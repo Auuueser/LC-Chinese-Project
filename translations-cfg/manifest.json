@@ -13,12 +13,12 @@
     {
       "locale": "zh-CN",
       "target_relative_path": "zh-CN/Item-Translate.cfg",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sha256": "fec58a9bcff56fb9db406af7de4ba6aeccac3d993b6010ba83802cf287a4d99b"
     },
     {
       "locale": "zh-CN",
       "target_relative_path": "zh-CN/Normal-Translate.cfg",
-      "sha256": "6cf2f13e7112a74aab4d2a15ce1bcabaa911d42b199a2efe2bbecf0ca0ec361f"
+      "sha256": "d5b7ad1052572fa17d437a578dfb87909887e07e58eb223ab539c89b0706c996"
     },
     {
       "locale": "zh-CN",

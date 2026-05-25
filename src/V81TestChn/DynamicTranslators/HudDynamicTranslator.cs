@@ -10,7 +10,9 @@ internal static partial class TranslationService
         public static bool CanHandleCheap(string? source) =>
             LooksLikeRandomSeedTextCheap(source) ||
             LooksLikeVoteTextCheap(source) ||
-            LooksLikeDaysLeftTextCheap(source);
+            LooksLikeDaysLeftTextCheap(source) ||
+            LooksLikeShipLeaveEarlyWarningTextCheap(source) ||
+            LooksLikeHudNotificationTextCheap(source);
 
         public static bool Translate(DynamicTextDomain domain, string? source, out string translated)
         {
@@ -23,6 +25,7 @@ internal static partial class TranslationService
             return domain switch
             {
                 DynamicTextDomain.HudScanner => TranslateScanValue(source, out translated) ||
+                                                TranslateScannerLabel(source, out translated) ||
                                                 TranslateFast(source, out translated),
                 DynamicTextDomain.HudRewards => TranslateRewardLine(source, out translated) ||
                                                 TranslateFast(source, out translated),
@@ -40,7 +43,9 @@ internal static partial class TranslationService
 
             return TranslateRandomSeedFast(source, out translated) ||
                    TranslateVotesFast(source, out translated) ||
-                   TranslateDaysLeftFast(source, out translated);
+                   TranslateDaysLeftFast(source, out translated) ||
+                   TranslateShipLeaveEarlyWarning(source, out translated) ||
+                   TranslateHudNotificationFast(source, out translated);
         }
 
         public static bool TranslateRandomSeed(string source, out string translated)
@@ -106,6 +111,45 @@ internal static partial class TranslationService
             }
 
             translated = $"\u4ef7\u503c\uff1a{match.Groups["value"].Value.Trim()}";
+            return true;
+        }
+
+        public static bool TranslateShipLeaveEarlyWarning(string source, out string translated)
+        {
+            translated = source;
+            var match = SafeRegexMatch(
+                StripRichTextTagsCheap(source).Trim(),
+                @"^WARNING!\s*Please\s+return\s+by\s+(?<time>.+?)\.\s*A\s+vote\s+has\s+been\s+cast,\s+and\s+the\s+autopilot\s*ship\s+will\s+leave\s+early\.$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            var leaveTime = LocalizeClockPeriod(match.Groups["time"].Value.Trim());
+            translated = $"\u8b66\u544a\uff01\u8bf7\u5728 {leaveTime} \u4e4b\u524d\u8fd4\u56de\u3002\u6295\u7968\u5df2\u7ecf\u5b8c\u6210\uff0c\u81ea\u52a8\u9a7e\u9a76\u98de\u8239\u5c06\u63d0\u65e9\u79bb\u5f00\u3002";
+            return true;
+        }
+
+        private static bool TranslateScannerLabel(string source, out string translated)
+        {
+            translated = source;
+            var stripped = StripRichTextTagsCheap(source).Trim();
+            if (stripped.Length == 0 ||
+                stripped.IndexOf('\n') >= 0 ||
+                stripped.IndexOf(':') >= 0 ||
+                LooksLikeSimpleNumber(stripped))
+            {
+                return false;
+            }
+
+            var localized = BuildTerminalLocalizedItemName(stripped);
+            if (string.Equals(localized, stripped, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            translated = localized;
             return true;
         }
 
@@ -257,6 +301,64 @@ internal static partial class TranslationService
             }
 
             translated = $"\u5269\u4f59 {days} \u5929";
+            return true;
+        }
+
+        private static bool LooksLikeHudNotificationTextCheap(string? source)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                return false;
+            }
+
+            var text = StripRichTextTagsCheap(source).TrimStart();
+            return text.StartsWith("Found journal entry:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("New creature data sent to terminal", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string LocalizeClockPeriod(string value)
+        {
+            if (value.EndsWith("AM", StringComparison.OrdinalIgnoreCase))
+            {
+                return value[..^2].TrimEnd() + " \u4e0a\u5348";
+            }
+
+            if (value.EndsWith("PM", StringComparison.OrdinalIgnoreCase))
+            {
+                return value[..^2].TrimEnd() + " \u4e0b\u5348";
+            }
+
+            return value;
+        }
+
+        private static bool TranslateHudNotificationFast(string source, out string translated)
+        {
+            translated = source;
+            var trimmed = StripRichTextTagsCheap(source).Trim();
+            if (trimmed.Equals("New creature data sent to terminal!", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("New creature data sent to terminal.", StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "\u65b0\u7684\u751f\u7269\u6570\u636e\u5df2\u53d1\u9001\u81f3\u7ec8\u7aef\uff01";
+                return true;
+            }
+
+            const string prefix = "Found journal entry:";
+            if (!trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var title = trimmed[prefix.Length..].Trim();
+            if (title.Length >= 2 &&
+                ((title[0] == '\'' && title[^1] == '\'') ||
+                 (title[0] == '"' && title[^1] == '"')))
+            {
+                title = title[1..^1].Trim();
+            }
+
+            translated = title.Length == 0
+                ? "\u627e\u5230\u65e5\u5fd7"
+                : $"\u627e\u5230\u65e5\u5fd7\uff1a{BuildTerminalLocalizedItemName(title)}";
             return true;
         }
     }

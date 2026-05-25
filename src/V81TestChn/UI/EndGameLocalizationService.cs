@@ -19,6 +19,7 @@ internal static class EndGameLocalizationService
     private const string EndgameStatsDeceasedTextureFile = "EndgameStatsDeceased.png";
     private const string EndgameStatsMissingTextureFile = "EndgameStatsMissing.png";
     private const long MaxTextureBytes = 8L * 1024L * 1024L;
+    private const long MaxTexturePixels = 4096L * 4096L;
     private static string? _textureDirectory;
     private static readonly Dictionary<string, Sprite?> SpriteCache = new(StringComparer.OrdinalIgnoreCase);
 
@@ -42,6 +43,7 @@ internal static class EndGameLocalizationService
 
         CleanupLegacyEndGameOverlays(hudManager.statsUIElements);
         LocalizePenaltyTexts(hudManager.statsUIElements, stage);
+        LocalizePlayerNotesTexts(hudManager.statsUIElements, stage);
         LocalizeRuntimeDeadTexts(hudManager, stage);
         LocalizePlayerStateBadges(hudManager.statsUIElements, stage);
         LocalizeAllPlayersDeadOverlayImage(hudManager.statsUIElements, stage);
@@ -57,6 +59,7 @@ internal static class EndGameLocalizationService
 
         LocalizeSpectateDeadTexts(hudManager, stage);
         LocalizeSpectateBoxTexts(hudManager, stage);
+        TryLocalizeSpectatingPlayerText(hudManager.spectatingPlayerText, stage);
     }
 
     public static void ApplyPlayersFiredStatsLocalization(HUDManager? hudManager, string stage)
@@ -137,6 +140,19 @@ internal static class EndGameLocalizationService
         TryApplyKnownDynamicText(elements.penaltyTotal, stage, "EndGamePenaltyTotal");
     }
 
+    private static void LocalizePlayerNotesTexts(EndOfGameStatUIElements elements, string stage)
+    {
+        if (elements.playerNotesText == null)
+        {
+            return;
+        }
+
+        foreach (var text in elements.playerNotesText)
+        {
+            TryApplyKnownDynamicText(text, stage, "EndGamePlayerNotes");
+        }
+    }
+
     private static void TryApplyKnownDynamicText(TMP_Text? text, string stage, string target)
     {
         if (text == null || string.IsNullOrWhiteSpace(text.text))
@@ -209,6 +225,19 @@ internal static class EndGameLocalizationService
         else if (string.Equals(trimmed, "Deceased", StringComparison.OrdinalIgnoreCase))
         {
             ApplyLocalizedText(text, DeceasedLocalizedText, stage, "SpectateDeceasedLabel");
+        }
+    }
+
+    public static void TryLocalizeSpectatingPlayerText(TMP_Text? text, string stage)
+    {
+        if (text == null || string.IsNullOrWhiteSpace(text.text))
+        {
+            return;
+        }
+
+        if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.SpectateStatus, text.text, out var rewritten))
+        {
+            ApplyLocalizedText(text, rewritten, stage, "SpectatingPlayerText");
         }
     }
 
@@ -695,6 +724,7 @@ internal static class EndGameLocalizationService
             return null;
         }
 
+        Texture2D? texture = null;
         try
         {
             var fileInfo = new FileInfo(path);
@@ -706,10 +736,22 @@ internal static class EndGameLocalizationService
             }
 
             var data = File.ReadAllBytes(path);
-            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!ImageConversion.LoadImage(texture, data, false))
             {
                 UnityEngine.Object.Destroy(texture);
+                texture = null;
+                SpriteCache[cacheKey] = null;
+                return null;
+            }
+
+            if (IsDecodedTextureTooLarge(texture))
+            {
+                Plugin.Log.LogWarning(
+                    $"NativeRelay[EndGameTexture] action=decoded-texture-too-large file={fileName} " +
+                    $"width={texture.width} height={texture.height} pixels={(long)texture.width * texture.height} maxPixels={MaxTexturePixels}");
+                UnityEngine.Object.Destroy(texture);
+                texture = null;
                 SpriteCache[cacheKey] = null;
                 return null;
             }
@@ -724,10 +766,16 @@ internal static class EndGameLocalizationService
             var sprite = Sprite.Create(texture, spriteRect, pivot, pixelsPerUnit, 0u, SpriteMeshType.FullRect, border);
             sprite.name = Path.GetFileNameWithoutExtension(fileName);
             SpriteCache[cacheKey] = sprite;
+            texture = null;
             return sprite;
         }
         catch (Exception ex)
         {
+            if (texture != null)
+            {
+                UnityEngine.Object.Destroy(texture);
+            }
+
             Plugin.Log.LogWarning($"NativeRelay[EndGameTexture] action=load-failed file={fileName} error={ex.GetType().Name}: {ex.Message}");
             SpriteCache[cacheKey] = null;
             return null;
@@ -754,6 +802,16 @@ internal static class EndGameLocalizationService
         }
 
         SpriteCache.Clear();
+    }
+
+    private static bool IsDecodedTextureTooLarge(Texture2D texture)
+    {
+        if (texture.width <= 0 || texture.height <= 0)
+        {
+            return true;
+        }
+
+        return (long)texture.width * texture.height > MaxTexturePixels;
     }
 
     private static string BuildSpriteCacheKey(string fileName, Sprite? templateSprite)
@@ -859,14 +917,18 @@ internal static class EndGameLocalizationService
             return false;
         }
 
+        if (transform.name.IndexOf("DeadOrAlive", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return false;
+        }
+
         var path = BuildPath(transform);
         if (path.IndexOf("DeathScreen/SpectateUI/", StringComparison.OrdinalIgnoreCase) < 0)
         {
             return false;
         }
 
-        return transform.name.IndexOf("DeadOrAlive", StringComparison.OrdinalIgnoreCase) >= 0
-            || path.EndsWith("/DeadOrAlive", StringComparison.OrdinalIgnoreCase);
+        return true;
     }
 
     private static bool IsKnownPlayerUsernameText(string? value)

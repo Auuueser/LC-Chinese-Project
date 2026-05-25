@@ -1408,9 +1408,9 @@
     },
     {
       "source": "Feiopar",
-      "target": "Feiopar",
-      "mode": "preserve",
-      "note": "敌人名，保留原文待核。"
+      "target": "黑豹",
+      "mode": "translate",
+      "note": "敌人名。"
     },
     {
       "source": "RadMech",
@@ -3154,7 +3154,7 @@
     },
     {
       "source": "Feiopar\n\nScientific name: Felis arborum\n\nThe Feiopar is a large mammal of the family Saeptivus. They typically stand at 5 feet tall. Of all species in this family, they most resemble their ancestor felines, though they differentiate themselves with their bony backs and long necks. Their tails are also twice the length of other species, commonly thought to support their enhanced climbing abilities, which they put to use when threatened. Feiopars are a recent discovery exclusive to the Green Witches--Vow, March, and Adamance.\n\nTheir personalities are very timid yet curious. Although they may appear often to travelers and campers--seated low in the dense brush--they are rarely dangerous, and even their attacks are rarely fatal. There are no recorded deaths attributed to Feiopars. Hikers and explorers have linked the Feiopar to multiple urban legends of the past and rumor the Feiopar to be behind many disappearances, specifically on Vow. However, these rumors are unfounded. The Feiopar is a vital regulator of these ecosystems and is only curious about the new visitors of its territory. So if you are planning on a trip to the remote and scenic Vow, you might want to learn some do's and don'ts about your small, saeptival friend!\n\nFirst of all: never hike alone. It's always good to have a buddy to watch your back, and Feiopars are intimidated by groups. And of course, never leave food out where it will attract prey and predators alike. Always keep your food in sealed containers. Side note: recent studies have indicated Feiopars are somewhat agitated by the color orange and high-visibility markings, however these have not been well-established.\n\nIf you do encounter a Feiopar, do not panic. Pick up small children and stay calm. Speak in a low voice, make yourself look as big as possible, and maintain direct eye contact. Unlike most predators, maintaining direct eye contact with the Feiopar is an essential deterrence. If you cannot locate the Feiopar, back away slowly and scan the forest for its bright, yellow eyes. When approaching, the Feiopar will typically give itself away with a brief, low purring. If this sound has already gone silent, the Feiopar may be within a dangerous distance. At very close proximity, eye contact with the Feiopar can actually have an adverse effect and persuade the Feiopar to pounce. This is why it's always recommended to keep non-lethal self defense such as bear spray on hand. If an encounter with the Feiopar has become violent, onlookers should stay clear and immediately seek medical aid for those involved, as attacks are often short-lived.\n\n\n",
-      "target": "Feiopar\n\n学名：Felis arborum\n\nFeiopar 是 Saeptivus 科的一种大型哺乳动物。它们通常高 5 英尺。在该科所有物种中，它们最像祖先猫科动物，但以骨质背部和长颈与之区分。它们的尾巴也有其他物种的两倍长，通常被认为用于支持增强的攀爬能力，并在受威胁时加以利用。Feiopar 是一种近来才发现的物种，仅见于“绿色女巫”：Vow、March 和 Adamance。\n\n它们的性格非常胆怯却好奇。尽管旅行者和露营者可能经常看见它们低伏在浓密灌木中，但它们很少危险，即使攻击也很少致命。没有任何记录显示死亡事件归因于 Feiopar。徒步者和探险者将 Feiopar 与过去多个都市传说联系起来，并传言 Feiopar 是许多失踪案背后的原因，尤其是在 Vow 上。然而，这些传言并无根据。Feiopar 是这些生态系统的重要调节者，只是对进入其领地的新访客感到好奇。因此，如果你计划前往偏远而风景优美的 Vow，也许应该了解一些关于这位小型 saeptival 朋友的注意事项！\n\n首先：永远不要独自徒步。有人替你留意背后总是好事，而且 Feiopar 会被群体吓退。当然，永远不要把食物放在外面，吸引猎物和捕食者。务必将食物保存在密封容器中。旁注：近期研究表明，Feiopar 似乎会被橙色和高可视标记稍微激怒，但这些结论尚未充分确立。\n\n如果你确实遇到 Feiopar，不要惊慌。抱起小孩并保持冷静。低声说话，让自己看起来尽可能大，并保持直接眼神接触。不同于大多数捕食者，与 Feiopar 保持直接眼神接触是一种关键威慑。如果你无法确定 Feiopar 的位置，请缓慢后退，并在森林中寻找它明亮的黄色眼睛。接近时，Feiopar 通常会以短促低沉的呼噜声暴露自身。如果这种声音已经停止，Feiopar 可能已处于危险距离内。在极近距离下，与 Feiopar 进行眼神接触反而可能产生相反效果，促使它扑击。因此，始终建议随身携带熊喷雾等非致命自卫工具。如果与 Feiopar 的遭遇变为暴力事件，旁观者应远离，并立即为相关人员寻求医疗援助，因为攻击通常持续时间很短。\n\n\n",
+      "target": "黑豹\n\n学名：Felis arborum\n\n黑豹 是 Saeptivus 科的一种大型哺乳动物。它们通常高 5 英尺。在该科所有物种中，它们最像祖先猫科动物，但以骨质背部和长颈与之区分。它们的尾巴也有其他物种的两倍长，通常被认为用于支持增强的攀爬能力，并在受威胁时加以利用。黑豹 是一种近来才发现的物种，仅见于“绿色女巫”：Vow、March 和 Adamance。\n\n它们的性格非常胆怯却好奇。尽管旅行者和露营者可能经常看见它们低伏在浓密灌木中，但它们很少危险，即使攻击也很少致命。没有任何记录显示死亡事件归因于 黑豹。徒步者和探险者将 黑豹 与过去多个都市传说联系起来，并传言 黑豹 是许多失踪案背后的原因，尤其是在 Vow 上。然而，这些传言并无根据。黑豹 是这些生态系统的重要调节者，只是对进入其领地的新访客感到好奇。因此，如果你计划前往偏远而风景优美的 Vow，也许应该了解一些关于这位小型 saeptival 朋友的注意事项！\n\n首先：永远不要独自徒步。有人替你留意背后总是好事，而且 黑豹 会被群体吓退。当然，永远不要把食物放在外面，吸引猎物和捕食者。务必将食物保存在密封容器中。旁注：近期研究表明，黑豹 似乎会被橙色和高可视标记稍微激怒，但这些结论尚未充分确立。\n\n如果你确实遇到 黑豹，不要惊慌。抱起小孩并保持冷静。低声说话，让自己看起来尽可能大，并保持直接眼神接触。不同于大多数捕食者，与 黑豹 保持直接眼神接触是一种关键威慑。如果你无法确定 黑豹 的位置，请缓慢后退，并在森林中寻找它明亮的黄色眼睛。接近时，黑豹 通常会以短促低沉的呼噜声暴露自身。如果这种声音已经停止，黑豹 可能已处于危险距离内。在极近距离下，与 黑豹 进行眼神接触反而可能产生相反效果，促使它扑击。因此，始终建议随身携带熊喷雾等非致命自卫工具。如果与 黑豹 的遭遇变为暴力事件，旁观者应远离，并立即为相关人员寻求医疗援助，因为攻击通常持续时间很短。\n\n\n",
       "mode": "translate",
       "note": "TerminalNode FeioparFile 第四批大型图鉴全文精翻。"
     },
@@ -6280,7 +6280,7 @@
     },
     {
       "source": "CarStealer",
-      "target": "CarStealer",
+      "target": "\u751f\u6210\u8f66\u8f86",
       "mode": "preserve",
       "note": "Scene TMP dynamic finalize (id/version preserve)."
     },

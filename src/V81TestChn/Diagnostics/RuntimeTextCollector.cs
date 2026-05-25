@@ -43,30 +43,30 @@ internal static class RuntimeTextCollector
     public static void Initialize(string pluginDir, ConfigFile config)
     {
         _enabled = config.Bind(
-            "Diagnostics",
+            ConfigSections.DiagnosticsTextCollector,
             "CollectUntranslatedText",
             false,
-            "Collect untranslated runtime text candidates into logs/untranslated-texts.csv. Disabled by default to avoid runtime overhead.");
+            "收集运行时疑似未翻译文本，并写入 logs/untranslated-texts.csv。默认关闭，避免影响帧时间。");
         _collectorFlushIntervalSeconds = config.Bind(
-            "Diagnostics",
+            ConfigSections.DiagnosticsTextCollector,
             "CollectorFlushIntervalSeconds",
             30f,
-            "When untranslated text collection is enabled, append pending records at this interval.");
+            "启用未翻译文本收集后，待写入记录的定时追加间隔，单位为秒。");
         _collectorFlushEveryRecords = config.Bind(
-            "Diagnostics",
+            ConfigSections.DiagnosticsTextCollector,
             "CollectorFlushEveryRecords",
             20,
-            "When untranslated text collection is enabled, append pending records after this many new records.");
+            "启用未翻译文本收集后，每累计多少条新记录就追加写入一次。");
         _maxCollectedRecords = config.Bind(
-            "Diagnostics",
+            ConfigSections.DiagnosticsTextCollector,
             "MaxCollectedRecords",
             5000,
-            "Maximum unique untranslated text records to keep per plugin session.");
+            "单次插件运行最多保留的未翻译文本记录数量。达到上限后停止继续收集。");
         _collectorUseFullTranslationCheck = config.Bind(
-            "Diagnostics",
+            ConfigSections.DiagnosticsTextCollector,
             "CollectorUseFullTranslationCheck",
             false,
-            "When true, untranslated text collection uses the full TranslationService.TryTranslate check. Disabled by default to keep diagnostics cheap.");
+            "收集前是否使用完整翻译流程复查文本。默认关闭，避免诊断功能进入较重路径。");
 
         StopFlushTimer();
         lock (SyncRoot)
@@ -123,12 +123,22 @@ internal static class RuntimeTextCollector
             return;
         }
 
+        if (!IsCollectionActive())
+        {
+            return;
+        }
+
         Record("TMP_Text", component.gameObject, component.font != null ? component.font.name : string.Empty, source);
     }
 
     public static void Record(Text component, string? source)
     {
         if (component == null)
+        {
+            return;
+        }
+
+        if (!IsCollectionActive())
         {
             return;
         }
@@ -143,12 +153,17 @@ internal static class RuntimeTextCollector
             return;
         }
 
+        if (!IsCollectionActive())
+        {
+            return;
+        }
+
         Record("TextMesh", component.gameObject, component.font != null ? component.font.name : string.Empty, source);
     }
 
     private static void Record(string componentType, GameObject gameObject, string fontName, string? source)
     {
-        if (!IsEnabled || !_isInitialized || string.IsNullOrEmpty(_outputPath))
+        if (!IsCollectionActive())
         {
             return;
         }
@@ -197,6 +212,11 @@ internal static class RuntimeTextCollector
         {
             FlushPending();
         }
+    }
+
+    private static bool IsCollectionActive()
+    {
+        return IsEnabled && _isInitialized && !string.IsNullOrEmpty(_outputPath);
     }
 
     private static bool ShouldCollect(string? source)

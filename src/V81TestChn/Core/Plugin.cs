@@ -13,7 +13,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "0.2.1";
+    public const string PluginVersion = "0.2.2";
 
     internal static ManualLogSource Log = null!;
 
@@ -38,6 +38,7 @@ public sealed class Plugin : BaseUnityPlugin
         TranslationGuard.Initialize(Config);
         TextPatches.Initialize(Config);
         TryInitialize("CustomLocalizationExtensionService", () => { CustomLocalizationExtensionService.Initialize(pluginDir, Config); });
+        TryInitialize("RuntimeIconsCompatibilityService", () => { RuntimeIconsCompatibilityService.Initialize(); });
         try
         {
             TranslationService.Initialize(Config);
@@ -48,13 +49,24 @@ public sealed class Plugin : BaseUnityPlugin
             Logger.LogError($"TranslationService.Load failed: {ex.GetType().Name}: {ex.Message}");
         }
 
-        var manualPatchCount = TextPatches.Install(_harmony);
-        if (manualPatchCount == 0)
+        var existingPatchCount = CountOwnHarmonyPatches();
+        var manualPatchCount = 0;
+        if (existingPatchCount > 0)
+        {
+            Logger.LogWarning($"Manual patch install skipped; {existingPatchCount} Harmony patches are already owned by {PluginGuid}.");
+        }
+        else
+        {
+            manualPatchCount = TextPatches.Install(_harmony);
+        }
+
+        if (manualPatchCount == 0 && existingPatchCount == 0)
         {
             Logger.LogWarning("Manual patch count is 0; global text hooks are not installed.");
         }
 
         TryInitialize("FontFallbackService", () => { FontFallbackService.TryLoadFontAsset(pluginDir); });
+        TryInitialize("FontFallbackAuditService", () => { FontFallbackAuditService.Initialize(Config); });
         TryInitialize("EmbeddedFontPatcherService", () => { EmbeddedFontPatcherService.Initialize(pluginDir, Config); });
         TryInitialize("AlertTextureReplacementService", () => { AlertTextureReplacementService.Initialize(pluginDir); });
         TryInitialize("RadiationWarningAuditService", () => { RadiationWarningAuditService.Initialize(Config); });
@@ -107,12 +119,13 @@ public sealed class Plugin : BaseUnityPlugin
         _runtimeShutDown = true;
         TryCleanup("Harmony.UnpatchSelf", _harmony.UnpatchSelf);
         TryCleanup("OriginalResourceStateService.RestoreAll", () => { OriginalResourceStateService.RestoreAll(); });
-        TryCleanup("RuntimeIconsCompatibilityService.Clear", () => { RuntimeIconsCompatibilityService.Clear(); });
+        TryCleanup("RuntimeIconsCompatibilityService.Shutdown", () => { RuntimeIconsCompatibilityService.Shutdown(); });
         TryCleanup("TextPatches.Clear", () => { TextPatches.Clear(); });
         TryCleanup("TranslationGuard.Clear", () => { TranslationGuard.Clear(); });
         TryCleanup("TargetedUiTranslator.Shutdown", () => { TargetedUiTranslator.Shutdown(); });
         TryCleanup("TranslationService.ClearCaches", () => { TranslationService.ClearCaches(); });
         TryCleanup("CustomLocalizationExtensionService.Shutdown", () => { CustomLocalizationExtensionService.Shutdown(); });
+        TryCleanup("FontFallbackAuditService.Shutdown", () => { FontFallbackAuditService.Shutdown(); });
         TryCleanup("FontFallbackService.Shutdown", () => { FontFallbackService.Shutdown(); });
         TryCleanup("EmbeddedFontPatcherService.Shutdown", () => { EmbeddedFontPatcherService.Shutdown(); });
         TryCleanup("AlertTextureReplacementService.Shutdown", () => { AlertTextureReplacementService.Shutdown(); });

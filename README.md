@@ -2,19 +2,19 @@
 
 ## 中文说明
 
-LC Chinese Project 是面向 Lethal Company V81 测试环境维护的简体中文本地化模组。项目提供运行时文本汉化、中文 TextMeshPro 字体 fallback、部分 UI 贴图本地化，以及针对常见 UI、图标和动态文本场景的兼容处理。
+LC Chinese Project 是面向 Lethal Company V81 测试环境维护的简体中文本地化模组。项目提供运行时文本汉化、中文 TextMeshPro 字体 fallback、部分 UI 贴图本地化，以及针对常见 UI、动态文本、终端页面和图标类模组的兼容处理。
 
 本项目不依赖 GameTranslator 运行时。文本替换、动态 UI 后处理、字体 fallback、贴图替换和兼容逻辑均由本插件在 BepInEx 环境中完成。
 
 ### 功能范围
 
 - 汉化游戏内 UI、HUD、终端、商店、扫描提示、飞船显示屏、星球信息、结算界面、大厅提示和部分场景文本。
-- 覆盖终端订单、星球天气、扫描价值、聊天系统消息、投票、剩余天数、重量单位、服装切换提示和载具交互提示等动态文本。
-- 保留终端输入、聊天输入、玩家名、大厅动态名、确认命令和图标类模组物品 key 的原版行为。
-- 提供中文 TextMeshPro 字体 fallback，降低缺字、透明字和动态文本渲染异常。
+- 覆盖终端订单、星球天气、扫描价值、聊天系统消息、投票、剩余天数、重量单位、服装切换提示、载具交互提示和观战状态等动态文本。
+- 优化快捷菜单、游戏设置、退出确认、联机提示和大厅状态弹窗等界面的中文显示稳定性。
+- 提供中文 TextMeshPro 字体 fallback，降低缺字、透明字、黑色字和动态文本渲染异常。
 - 包含部分本地化 UI 贴图资源。
 - 兼容 RuntimeIcons、RuntimeIcons_BetterRotations 和 HoneeItemIcons，保留原版英文物品 key 供图标匹配使用，仅在显示层处理中文。
-- 新增自定义本地化支持：可通过独立 `.cfg` 文件扩展文本替换规则。
+- 支持自定义本地化：可通过独立 `.cfg` 文件扩展文本替换规则。
 
 ### 自定义本地化
 
@@ -62,7 +62,7 @@ style:ignorecase:discount|color=#FFD447
 常用配置：
 
 ```ini
-[CustomLocalization]
+[01 基础 - 自定义本地化]
 Enabled = true
 PreferCustomTranslations = false
 EnableRegex = false
@@ -92,25 +92,25 @@ MaxStyleRules = 64
 - 如果输入文本被错误翻译，请优先检查终端输入、聊天输入、玩家名和大厅动态文本保护逻辑。
 - 如果自定义本地化规则导致性能问题，请先禁用 regex，再逐步缩小规则范围。
 
-### 许可与鸣谢
+### 许可与致谢
 
 本项目以 MIT 协议发布。项目包含或改编了部分第三方 MIT 内容，并分发基于 OFL 字体生成的 TextMeshPro 字体资源。详细归属与分发说明见 `THIRD_PARTY_LICENSES.md`。
 
 ## English
 
-LC Chinese Project is a Simplified Chinese localization mod maintained for the Lethal Company V81 test environment. It provides runtime text localization, Chinese TextMeshPro font fallback, selected localized UI textures, and compatibility handling for common UI, icon, and dynamic-text scenarios.
+LC Chinese Project is a Simplified Chinese localization mod maintained for the Lethal Company V81 test environment. It provides runtime text localization, Chinese TextMeshPro font fallback, selected localized UI textures, and compatibility handling for common UI, dynamic text, terminal pages, and icon-related mods.
 
 The project does not require GameTranslator at runtime. Text replacement, dynamic UI post-processing, font fallback, texture replacement, and compatibility logic are implemented by this BepInEx plugin.
 
 ### Scope
 
 - Localizes in-game UI, HUD, terminal pages, store pages, scan prompts, ship monitor text, planet information, endgame screens, lobby warnings, and selected scene text.
-- Covers dynamic text such as terminal orders, planet weather, scanner values, chat system messages, votes, days left, weight units, suit-change prompts, and vehicle interaction prompts.
-- Preserves vanilla behavior for terminal input, chat input, player names, lobby dynamic names, confirmation commands, and icon-mod item keys.
-- Provides Chinese TextMeshPro fallback to reduce missing glyphs, transparent glyphs, and dynamic text rendering issues.
+- Covers dynamic text such as terminal orders, planet weather, scanner values, chat system messages, votes, days left, weight units, suit-change prompts, vehicle prompts, and spectate status.
+- Improves Chinese display stability for quick menus, game settings, leave-game confirmation, online warnings, and lobby status popups.
+- Provides Chinese TextMeshPro fallback to reduce missing glyphs, transparent glyphs, black glyphs, and dynamic text rendering issues.
 - Includes selected localized UI texture resources.
 - Keeps RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons compatible by preserving vanilla English item keys for icon matching while translating display text separately.
-- Adds custom localization support through standalone `.cfg` files.
+- Supports custom localization through standalone `.cfg` files.
 
 ### Custom Localization
 
@@ -158,7 +158,7 @@ Rule prefixes:
 Common options:
 
 ```ini
-[CustomLocalization]
+[01 基础 - 自定义本地化]
 Enabled = true
 PreferCustomTranslations = false
 EnableRegex = false

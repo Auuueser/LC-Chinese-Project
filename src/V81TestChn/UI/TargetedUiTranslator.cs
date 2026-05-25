@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using GameNetcodeStuff;
 using TMPro;
@@ -14,12 +15,17 @@ internal static class TargetedUiTranslator
     private static int _dropdownRefreshDepth;
 
     private static readonly HashSet<int> QuickMenuTranslated = new();
+    private static readonly HashSet<int> MenuPanelTranslated = new();
+    private static readonly HashSet<int> QuickMenuTranslationRunning = new();
+    private static readonly HashSet<int> MenuPanelTranslationRunning = new();
     private static readonly Dictionary<int, ProcessedTextState> TranslationProcessedCache = new();
     private static readonly Dictionary<int, List<int>> TmpDropdownOptionTextCache = new();
     private static readonly Dictionary<int, List<int>> DropdownOptionTextCache = new();
     private static readonly Dictionary<int, ChatOutputState> ChatOutputStates = new();
+    private static readonly Dictionary<int, CursorTipState> CursorTipStates = new();
     private const int ProcessedTextCacheLimit = 8192;
     private const int ChatLineCacheLimit = 256;
+    private const int MenuTranslationWorkBudgetPerFrame = 12;
     private static bool _sceneUnloadSubscribed;
 
     private readonly struct ProcessedTextState
@@ -41,6 +47,20 @@ internal static class TargetedUiTranslator
         public string? LastOriginalText;
         public string? LastTranslatedText;
         public readonly Dictionary<string, string?> LineTranslationCache = new(StringComparer.Ordinal);
+    }
+
+    private sealed class CursorTipState
+    {
+        public int ParentId;
+        public string? LastOriginalText;
+        public string? LastTranslatedText;
+    }
+
+    private sealed class TranslationCounts
+    {
+        public int Translated;
+        public int Seen;
+        public int WorkThisFrame;
     }
 
     public static void Initialize()
@@ -68,10 +88,14 @@ internal static class TargetedUiTranslator
     public static void ClearCaches()
     {
         QuickMenuTranslated.Clear();
+        MenuPanelTranslated.Clear();
+        QuickMenuTranslationRunning.Clear();
+        MenuPanelTranslationRunning.Clear();
         TranslationProcessedCache.Clear();
         TmpDropdownOptionTextCache.Clear();
         DropdownOptionTextCache.Clear();
         ChatOutputStates.Clear();
+        CursorTipStates.Clear();
     }
 
     private static void OnSceneUnloaded(Scene scene)
@@ -91,6 +115,69 @@ internal static class TargetedUiTranslator
         var result = TranslateGameObject(root, seen);
         Plugin.LogTargetedTranslation(reason, result.translated, result.seen);
         return result;
+    }
+
+    public static (int translated, int seen) TranslateMenuPanelOnce(GameObject? root, string reason)
+    {
+        if (root == null)
+        {
+            return (0, 0);
+        }
+
+        var instanceId = root.GetInstanceID();
+        if (!MenuPanelTranslated.Add(instanceId))
+        {
+            return (0, 0);
+        }
+
+        var seen = new HashSet<int>();
+        var result = TranslateGameObject(root, seen, includeInactive: false);
+        Plugin.LogTargetedTranslation(reason, result.translated, result.seen);
+        return result;
+    }
+
+    public static bool ScheduleMenuPanelOnce(MonoBehaviour? owner, GameObject? root, string reason)
+    {
+        if (root == null)
+        {
+            return true;
+        }
+
+        var instanceId = root.GetInstanceID();
+        if (MenuPanelTranslated.Contains(instanceId) || MenuPanelTranslationRunning.Contains(instanceId))
+        {
+            return true;
+        }
+
+        if (owner == null || !owner.isActiveAndEnabled)
+        {
+            return false;
+        }
+
+        TranslateGameObjectOpenFrameFast(root, includeInactive: false);
+
+        try
+        {
+            MenuPanelTranslationRunning.Add(instanceId);
+            owner.StartCoroutine(TranslateMenuPanelOnceBudgeted(root, reason, instanceId));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            MenuPanelTranslationRunning.Remove(instanceId);
+            Plugin.Log.LogWarning($"Menu panel translation scheduling failed: {ex.GetType().Name}: {ex.Message}");
+            return false;
+        }
+    }
+
+    public static (int translated, int seen) TranslateQuickMenuLeaveGamePanel(GameObject? panel, string reason)
+    {
+        if (panel == null)
+        {
+            return (0, 0);
+        }
+
+        return TranslateMenuPanelOnce(panel, reason);
     }
 
     public static (int translated, int seen) TranslateMenuManager(MenuManager menu, string reason)
@@ -186,15 +273,16 @@ internal static class TargetedUiTranslator
 
         if (firstPass)
         {
-            Add(TranslateGameObject(menu.gameObject, seen));
-            Add(TranslateRootOnly(menu.menuContainer, seen));
             Add(TranslateRootOnly(menu.mainButtonsPanel, seen));
-            Add(TranslateRootOnly(menu.leaveGameConfirmPanel, seen));
-            Add(TranslateRootOnly(menu.settingsPanel, seen));
-            Add(TranslateRootOnly(menu.ConfirmKickUserPanel, seen));
-            Add(TranslateRootOnly(menu.KeybindsPanel, seen));
-            Add(TranslateRootOnly(menu.playerListPanel, seen));
-            Add(TranslateRootOnly(menu.debugMenuUI, seen));
+            if (menu.playerListPanel != null && menu.playerListPanel.activeInHierarchy)
+            {
+                Add(TranslateRootOnly(menu.playerListPanel, seen));
+            }
+
+            if (menu.debugMenuUI != null && menu.debugMenuUI.activeInHierarchy)
+            {
+                Add(TranslateRootOnly(menu.debugMenuUI, seen));
+            }
         }
 
         TranslateTmp(menu.interactTipText, seen, ref translated, ref totalSeen);
@@ -211,6 +299,54 @@ internal static class TargetedUiTranslator
         {
             translated += part.translated;
             totalSeen += part.seen;
+        }
+    }
+
+    public static bool ScheduleQuickMenu(QuickMenuManager? menu, string reason)
+    {
+        if (menu == null)
+        {
+            return true;
+        }
+
+        var instanceId = menu.GetInstanceID();
+        if (QuickMenuTranslationRunning.Contains(instanceId))
+        {
+            return true;
+        }
+
+        if (!menu.isActiveAndEnabled)
+        {
+            return false;
+        }
+
+        var firstPass = QuickMenuTranslated.Add(instanceId);
+        if (firstPass)
+        {
+            TranslateGameObjectOpenFrameFast(menu.mainButtonsPanel, includeInactive: true);
+            if (menu.debugMenuUI != null && menu.debugMenuUI.activeInHierarchy)
+            {
+                TranslateGameObjectOpenFrameFast(menu.debugMenuUI, includeInactive: true);
+            }
+        }
+
+        try
+        {
+            QuickMenuTranslationRunning.Add(instanceId);
+            menu.StartCoroutine(TranslateQuickMenuBudgeted(menu, reason, instanceId, firstPass));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            QuickMenuTranslationRunning.Remove(instanceId);
+            Plugin.Log.LogWarning($"Quick menu translation scheduling failed: {ex.GetType().Name}: {ex.Message}");
+            if (firstPass)
+            {
+                // Re-enable the synchronous first pass fallback if coroutine scheduling failed.
+                QuickMenuTranslated.Remove(instanceId);
+            }
+
+            return false;
         }
     }
 
@@ -588,17 +724,59 @@ internal static class TargetedUiTranslator
 
     public static (int translated, int seen) TranslatePlayerCursorTip(PlayerControllerB? player, string reason)
     {
-        if (player?.cursorTip == null)
+        var text = player?.cursorTip;
+        if (text == null || string.IsNullOrWhiteSpace(text.text))
         {
             return (0, 0);
         }
 
-        var seen = new HashSet<int>();
-        var translated = 0;
-        var totalSeen = 0;
-        TranslateTmpTargeted(player.cursorTip, DynamicTextDomain.HudControlTip, seen, ref translated, ref totalSeen);
-        Plugin.LogTargetedTranslation(reason, translated, totalSeen);
-        return (translated, totalSeen);
+        var source = text.text;
+        var id = text.GetInstanceID();
+        var parentId = GetParentInstanceId(text);
+        if (!CursorTipStates.TryGetValue(id, out var state) || state.ParentId != parentId)
+        {
+            state = new CursorTipState { ParentId = parentId };
+            CursorTipStates[id] = state;
+        }
+
+        if (string.Equals(source, state.LastTranslatedText, StringComparison.Ordinal))
+        {
+            ApplyTmpStyleRepairs(text, source, "TargetedUiTranslator.TMP.HudControlTip");
+            Plugin.LogTargetedTranslation(reason, 0, 1);
+            return (0, 1);
+        }
+
+        if (state.LastTranslatedText != null &&
+            string.Equals(source, state.LastOriginalText, StringComparison.Ordinal) &&
+            !string.Equals(source, state.LastTranslatedText, StringComparison.Ordinal))
+        {
+            text.text = state.LastTranslatedText;
+            ApplyTmpStyleRepairs(text, state.LastTranslatedText, "TargetedUiTranslator.TMP.HudControlTip");
+            Plugin.ReportTranslationHit();
+            MarkTranslationProcessed(text, state.LastTranslatedText);
+            Plugin.LogTargetedTranslation(reason, 1, 1);
+            return (1, 1);
+        }
+
+        if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.HudControlTip, source, out var value) &&
+            !string.Equals(source, value, StringComparison.Ordinal))
+        {
+            text.text = value;
+            state.LastOriginalText = source;
+            state.LastTranslatedText = value;
+            ApplyTmpStyleRepairs(text, value, "TargetedUiTranslator.TMP.HudControlTip");
+            Plugin.ReportTranslationHit();
+            MarkTranslationProcessed(text, value);
+            Plugin.LogTargetedTranslation(reason, 1, 1);
+            return (1, 1);
+        }
+
+        state.LastOriginalText = source;
+        state.LastTranslatedText = source;
+        ApplyTmpStyleRepairs(text, source, "TargetedUiTranslator.TMP.HudControlTip");
+        MarkTranslationProcessed(text, source);
+        Plugin.LogTargetedTranslation(reason, 0, 1);
+        return (0, 1);
     }
 
     public static (int translated, int seen) TranslateVehicleStaticTexts(VehicleController? vehicle, string reason)
@@ -875,6 +1053,11 @@ internal static class TargetedUiTranslator
         return root == null ? (0, 0) : TranslateGameObject(root, seenObjects);
     }
 
+    private static (int translated, int seen) TranslateRootOnly(GameObject? root, HashSet<int> seenObjects, bool includeInactive)
+    {
+        return root == null ? (0, 0) : TranslateGameObject(root, seenObjects, includeInactive);
+    }
+
     private static (int translated, int seen) TranslateTmpRoot(TMP_Text? text, HashSet<int> seenObjects)
     {
         var root = text == null ? null : text.transform.parent?.gameObject;
@@ -883,35 +1066,334 @@ internal static class TargetedUiTranslator
 
     private static (int translated, int seen) TranslateGameObject(GameObject root, HashSet<int> seenObjects)
     {
+        return TranslateGameObject(root, seenObjects, includeInactive: true);
+    }
+
+    private static (int translated, int seen) TranslateGameObject(GameObject root, HashSet<int> seenObjects, bool includeInactive)
+    {
         var translated = 0;
         var totalSeen = 0;
 
-        foreach (var dropdown in root.GetComponentsInChildren<TMP_Dropdown>(true))
+        foreach (var dropdown in root.GetComponentsInChildren<TMP_Dropdown>(includeInactive))
         {
             TranslateTmpDropdown(dropdown, ref translated);
         }
 
-        foreach (var dropdown in root.GetComponentsInChildren<Dropdown>(true))
+        foreach (var dropdown in root.GetComponentsInChildren<Dropdown>(includeInactive))
         {
             TranslateDropdown(dropdown, ref translated);
         }
 
-        foreach (var text in root.GetComponentsInChildren<TMP_Text>(true))
+        foreach (var text in root.GetComponentsInChildren<TMP_Text>(includeInactive))
         {
             TranslateTmp(text, seenObjects, ref translated, ref totalSeen);
         }
 
-        foreach (var text in root.GetComponentsInChildren<Text>(true))
+        foreach (var text in root.GetComponentsInChildren<Text>(includeInactive))
         {
             TranslateUiText(text, seenObjects, ref translated, ref totalSeen);
         }
 
-        foreach (var text in root.GetComponentsInChildren<TextMesh>(true))
+        foreach (var text in root.GetComponentsInChildren<TextMesh>(includeInactive))
         {
             TranslateTextMesh(text, seenObjects, ref translated, ref totalSeen);
         }
 
         return (translated, totalSeen);
+    }
+
+    private static IEnumerator TranslateMenuPanelOnceBudgeted(GameObject root, string reason, int instanceId)
+    {
+        var counts = new TranslationCounts();
+        try
+        {
+            if (!MenuPanelTranslated.Add(instanceId))
+            {
+                yield break;
+            }
+
+            var seen = new HashSet<int>();
+            yield return TranslateGameObjectBudgeted(root, seen, includeInactive: false, counts);
+            Plugin.LogTargetedTranslation(reason, counts.Translated, counts.Seen);
+        }
+        finally
+        {
+            MenuPanelTranslationRunning.Remove(instanceId);
+        }
+    }
+
+    private static IEnumerator TranslateQuickMenuBudgeted(
+        QuickMenuManager menu,
+        string reason,
+        int instanceId,
+        bool firstPass)
+    {
+        var counts = new TranslationCounts();
+        try
+        {
+            var seen = new HashSet<int>();
+            if (firstPass)
+            {
+                if (menu.playerListPanel != null && menu.playerListPanel.activeInHierarchy)
+                {
+                    yield return TranslateRootOnlyBudgeted(menu.playerListPanel, seen, counts);
+                }
+            }
+
+            TranslateTmp(menu.interactTipText, seen, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+
+            TranslateTmp(menu.leaveGameClarificationText, seen, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+
+            TranslateTmp(menu.ConfirmKickPlayerText, seen, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+
+            TranslateTmp(menu.currentMicrophoneText, seen, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+
+            TranslateTmp(menu.changesNotAppliedText, seen, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+
+            TranslateTmp(menu.settingsBackButton, seen, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+
+            Plugin.LogTargetedTranslation(reason, counts.Translated, counts.Seen);
+        }
+        finally
+        {
+            QuickMenuTranslationRunning.Remove(instanceId);
+        }
+    }
+
+    private static IEnumerator TranslateRootOnlyBudgeted(GameObject? root, HashSet<int> seenObjects, TranslationCounts counts)
+    {
+        if (root == null)
+        {
+            yield break;
+        }
+
+        yield return TranslateGameObjectBudgeted(root, seenObjects, includeInactive: true, counts);
+    }
+
+    private static IEnumerator TranslateGameObjectBudgeted(
+        GameObject root,
+        HashSet<int> seenObjects,
+        bool includeInactive,
+        TranslationCounts counts)
+    {
+        foreach (var dropdown in root.GetComponentsInChildren<TMP_Dropdown>(includeInactive))
+        {
+            TranslateTmpDropdown(dropdown, ref counts.Translated);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+        }
+
+        foreach (var dropdown in root.GetComponentsInChildren<Dropdown>(includeInactive))
+        {
+            TranslateDropdown(dropdown, ref counts.Translated);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+        }
+
+        foreach (var text in root.GetComponentsInChildren<TMP_Text>(includeInactive))
+        {
+            TranslateTmp(text, seenObjects, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+        }
+
+        foreach (var text in root.GetComponentsInChildren<Text>(includeInactive))
+        {
+            TranslateUiText(text, seenObjects, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+        }
+
+        foreach (var text in root.GetComponentsInChildren<TextMesh>(includeInactive))
+        {
+            TranslateTextMesh(text, seenObjects, ref counts.Translated, ref counts.Seen);
+            if (AdvanceMenuBudget(counts))
+            {
+                yield return null;
+            }
+        }
+    }
+
+    private static bool AdvanceMenuBudget(TranslationCounts counts)
+    {
+        counts.WorkThisFrame++;
+        if (counts.WorkThisFrame < MenuTranslationWorkBudgetPerFrame)
+        {
+            return false;
+        }
+
+        counts.WorkThisFrame = 0;
+        return true;
+    }
+
+    private static void TranslateGameObjectOpenFrameFast(GameObject? root, bool includeInactive)
+    {
+        if (root == null)
+        {
+            return;
+        }
+
+        foreach (var dropdown in root.GetComponentsInChildren<TMP_Dropdown>(includeInactive))
+        {
+            TranslateTmpDropdownOptionsFastExact(dropdown);
+        }
+
+        foreach (var dropdown in root.GetComponentsInChildren<Dropdown>(includeInactive))
+        {
+            TranslateDropdownOptionsFastExact(dropdown);
+        }
+
+        foreach (var text in root.GetComponentsInChildren<TMP_Text>(includeInactive))
+        {
+            TranslateTmpOpenFrameFast(text);
+        }
+
+        foreach (var text in root.GetComponentsInChildren<Text>(includeInactive))
+        {
+            TranslateUiTextOpenFrameFast(text);
+        }
+
+        foreach (var text in root.GetComponentsInChildren<TextMesh>(includeInactive))
+        {
+            TranslateTextMeshOpenFrameFast(text);
+        }
+    }
+
+    private static void TranslateTmpOpenFrameFast(TMP_Text? text)
+    {
+        if (text == null || IsInputFieldTextComponent(text) || IsLobbySlotDynamicText(text))
+        {
+            return;
+        }
+
+        if (!TranslationService.TryTranslateFastExact(text.text, out var translated) ||
+            string.Equals(text.text, translated, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        text.text = translated;
+        FontFallbackService.ApplyFallback(text, translated);
+        MarkTranslationProcessed(text, translated);
+        Plugin.ReportTranslationHit();
+    }
+
+    private static void TranslateUiTextOpenFrameFast(Text? text)
+    {
+        if (text == null ||
+            !TranslationService.TryTranslateFastExact(text.text, out var translated) ||
+            string.Equals(text.text, translated, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        text.text = translated;
+        MarkTranslationProcessed(text, translated);
+        Plugin.ReportTranslationHit();
+    }
+
+    private static void TranslateTextMeshOpenFrameFast(TextMesh? text)
+    {
+        if (text == null ||
+            !TranslationService.TryTranslateFastExact(text.text, out var translated) ||
+            string.Equals(text.text, translated, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        text.text = translated;
+        MarkTranslationProcessed(text, translated);
+        Plugin.ReportTranslationHit();
+    }
+
+    private static void TranslateTmpDropdownOptionsFastExact(TMP_Dropdown? dropdown)
+    {
+        if (dropdown?.options == null)
+        {
+            return;
+        }
+
+        var changed = false;
+        for (var i = 0; i < dropdown.options.Count; i++)
+        {
+            var option = dropdown.options[i];
+            if (option == null ||
+                !TranslationService.TryTranslateFastExact(option.text, out var translated) ||
+                string.Equals(option.text, translated, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            option.text = translated;
+            changed = true;
+            Plugin.ReportTranslationHit();
+        }
+
+        if (changed)
+        {
+            SafeRefreshShownValue(dropdown);
+        }
+    }
+
+    private static void TranslateDropdownOptionsFastExact(Dropdown? dropdown)
+    {
+        if (dropdown?.options == null)
+        {
+            return;
+        }
+
+        var changed = false;
+        for (var i = 0; i < dropdown.options.Count; i++)
+        {
+            var option = dropdown.options[i];
+            if (option == null ||
+                !TranslationService.TryTranslateFastExact(option.text, out var translated) ||
+                string.Equals(option.text, translated, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            option.text = translated;
+            changed = true;
+            Plugin.ReportTranslationHit();
+        }
+
+        if (changed)
+        {
+            SafeRefreshShownValue(dropdown);
+        }
     }
 
     private static void TranslateTmpArray(TMP_Text[]? texts, HashSet<int> seenObjects, ref int translated, ref int totalSeen)
@@ -998,7 +1480,7 @@ internal static class TargetedUiTranslator
 
         totalSeen++;
         var alreadyTranslated = WasTranslationProcessed(text, text.text);
-        if (!alreadyTranslated && TranslationService.TryTranslate(text.text, out var value))
+        if (!alreadyTranslated && TryTranslateStaticUiText(text.text, out var value))
         {
             text.text = value;
             ApplyTmpStyleRepairs(text, value, "TargetedUiTranslator.TMP");
@@ -1027,7 +1509,7 @@ internal static class TargetedUiTranslator
 
         totalSeen++;
         var alreadyTranslated = WasTranslationProcessed(text, text.text);
-        if (!alreadyTranslated && TranslationService.TryTranslate(text.text, out var value))
+        if (!alreadyTranslated && TryTranslateStaticUiText(text.text, out var value))
         {
             text.text = value;
             ApplyUiStyleRepairs(text, "TargetedUiTranslator.UI.Text", value);
@@ -1056,7 +1538,7 @@ internal static class TargetedUiTranslator
 
         totalSeen++;
         var alreadyTranslated = WasTranslationProcessed(text, text.text);
-        if (!alreadyTranslated && TranslationService.TryTranslate(text.text, out var value))
+        if (!alreadyTranslated && TryTranslateStaticUiText(text.text, out var value))
         {
             text.text = value;
             ApplyTextMeshStyleRepairs(text, "TargetedUiTranslator.TextMesh", value);
@@ -1069,6 +1551,16 @@ internal static class TargetedUiTranslator
             ApplyTextMeshStyleRepairs(text, "TargetedUiTranslator.TextMesh", text.text);
             MarkTranslationProcessed(text, text.text);
         }
+    }
+
+    private static bool TryTranslateStaticUiText(string? source, out string translated)
+    {
+        if (TranslationService.TryTranslateFastExact(source, out translated))
+        {
+            return true;
+        }
+
+        return TranslationService.TryTranslate(source, out translated);
     }
 
     private static bool WasTranslationProcessed(Component component, string? text)

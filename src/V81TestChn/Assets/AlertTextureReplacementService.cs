@@ -80,6 +80,7 @@ internal static class AlertTextureReplacementService
             return;
         }
 
+        ResetSystemOnlineWatcherIfStale(hudManager);
         if (_systemOnlineWatcher != null)
         {
             return;
@@ -179,6 +180,7 @@ internal static class AlertTextureReplacementService
             return;
         }
 
+        ResetFixedSceneLabelWatcherIfStale(hudManager);
         if (_fixedSceneLabelWatcher != null)
         {
             return;
@@ -190,14 +192,28 @@ internal static class AlertTextureReplacementService
 
     public static void Shutdown()
     {
-        if (_systemOnlineWatcher != null && _systemOnlineWatcherOwner != null)
+        try
         {
-            _systemOnlineWatcherOwner.StopCoroutine(_systemOnlineWatcher);
+            if (_systemOnlineWatcher != null && _systemOnlineWatcherOwner != null)
+            {
+                _systemOnlineWatcherOwner.StopCoroutine(_systemOnlineWatcher);
+            }
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"NativeRelay shutdown failed stopping SystemOnline watcher: {ex.GetType().Name}: {ex.Message}");
         }
 
-        if (_fixedSceneLabelWatcher != null && _fixedSceneLabelWatcherOwner != null)
+        try
         {
-            _fixedSceneLabelWatcherOwner.StopCoroutine(_fixedSceneLabelWatcher);
+            if (_fixedSceneLabelWatcher != null && _fixedSceneLabelWatcherOwner != null)
+            {
+                _fixedSceneLabelWatcherOwner.StopCoroutine(_fixedSceneLabelWatcher);
+            }
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"NativeRelay shutdown failed stopping fixed scene label watcher: {ex.GetType().Name}: {ex.Message}");
         }
 
         _systemOnlineWatcher = null;
@@ -205,6 +221,59 @@ internal static class AlertTextureReplacementService
         _systemOnlineWatcherOwner = null;
         _fixedSceneLabelWatcherOwner = null;
         NativeTextRoleCache.Clear();
+    }
+
+    private static void ResetSystemOnlineWatcherIfStale(HUDManager currentHud)
+    {
+        if (_systemOnlineWatcher == null)
+        {
+            _systemOnlineWatcherOwner = null;
+            return;
+        }
+
+        if (_systemOnlineWatcherOwner == currentHud)
+        {
+            return;
+        }
+
+        StopStaleWatcher(_systemOnlineWatcherOwner, _systemOnlineWatcher, "SystemOnline");
+        _systemOnlineWatcher = null;
+        _systemOnlineWatcherOwner = null;
+    }
+
+    private static void ResetFixedSceneLabelWatcherIfStale(HUDManager currentHud)
+    {
+        if (_fixedSceneLabelWatcher == null)
+        {
+            _fixedSceneLabelWatcherOwner = null;
+            return;
+        }
+
+        if (_fixedSceneLabelWatcherOwner == currentHud)
+        {
+            return;
+        }
+
+        StopStaleWatcher(_fixedSceneLabelWatcherOwner, _fixedSceneLabelWatcher, "FixedSceneLabel");
+        _fixedSceneLabelWatcher = null;
+        _fixedSceneLabelWatcherOwner = null;
+    }
+
+    private static void StopStaleWatcher(HUDManager? owner, Coroutine watcher, string label)
+    {
+        if (owner == null)
+        {
+            return;
+        }
+
+        try
+        {
+            owner.StopCoroutine(watcher);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"NativeRelay stale {label} watcher stop failed: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     public static void TryReplaceSystemOnlineText(TMP_Text? text, string stage)

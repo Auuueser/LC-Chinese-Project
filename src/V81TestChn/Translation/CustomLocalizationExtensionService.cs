@@ -50,50 +50,50 @@ internal static class CustomLocalizationExtensionService
     public static void Initialize(string pluginDir, ConfigFile config)
     {
         _enabled = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "Enabled",
             true,
-            "Load optional custom localization cfg files from plugin/config custom-localization directories.");
+            "启用自定义本地化扩展。开启后会读取插件目录和配置目录中的 custom-localization cfg 文件。");
         _preferCustomTranslations = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "PreferCustomTranslations",
             false,
-            "When true, custom exact translations are checked before built-in translations. Regex translations are still gated by EnableRegex.");
+            "自定义精确替换是否优先于内置翻译。默认关闭，避免个人规则意外覆盖内置稳定译文。");
         _enableRegex = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "EnableRegex",
             false,
-            "Enable custom regex translations and regex style rules. Disabled by default to keep global text paths cheap.");
+            "启用自定义正则替换和正则样式规则。默认关闭，避免高频文本路径产生额外开销。");
         _maxExactRules = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "MaxExactRules",
             DefaultMaxExactRules,
-            "Maximum custom exact translation rules to load.");
+            "最多加载的自定义精确替换规则数量。");
         _maxIgnoreCaseRules = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "MaxIgnoreCaseRules",
             DefaultMaxIgnoreCaseRules,
-            "Maximum custom ignorecase translation rules to load.");
+            "最多加载的自定义忽略大小写替换规则数量。");
         _maxRegexRules = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "MaxRegexRules",
             DefaultMaxRegexRules,
-            "Maximum custom regex translation rules to load.");
+            "最多加载的自定义正则替换规则数量。仅在 EnableRegex 为 true 时生效。");
         _maxStyleRules = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "MaxStyleRules",
             DefaultMaxStyleRules,
-            "Maximum custom style rules to load.");
+            "最多加载的自定义样式规则数量。");
         _maxLoadedFiles = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "MaxLoadedFiles",
             DefaultMaxLoadedFiles,
-            "Maximum custom localization cfg files to load.");
+            "最多加载的自定义本地化 cfg 文件数量。");
         _maxConfigFileBytes = config.Bind(
-            "CustomLocalization",
+            ConfigSections.CustomLocalization,
             "MaxConfigFileBytes",
             DefaultMaxConfigFileBytes,
-            "Maximum size in bytes for each custom localization cfg file.");
+            "单个自定义本地化 cfg 文件允许的最大字节数。");
 
         Load(pluginDir);
     }
@@ -560,7 +560,10 @@ internal static class CustomLocalizationExtensionService
     private static bool TryFindStyle(Component component, string? value, bool allowRegexStyle, out StyleRule style)
     {
         style = null!;
-        if (_enabled?.Value != true || string.IsNullOrEmpty(value))
+        if (_enabled?.Value != true ||
+            string.IsNullOrEmpty(value) ||
+            !_hasStyleRules ||
+            (!allowRegexStyle && !_hasGlobalStyleRules))
         {
             return false;
         }

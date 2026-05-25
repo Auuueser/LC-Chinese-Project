@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace V81TestChn;
@@ -11,6 +12,9 @@ internal static partial class TranslationService
             LooksLikeEndgameStatTextCheap(source) ||
             LooksLikeVoteTextCheap(source) ||
             LooksLikeDaysLeftTextCheap(source) ||
+            LooksLikeShipLeaveEarlyWarningTextCheap(source) ||
+            source?.IndexOf("Notes", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            source?.IndexOf("Spectating", StringComparison.OrdinalIgnoreCase) >= 0 ||
             source?.IndexOf("Dead", StringComparison.OrdinalIgnoreCase) >= 0 ||
             source?.IndexOf("YOU ARE FIRED", StringComparison.OrdinalIgnoreCase) >= 0;
 
@@ -22,11 +26,105 @@ internal static partial class TranslationService
                 return false;
             }
 
-            return TranslateStatLine(source, out translated) ||
+            return TranslatePlayerNotes(source, out translated) ||
+                   TranslateStatLine(source, out translated) ||
                    TranslatePlayersFired(source, out translated) ||
+                   HudDynamicTranslator.TranslateShipLeaveEarlyWarning(source, out translated) ||
                    HudDynamicTranslator.TranslateVotes(source, out translated) ||
                    HudDynamicTranslator.TranslateDaysLeft(source, out translated) ||
                    TranslatePlayerStatus(source, out translated);
+        }
+
+        public static bool TranslatePlayerNotes(string source, out string translated)
+        {
+            translated = source;
+            if (source.IndexOf("Notes", StringComparison.OrdinalIgnoreCase) < 0 &&
+                source.IndexOf("\u5907\u6ce8", StringComparison.Ordinal) < 0 &&
+                source.IndexOf("\u7b14\u8bb0", StringComparison.Ordinal) < 0)
+            {
+                return false;
+            }
+
+            var lines = source.Split('\n');
+            var changed = false;
+            var builder = new StringBuilder(source.Length + 16);
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (i > 0)
+                {
+                    builder.Append('\n');
+                }
+
+                var line = lines[i];
+                var hasCarriageReturn = line.EndsWith("\r", StringComparison.Ordinal);
+                var content = hasCarriageReturn ? line[..^1] : line;
+                var rewritten = TranslatePlayerNoteLine(content);
+                if (!string.Equals(content, rewritten, StringComparison.Ordinal))
+                {
+                    changed = true;
+                }
+
+                builder.Append(rewritten);
+                if (hasCarriageReturn)
+                {
+                    builder.Append('\r');
+                }
+            }
+
+            if (!changed)
+            {
+                return false;
+            }
+
+            translated = builder.ToString();
+            return true;
+        }
+
+        private static string TranslatePlayerNoteLine(string line)
+        {
+            var trimmedStart = line.TrimStart();
+            var leading = line[..(line.Length - trimmedStart.Length)];
+            var header = trimmedStart.Trim();
+            if (string.Equals(header, "Notes:", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(header, "Notes\uff1a", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(header, "\u5907\u6ce8:", StringComparison.Ordinal) ||
+                string.Equals(header, "\u5907\u6ce8\uff1a", StringComparison.Ordinal) ||
+                string.Equals(header, "\u7b14\u8bb0:", StringComparison.Ordinal) ||
+                string.Equals(header, "\u7b14\u8bb0\uff1a", StringComparison.Ordinal))
+            {
+                return leading + "\u5907\u6ce8\uff1a";
+            }
+
+            var bulletPrefix = string.Empty;
+            var note = trimmedStart;
+            if (note.StartsWith("*", StringComparison.Ordinal))
+            {
+                var afterBullet = note[1..].TrimStart();
+                bulletPrefix = "* ";
+                note = afterBullet;
+            }
+
+            return TranslatePlayerNoteToken(note, out var localized)
+                ? leading + bulletPrefix + localized
+                : line;
+        }
+
+        private static bool TranslatePlayerNoteToken(string source, out string translated)
+        {
+            translated = source;
+            var normalized = source.Trim().TrimEnd('.').Trim();
+            translated = normalized.ToLowerInvariant() switch
+            {
+                "most lazy employee" => "\u6700\u61d2\u60f0\u7684\u5458\u5de5",
+                "the laziest employee" => "\u6700\u61d2\u60f0\u7684\u5458\u5de5",
+                "most profitable" => "\u6700\u4f1a\u8d5a\u94b1\u7684\u5458\u5de5",
+                "most paranoid employee" => "\u6700\u504f\u6267\u7684\u5458\u5de5",
+                "the most paranoid employee" => "\u6700\u504f\u6267\u7684\u5458\u5de5",
+                "sustained the most injuries" => "\u53d7\u4f24\u4e25\u91cd\u7684\u5458\u5de5",
+                "sustained the most injurie" => "\u53d7\u4f24\u4e25\u91cd\u7684\u5458\u5de5",
+                _ => string.Empty
+            };
+            return translated.Length > 0;
         }
 
         public static bool TranslateStatLine(string source, out string translated)
@@ -140,6 +238,11 @@ internal static partial class TranslationService
         {
             translated = source;
             var trimmed = source.Trim();
+            if (TranslateSpectatingStatus(trimmed, out translated))
+            {
+                return true;
+            }
+
             if (TranslateStatusToken(trimmed, out translated))
             {
                 return true;
@@ -155,6 +258,35 @@ internal static partial class TranslationService
             }
 
             translated = match.Groups["name"].Value.TrimEnd() + match.Groups["sep"].Value + status;
+            return true;
+        }
+
+        private static bool TranslateSpectatingStatus(string source, out string translated)
+        {
+            translated = source;
+            var match = SafeRegexMatch(
+                source,
+                @"^(?<open>[<\(（])?\s*Spectating\s*[:：]\s*(?<name>.+?)\s*(?<close>[>\)）])?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            var name = match.Groups["name"].Value.Trim();
+            if (name.Length == 0)
+            {
+                return false;
+            }
+
+            var open = match.Groups["open"].Value;
+            var close = match.Groups["close"].Value;
+            var value = $"\u6b63\u5728\u65c1\u89c2\uff1a{name}";
+            translated = open == "<" || close == ">"
+                ? $"<{value}>"
+                : open.Length > 0 || close.Length > 0
+                    ? $"\uff08{value}\uff09"
+                    : value;
             return true;
         }
 

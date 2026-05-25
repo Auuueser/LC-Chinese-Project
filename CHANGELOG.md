@@ -2,6 +2,14 @@
 
 ## 中文
 
+### 0.2.2 - 菜单稳定性、配置可读性与文本覆盖更新
+
+- 改进快捷菜单、游戏设置和退出确认界面的本地化时机，减少首次打开或反复打开时的峰值卡顿，并降低首帧短暂显示英文原文的概率。
+- 优化运行时字体与材质保护，降低交互提示、菜单按钮和大厅 UI 出现黑色字、半透明字或方块字的风险。
+- 补充公司星球说明、观战状态、退出确认弹窗、提前离船投票警告和 Performance Report notes 等原版动态文本覆盖。
+- 改进游戏设置、调试菜单和弹窗类 UI 的目标后处理，减少全局文本路径承担的高频工作。
+- 发布配置默认分组改为中文大类与小类，并将配置说明改为中文；自定义正则、诊断日志、未翻译文本收集和字体材质调整仍保持默认关闭。
+
 ### 0.2.1 - 性能、观战状态与文本覆盖更新
 
 - 降低右键扫描、富文本消息刷新和高频 UI 文本更新时的短暂卡顿风险，减少全局文本路径中的重复组件分类与 HUD 扫描源节点处理。
@@ -29,6 +37,14 @@
 - 使用当前运行时构建刷新 Thunderstore 包体和 GitHub 发布元数据。
 
 ## English
+
+### 0.2.2 - Menu stability, readable configuration, and text coverage update
+
+- Improved localization timing for the quick menu, game settings, and leave-game confirmation screens, reducing peak stutter on first open or repeated opens and lowering the chance of a one-frame English flash.
+- Strengthened runtime font and material safeguards to reduce black, translucent, or square glyph regressions in interaction prompts, menu buttons, and lobby UI.
+- Added coverage for the Company moon description, spectate status, leave-game confirmation popup, early-leave vote warning, and vanilla Performance Report notes.
+- Improved targeted post-processing for game settings, debug menus, and popup UI so less work falls back to global high-frequency text paths.
+- Changed generated release cfg sections to Chinese category groups with Chinese descriptions. Custom regex, diagnostic logging, untranslated text collection, and font material tweaks remain disabled by default.
 
 ### 0.2.1 - Performance, spectate status, and text coverage update
 

@@ -128,8 +128,11 @@ internal static partial class TranslationService
                           TryTranslateKnownDynamicTextFast(source, out translated);
                 break;
             case DynamicTextDomain.PlanetInfo:
-                matched = PlanetInfoDynamicTranslator.Translate(source, out translated) ||
-                          TryTranslateMapScreenDescription(source, out translated);
+                matched = source.IndexOf('\n') >= 0
+                    ? TryTranslateMapScreenDescription(source, out translated) ||
+                      PlanetInfoDynamicTranslator.Translate(source, out translated)
+                    : PlanetInfoDynamicTranslator.Translate(source, out translated) ||
+                      TryTranslateMapScreenDescription(source, out translated);
                 break;
             case DynamicTextDomain.MenuNotification:
                 matched = TryTranslateHostModWarning(source, out translated);
@@ -172,6 +175,7 @@ internal static partial class TranslationService
                LooksLikeRandomSeedTextCheap(source) ||
                LooksLikeEndgameStatTextCheap(source) ||
                LooksLikeControlTipTextCheap(source) ||
+               LooksLikeShipLeaveEarlyWarningTextCheap(source) ||
                LooksLikeClockTextCheap(source) ||
                LooksLikeShipMonitorTextCheap(source) ||
                LooksLikePlanetInfoTextCheap(source) ||
@@ -240,6 +244,20 @@ internal static partial class TranslationService
         return text.StartsWith("Random seed:", StringComparison.OrdinalIgnoreCase);
     }
 
+    public static bool LooksLikeShipLeaveEarlyWarningTextCheap(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return false;
+        }
+
+        var text = StripRichTextTagsCheap(source).TrimStart();
+        return text.StartsWith("WARNING!", StringComparison.OrdinalIgnoreCase) &&
+               text.IndexOf("vote has been cast", StringComparison.OrdinalIgnoreCase) >= 0 &&
+               text.IndexOf("autopilot", StringComparison.OrdinalIgnoreCase) >= 0 &&
+               text.IndexOf("leave early", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     public static bool LooksLikeClockTextCheap(string? source)
     {
         if (string.IsNullOrWhiteSpace(source))
@@ -289,7 +307,9 @@ internal static partial class TranslationService
                text.StartsWith("\u73af\u5883:", StringComparison.Ordinal) ||
                text.StartsWith("\u73af\u5883\uff1a", StringComparison.Ordinal) ||
                text.StartsWith("\u751f\u6001:", StringComparison.Ordinal) ||
-               text.StartsWith("\u751f\u6001\uff1a", StringComparison.Ordinal);
+               text.StartsWith("\u751f\u6001\uff1a", StringComparison.Ordinal) ||
+               text.Contains("Where the Company resides", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("Where the Company resices", StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool LooksLikeEndgameStatTextCheap(string? source)

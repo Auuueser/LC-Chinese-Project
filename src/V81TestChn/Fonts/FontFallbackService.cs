@@ -18,6 +18,7 @@ internal static class FontFallbackService
     private static readonly HashSet<int> FinalRenderRepairLoggedIds = new();
     private static readonly HashSet<int> RenderAuditLoggedIds = new();
     private static readonly HashSet<int> AppliedFallbackFontIds = new();
+    private static readonly HashSet<int> NormalizedFallbackMaterialIds = new();
     private static int _renderAuditBudget = 80;
     private static int _finalRenderRepairLogBudget = 80;
     private static int _specialCaseLogBudget = 60;
@@ -52,6 +53,7 @@ internal static class FontFallbackService
         FinalRenderRepairLoggedIds.Clear();
         RenderAuditLoggedIds.Clear();
         AppliedFallbackFontIds.Clear();
+        NormalizedFallbackMaterialIds.Clear();
 
         if (_fallbackFont != null)
         {
@@ -102,9 +104,11 @@ internal static class FontFallbackService
             return;
         }
 
+        AssetBundle? bundle = null;
+        var ownsBundle = false;
         try
         {
-            var bundle = AssetBundle.LoadFromFile(bundlePath);
+            bundle = AssetBundle.LoadFromFile(bundlePath);
             if (bundle == null)
             {
                 Plugin.Log.LogWarning("Failed to load Chinese TMP font bundle.");
@@ -119,6 +123,7 @@ internal static class FontFallbackService
                 {
                     _fallbackFontBundle = bundle;
                     _ownsFallbackFont = true;
+                    ownsBundle = true;
                     NormalizeFallbackFontMaterials();
                     Plugin.Log.LogInfo($"Loaded Chinese fallback font: {_fallbackFont.name} from {bundlePath}");
                     ApplyFallbackGlobally();
@@ -127,6 +132,7 @@ internal static class FontFallbackService
             }
 
             bundle.Unload(false);
+            bundle = null;
             Plugin.Log.LogWarning($"No TMP_FontAsset found in Chinese font bundle: {bundlePath}");
             TryLoadSystemFontAsset();
         }
@@ -134,6 +140,13 @@ internal static class FontFallbackService
         {
             Plugin.Log.LogError($"Failed to load Chinese font bundle: {ex}");
             TryLoadSystemFontAsset();
+        }
+        finally
+        {
+            if (!ownsBundle && bundle != null)
+            {
+                bundle.Unload(false);
+            }
         }
     }
 
@@ -332,63 +345,15 @@ internal static class FontFallbackService
         }
 
         ApplyFallbackToFont(fontAsset);
-        NormalizeMaterial(fontAsset.material);
+        if (ReferenceEquals(fontAsset, _fallbackFont))
+        {
+            NormalizeMaterial(fontAsset.material);
+        }
     }
 
-    public static void ReconcileSubMeshMaterial(TMP_SubMeshUI? subMesh)
+    public static void NormalizePluginFallbackFontMaterial(TMP_FontAsset? fontAsset)
     {
-        if (subMesh == null)
-        {
-            return;
-        }
-
-        var owner = subMesh.textComponent;
-        if (owner == null || string.IsNullOrWhiteSpace(owner.text) || !ContainsCjk(owner.text))
-        {
-            return;
-        }
-
-        EnsureFinalRenderRepair(owner);
-        var primary = owner.fontSharedMaterial;
-        var shared = subMesh.sharedMaterial;
-        var instance = TryGetSubMeshUiMaterial(subMesh, "ReconcileSubMeshMaterial(UI)");
-
-        if (primary != null)
-        {
-            SyncMaterialWithPrimary(shared, primary);
-            SyncMaterialWithPrimary(instance, primary);
-        }
-
-        ApplyFaceColorFromOwner(shared, owner);
-        ApplyFaceColorFromOwner(instance, owner);
-        subMesh.color = owner.color;
-        AuditIfStillDark("ReconcileSubMeshMaterial(UI)", owner);
-    }
-
-    public static void ReconcileSubMeshMaterial(TMP_SubMesh? subMesh)
-    {
-        if (subMesh == null)
-        {
-            return;
-        }
-
-        var owner = subMesh.textComponent;
-        if (owner == null || string.IsNullOrWhiteSpace(owner.text) || !ContainsCjk(owner.text))
-        {
-            return;
-        }
-
-        EnsureFinalRenderRepair(owner);
-        var primary = owner.fontSharedMaterial;
-        if (primary != null)
-        {
-            SyncMaterialWithPrimary(subMesh.sharedMaterial, primary);
-            SyncMaterialWithPrimary(subMesh.material, primary);
-        }
-
-        ApplyFaceColorFromOwner(subMesh.sharedMaterial, owner);
-        ApplyFaceColorFromOwner(subMesh.material, owner);
-        AuditIfStillDark("ReconcileSubMeshMaterial(3D)", owner);
+        NormalizeMaterial(fontAsset?.material);
     }
 
     public static void SanitizeAssignedColor(TMP_Text? text, ref Color value, string? candidateText = null)
@@ -475,6 +440,7 @@ internal static class FontFallbackService
         var fontId = fontAsset.GetInstanceID();
         if (AppliedFallbackFontIds.Contains(fontId))
         {
+            NormalizeFontMaterialForFallback(fontAsset);
             return;
         }
 
@@ -489,6 +455,28 @@ internal static class FontFallbackService
         }
 
         AppliedFallbackFontIds.Add(fontId);
+        NormalizeFontMaterialForFallback(fontAsset);
+    }
+
+    private static void NormalizeFontMaterialForFallback(TMP_FontAsset fontAsset)
+    {
+        if (fontAsset == null || ReferenceEquals(fontAsset, _fallbackFont))
+        {
+            return;
+        }
+
+        var material = fontAsset.material;
+        if (material == null)
+        {
+            return;
+        }
+
+        if (!NormalizedFallbackMaterialIds.Add(material.GetInstanceID()))
+        {
+            return;
+        }
+
+        NormalizeMaterial(material);
     }
 
     private static void WarmFallbackCharacters()
