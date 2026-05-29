@@ -13,7 +13,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "0.2.3";
+    public const string PluginVersion = "3.0.0";
 
     internal static ManualLogSource Log = null!;
 
@@ -49,6 +49,8 @@ public sealed class Plugin : BaseUnityPlugin
             Logger.LogError($"TranslationService.Load failed: {ex.GetType().Name}: {ex.Message}");
         }
 
+        TryInitialize("AutomaticTranslationService", () => { AutomaticTranslationService.Initialize(pluginDir, Config); });
+
         var existingPatchCount = CountOwnHarmonyPatches();
         var manualPatchCount = 0;
         if (existingPatchCount > 0)
@@ -67,7 +69,6 @@ public sealed class Plugin : BaseUnityPlugin
 
         TryInitialize("FontFallbackService", () => { FontFallbackService.TryLoadFontAsset(pluginDir); });
         TryInitialize("FontFallbackAuditService", () => { FontFallbackAuditService.Initialize(Config); });
-        TryInitialize("EmbeddedFontPatcherService", () => { EmbeddedFontPatcherService.Initialize(pluginDir, Config); });
         TryInitialize("AlertTextureReplacementService", () => { AlertTextureReplacementService.Initialize(pluginDir); });
         TryInitialize("RadiationWarningAuditService", () => { RadiationWarningAuditService.Initialize(Config); });
         TryInitialize("RadiationWarningPlaybackService", () => { RadiationWarningPlaybackService.Initialize(pluginDir, Config); });
@@ -76,8 +77,16 @@ public sealed class Plugin : BaseUnityPlugin
         TryInitialize("TargetedUiTranslator", () => { TargetedUiTranslator.Initialize(); });
 
         // Verbose runtime marker; keep code available for future diagnostics without adding startup log noise.
-        // Logger.LogInfo($"Runtime marker: lean-hooks-v72-warning-graft; embeddedFontPatcher=startup-only; fontAssetAwake=minimal-restored; fallback=relay-only-plus-whitelist; relaySync=hud-start-plus-color-sync-plus-exact-path-watcher; fixedSceneLabels=relay-scene-watcher-plus-exact-text; translationCfg=first-source-wins-no-command-alias-cfg-terminal-zhCN-skipped; translationRegexSafety=known-slow-cfg-fastpath; hostStageMarkers=enabled; roomCreateProbe=diagnostics-suppressed; systemOnlineMode=original-tmp-exact-path-only; terminalInput=untranslated-safe; terminalUiRootTranslation=disabled; terminalLoadNewNodeFallback=disabled; terminalInputFieldGlobalTmpHooks=disabled; terminalOutput=body-cn-command-pages-bilingual-full-structured-safe; endgameLocalization=original-image-sprite-replacement-clean-reference-textures-plus-statsboxes-candidate-fix; spectateDeadLocalization=early-hooked; warningTextureLocalization=animator-following-sprite-substitution; manualPatchCount={manualPatchCount}; harmonyPatchedMethods={CountOwnHarmonyPatches()}");
+        // Logger.LogInfo($"Runtime marker: lean-hooks-v72-warning-graft; fontCompatibility=primary-fallback-only; fontAssetAwake=minimal-restored; fallback=relay-only-plus-whitelist; relaySync=hud-start-plus-color-sync-plus-exact-path-watcher; fixedSceneLabels=relay-scene-watcher-plus-exact-text; translationCfg=first-source-wins-no-command-alias-cfg-terminal-zhCN-skipped; translationRegexSafety=known-slow-cfg-fastpath; hostStageMarkers=enabled; roomCreateProbe=diagnostics-suppressed; systemOnlineMode=original-tmp-exact-path-only; terminalInput=untranslated-safe; terminalUiRootTranslation=disabled; terminalLoadNewNodeFallback=disabled; terminalInputFieldGlobalTmpHooks=disabled; terminalOutput=body-cn-command-pages-bilingual-full-structured-safe; endgameLocalization=original-image-sprite-replacement-clean-reference-textures-plus-statsboxes-candidate-fix; spectateDeadLocalization=early-hooked; warningTextureLocalization=animator-following-sprite-substitution; manualPatchCount={manualPatchCount}; harmonyPatchedMethods={CountOwnHarmonyPatches()}");
         Logger.LogInfo($"{PluginName} loaded. Entries: {TranslationService.EntryCount}; manualPatchCount={manualPatchCount}; harmonyPatchedMethods={CountOwnHarmonyPatches()}");
+    }
+
+    private void Update()
+    {
+        if (AutomaticTranslationService.NeedsMainThreadPump)
+        {
+            AutomaticTranslationService.PumpMainThread();
+        }
     }
 
     private void OnApplicationQuit()
@@ -127,12 +136,12 @@ public sealed class Plugin : BaseUnityPlugin
         TryCleanup("CustomLocalizationExtensionService.Shutdown", () => { CustomLocalizationExtensionService.Shutdown(); });
         TryCleanup("FontFallbackAuditService.Shutdown", () => { FontFallbackAuditService.Shutdown(); });
         TryCleanup("FontFallbackService.Shutdown", () => { FontFallbackService.Shutdown(); });
-        TryCleanup("EmbeddedFontPatcherService.Shutdown", () => { EmbeddedFontPatcherService.Shutdown(); });
         TryCleanup("AlertTextureReplacementService.Shutdown", () => { AlertTextureReplacementService.Shutdown(); });
         TryCleanup("RadiationWarningAuditService.Shutdown", () => { RadiationWarningAuditService.Shutdown(); });
         TryCleanup("RadiationWarningPlaybackService.Shutdown", () => { RadiationWarningPlaybackService.Shutdown(); });
         TryCleanup("EndGameLocalizationService.Shutdown", () => { EndGameLocalizationService.Shutdown(); });
         TryCleanup("RuntimeTextCollector.Shutdown", () => { RuntimeTextCollector.Shutdown(); });
+        TryCleanup("AutomaticTranslationService.Shutdown", () => { AutomaticTranslationService.Shutdown(); });
         _cleanupInProgress = false;
     }
 

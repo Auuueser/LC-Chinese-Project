@@ -17,8 +17,6 @@ __pycache__/
 # Local snapshots and external work folders
 backups/
 Assembly-CSharp/
-LC-FontPatcher-main/
-LeKAKiD-FontPatcher-1.2.4/
 build_font_project/
 tools/pydeps/
 

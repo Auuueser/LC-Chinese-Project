@@ -311,7 +311,6 @@ internal static class CustomLocalizationExtensionService
         yield return Path.Combine(pluginDir, "custom-localization");
         yield return Path.Combine(Paths.ConfigPath, "V81TestChn", "custom-localization");
         yield return Path.Combine(Paths.ConfigPath, "V81TestChn", "custom-translations");
-        yield return Path.Combine(Paths.ConfigPath, "translations", "custom");
     }
 
     private static bool LoadCfgFile(string file)

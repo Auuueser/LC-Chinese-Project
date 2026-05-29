@@ -89,20 +89,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\translations\zh-CN.json" CopyToOutputDirectory="PreserveNewest" Link="translations\zh-CN.json" />
-    <None Include="..\..\translations-cfg\manifest.json" CopyToOutputDirectory="PreserveNewest" Link="translations-cfg\manifest.json" Condition="Exists('..\..\translations-cfg\manifest.json')" />
-    <None Include="..\..\translations-cfg\**\*.cfg" CopyToOutputDirectory="PreserveNewest" Link="translations-cfg\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\translations-cfg')" />
+    <None Include="..\..\translations-clean\**\*" CopyToOutputDirectory="PreserveNewest" Link="translations-clean\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\translations-clean')" />
     <None Include="..\..\fonts\zh-cn-tmp-font" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-tmp-font" Condition="Exists('..\..\fonts\zh-cn-tmp-font')" />
     <None Include="..\..\fonts\OFL-1.1.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\OFL-1.1.txt" Condition="Exists('..\..\fonts\OFL-1.1.txt')" />
     <None Include="..\..\fonts\zh-cn-charset.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-charset.txt" Condition="Exists('..\..\fonts\zh-cn-charset.txt')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png" CopyToOutputDirectory="PreserveNewest" Link="textures\AlertText [52CF932FDE-AB216CEFD9].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png')" />
-    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanel*.png" CopyToOutputDirectory="Always" Link="textures\%(Filename)%(Extension)" Condition="Exists('..\..\assets\textures\zh-CN\Texture')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarning [E5C5C6E52B-F9F9EA9261].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchBWarning [E5C5C6E52B-F9F9EA9261].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarning [E5C5C6E52B-F9F9EA9261].png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiation [FFCC97E055-2C688E6DC8].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchBWarningRadiation [FFCC97E055-2C688E6DC8].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiation [FFCC97E055-2C688E6DC8].png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiationB [7D4ED37952-95F686DE01].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchBWarningRadiationB [7D4ED37952-95F686DE01].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiationB [7D4ED37952-95F686DE01].png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiationC [7FBAA1AA30-9E2C036778].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchBWarningRadiationC [7FBAA1AA30-9E2C036778].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiationC [7FBAA1AA30-9E2C036778].png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiationD [4877939F7B-47E20481B0].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchBWarningRadiationD [4877939F7B-47E20481B0].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchBWarningRadiationD [4877939F7B-47E20481B0].png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\EndgameAllPlayersDeadOverlay.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameAllPlayersDeadOverlay.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameAllPlayersDeadOverlay.png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsBoxesLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsBoxesLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsBoxesLocalized.png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsDeceased.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsDeceased.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsDeceased.png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsMissing.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsMissing.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsMissing.png')" />
-    <None Include="..\..\fonts\fontpatcher\default\*" CopyToOutputDirectory="PreserveNewest" Link="fontpatcher\default\%(Filename)%(Extension)" Condition="Exists('..\..\fonts\fontpatcher\default')" />
-    <None Include="..\..\LeKAKiD-FontPatcher-1.2.4\config\FontPatcher\default\*" CopyToOutputDirectory="PreserveNewest" Link="fontpatcher\default\%(Filename)%(Extension)" Condition="Exists('..\..\LeKAKiD-FontPatcher-1.2.4\config\FontPatcher\default')" />
   </ItemGroup>
 
   <Target Name="RequireGameDir" BeforeTargets="ResolveReferences" Condition="'$(GameDir)' == ''">
@@ -112,18 +113,45 @@
   <Target Name="CleanOverlayArtifacts" AfterTargets="Build">
     <ItemGroup>
       <LocalOverlayArtifacts Include="$(TargetDir)textures\EnteringAtmosphereOverlay.png" />
+      <LocalOverlayArtifacts Include="$(TargetDir)textures\RedUIPanelGlitchB%5BC864CEDFD2-470F6C25C6%5D.png" />
+      <LocalOverlayArtifacts Include="$(TargetDir)textures\RedUIPanelGlitchBWarning%5BE5C5C6E52B-F9F9EA9261%5D.png" />
+      <LocalOverlayArtifacts Include="$(TargetDir)textures\RedUIPanelGlitchBWarningRadiation%5BFFCC97E055-2C688E6DC8%5D.png" />
+      <LocalOverlayArtifacts Include="$(TargetDir)textures\RedUIPanelGlitchBWarningRadiationB%5B7D4ED37952-95F686DE01%5D.png" />
+      <LocalOverlayArtifacts Include="$(TargetDir)textures\RedUIPanelGlitchBWarningRadiationC%5B7FBAA1AA30-9E2C036778%5D.png" />
+      <LocalOverlayArtifacts Include="$(TargetDir)textures\RedUIPanelGlitchBWarningRadiationD%5B4877939F7B-47E20481B0%5D.png" />
       <LocalOverlayArtifacts Include="$(TargetDir)overlays\zh-cn-overlays" />
       <LocalOverlayArtifacts Include="$(TargetDir)overlays\zh-cn-overlays.manifest" />
       <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\EnteringAtmosphereOverlay.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\RedUIPanelGlitchB%5BC864CEDFD2-470F6C25C6%5D.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\RedUIPanelGlitchBWarning%5BE5C5C6E52B-F9F9EA9261%5D.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\RedUIPanelGlitchBWarningRadiation%5BFFCC97E055-2C688E6DC8%5D.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\RedUIPanelGlitchBWarningRadiationB%5B7D4ED37952-95F686DE01%5D.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\RedUIPanelGlitchBWarningRadiationC%5B7FBAA1AA30-9E2C036778%5D.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\textures\RedUIPanelGlitchBWarningRadiationD%5B4877939F7B-47E20481B0%5D.png" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
       <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
       <DistOverlayArtifacts Include="..\..\dist\BepInEx\plugins\V81TestChn\overlays\zh-cn-overlays.manifest" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
       <TestOverlayArtifacts Include="$(TestDeployDir)\textures\EnteringAtmosphereOverlay.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\RedUIPanelGlitchB%5BC864CEDFD2-470F6C25C6%5D.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\RedUIPanelGlitchBWarning%5BE5C5C6E52B-F9F9EA9261%5D.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\RedUIPanelGlitchBWarningRadiation%5BFFCC97E055-2C688E6DC8%5D.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\RedUIPanelGlitchBWarningRadiationB%5B7D4ED37952-95F686DE01%5D.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\RedUIPanelGlitchBWarningRadiationC%5B7FBAA1AA30-9E2C036778%5D.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestOverlayArtifacts Include="$(TestDeployDir)\textures\RedUIPanelGlitchBWarningRadiationD%5B4877939F7B-47E20481B0%5D.png" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
       <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
       <TestOverlayArtifacts Include="$(TestDeployDir)\overlays\zh-cn-overlays.manifest" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <LocalLegacyTranslationDirs Include="$(TargetDir)translations" />
+      <LocalLegacyTranslationDirs Include="$(TargetDir)translations-cfg" />
+      <DistLegacyTranslationDirs Include="..\..\dist\BepInEx\plugins\V81TestChn\translations" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <DistLegacyTranslationDirs Include="..\..\dist\BepInEx\plugins\V81TestChn\translations-cfg" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn')" />
+      <TestLegacyTranslationDirs Include="$(TestDeployDir)\translations" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
+      <TestLegacyTranslationDirs Include="$(TestDeployDir)\translations-cfg" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != ''" />
     </ItemGroup>
     <Delete Files="@(LocalOverlayArtifacts)" />
     <Delete Files="@(DistOverlayArtifacts)" />
     <Delete Files="@(TestOverlayArtifacts)" />
+    <RemoveDir Directories="@(LocalLegacyTranslationDirs)" />
+    <RemoveDir Directories="@(DistLegacyTranslationDirs)" />
+    <RemoveDir Directories="@(TestLegacyTranslationDirs)" />
     <RemoveDir Directories="$(TargetDir)overlays" Condition="Exists('$(TargetDir)overlays')" />
     <RemoveDir Directories="..\..\dist\BepInEx\plugins\V81TestChn\overlays" Condition="'$(EnableDistSync)' == 'true' and Exists('..\..\dist\BepInEx\plugins\V81TestChn\overlays')" />
     <RemoveDir Directories="$(TestDeployDir)\overlays" Condition="'$(EnableTestDeploy)' == 'true' and '$(TestDeployDir)' != '' and Exists('$(TestDeployDir)\overlays')" />

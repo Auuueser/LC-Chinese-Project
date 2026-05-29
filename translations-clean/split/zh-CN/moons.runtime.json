@@ -1,0 +1,612 @@
+{
+    "schema_version":  1,
+    "version":  1,
+    "domain":  "moons",
+    "role":  "runtime-json-split",
+    "locale":  "zh-CN",
+    "generated_from":  "translations-source/clean-translation-draft.zh-CN.json",
+    "source_seed_path":  "translations-source/clean-source-seed.json",
+    "source_seed_sha256":  "0a3cfa42e167b7e832d8de4279c994c5d986d1d6c27e11014aa16ab5698c443b",
+    "draft_sha256":  "27bb6a97a6067333b71208ab52e4ab5989886938141354ebd653b421affaceee",
+    "runtime_json_path":  "translations-clean/zh-CN.runtime.json",
+    "runtime_json_sha256":  "33a28fff89a52387d21697973cfd6a9cb247ffc3493c5a3ca62d90277a0d3934",
+    "runtime_packaged":  true,
+    "runtime_loader":  "inert-split-artifact; monolith remains active loader input",
+    "entry_count":  99,
+    "entries":  [
+                    {
+                        "source":  "20 Adamance",
+                        "target":  "20 号 亚当皎月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "21 Offense",
+                        "target":  "21 号 侵攻月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "220 Assurance",
+                        "target":  "220 号 保障月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "41 Experimentation",
+                        "target":  "41 号 实验月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "44 Liquidation",
+                        "target":  "44 号 清算月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "5 Embrion",
+                        "target":  "5 号 胚壤月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "56 Vow",
+                        "target":  "56 号 誓约月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "61 March",
+                        "target":  "61 号 三月月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "68 Artifice",
+                        "target":  "68 号 机巧月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "7 Dine",
+                        "target":  "7 号 餐宴月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "71 Gordion",
+                        "target":  "71 号 戈尔迪翁",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "8 Titan",
+                        "target":  "8 号 泰坦月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "85 Rend",
+                        "target":  "85 号 裂痕月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-route; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "A competitive and toughened ecosystem supports aggressive lifeforms.",
+                        "target":  "竞争激烈且经过磨砺的生态系统孕育出攻击性生命形态。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "A competitive ecosystem supports aggressive lifeforms.",
+                        "target":  "高度竞争的生态系统让攻击性生命形态得以存续。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "A frozen, flat landscape.",
+                        "target":  "冰封而平坦的地貌。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "A landscape of deep valleys and mountains.",
+                        "target":  "遍布深谷与山脉的地表。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Abandoned",
+                        "target":  "已废弃区域",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Abandoned facilities are littered across the landscape, which was once teeming with life.",
+                        "target":  "废弃设施散落在地表各处；这里曾经充满生命迹象。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Arid. Low habitability, worsened by industrial artifacts.",
+                        "target":  "干旱。宜居性偏低，并受到工业遗迹进一步恶化。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Arid. Thick haze, worsened by industrial artifacts.",
+                        "target":  "干旱且浓雾弥漫，工业遗迹使环境更加恶劣。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Believed to have splintered off from its cousin Assurance",
+                        "target":  "据信它从近亲天体 Assurance 分离而来",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "but there is now no sign of life, and they have become a mystery.",
+                        "target":  "但如今已没有生命迹象，它们也成了未解之谜。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CELESTIAL BODY:",
+                        "target":  "目标天体：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CELESTIAL BODY: ",
+                        "target":  "目标天体：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CELESTIAL BODY: 41 Experimentation",
+                        "target":  "天体：41 号 实验月",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS:",
+                        "target":  "环境状况：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Constant blizzards decrease visibility.",
+                        "target":  "持续暴风雪会显著降低能见度。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Desolate and flat with unbreathable air",
+                        "target":  "荒凉平坦，空气无法呼吸",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Desolate, made of amethyst.",
+                        "target":  "荒芜，并由紫晶质地构成。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Diverse",
+                        "target":  "生态多样",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Diverse, teeming with plant-life",
+                        "target":  "生态多样，并布满植物生命。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Dominated by a few species.",
+                        "target":  "由少数物种占据主导。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ecosystem supports territorial behaviour.",
+                        "target":  "该生态系统支持强烈的领地行为。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Embrion is devoid of biological life.",
+                        "target":  "Embrion 缺乏生物生命迹象。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Embrion was discovered in just the last century.",
+                        "target":  "Embrion 是近一个世纪内才被记录到的天体。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Erosion and geographical forces have resulted in a landscape of deep valleys and mountains.",
+                        "target":  "侵蚀作用与地质力量塑造出深谷和山脉交错的地貌。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Expansive. Constant rain.",
+                        "target":  "地形开阔，降雨持续不断。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FAUNA:",
+                        "target":  "动物群系：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Frozen, rocky. Its planet orbits a white dwarf star.",
+                        "target":  "寒冷多岩。其行星围绕一颗白矮星运行。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Frozen, rocky. This moon was mined for resources. It\u0027s easy to get lost here.",
+                        "target":  "寒冷多岩。此月球曾被开采资源，在这里很容易迷失方向。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HAZARD LEVEL:",
+                        "target":  "风险级别：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY:",
+                        "target":  "历史记录：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Home to a lively, diverse ecosystem of smaller-sized omnivores.",
+                        "target":  "这里栖息着活跃而多样的小型杂食生物群。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Humid.",
+                        "target":  "湿度偏高。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Humid. Rough terrain. Teeming with plant-life.",
+                        "target":  "湿润，地势崎岖，植物生命繁盛。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It is \ncurrently [currentPlanetTime] on this moon.",
+                        "target":  "该月球当前时间为：\n[currentPlanetTime]。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-time; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It looks like this moon was mined for resources.",
+                        "target":  "看起来这颗月球曾经历资源开采。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It\u0027s easy to get lost within the giant industrial complex.",
+                        "target":  "在这座庞大的工业设施群中很容易迷路。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It\u0027s highly unlikely for complex life to exist here.",
+                        "target":  "这里几乎不可能存在复杂生命。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-ecology; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Its planet orbits white dwarf star, making for inhospitable, cold conditions.",
+                        "target":  "其行星围绕白矮星运行，形成寒冷且不宜居的环境。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It\u0027s rumored that active machinery has been left behind.",
+                        "target":  "传言这里仍遗留着尚可运作的机械。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Its terrain is more expansive.",
+                        "target":  "此处地形更加开阔。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jagged and weathered terrain.",
+                        "target":  "地表嶙峋，并长期受到风化。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "March undergoes constant drizzling weather.",
+                        "target":  "March 长期处于细雨天气之中。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "mild weather",
+                        "target":  "天气平稳",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Moderate",
+                        "target":  "中等程度",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field-value; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "No land masses. Continual storms.",
+                        "target":  "没有陆地区域，风暴持续不断。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Not discovered for quite some time due to its close orbit around gas giant Big Grin.",
+                        "target":  "由于紧贴气态巨行星 Big Grin 运行，它很长时间都未被发现。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-history; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Offense features similar jagged and dry conditions but differs in its ecosystem.",
+                        "target":  "Offense 同样干燥而地形嶙峋，但生态系统有所不同。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-environment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Orbiting:",
+                        "target":  "正在环绕：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Orbiting: ",
+                        "target":  "正在环绕：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-field; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Blizzard",
+                        "target":  "暴风雪天气",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS: A frozen, flat landscape.",
+                        "target":  "环境条件：冰封且平坦的地貌。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS: Arid. Low habitability, worsened by industrial artifacts.",
+                        "target":  "环境条件：干旱，宜居性低，并受工业遗迹进一步恶化。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS: Humid.",
+                        "target":  "环境条件：湿润。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Dangerous entities have been rumored to take residence in the vast network of tunnels.",
+                        "target":  "传闻称危险实体已经栖身在庞大的隧道网络中。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Daytime",
+                        "target":  "白昼时段",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=time-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Eclipsed",
+                        "target":  "日蚀状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "EMPLOYEE RANK",
+                        "target":  "雇员等级",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=rank-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FAUNA: A competitive and toughened ecosystem supports aggressive lifeforms. Travellers to 21-Offense should know it\u0027s not for the faint of heart.",
+                        "target":  "生态：竞争激烈且严酷的生态系统孕育了好斗的生命体。前往 21-Offense 的旅行者应知道，这里并不适合胆小者。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FAUNA: Dangerous entities have been rumored to take residence in the vast network of tunnels.",
+                        "target":  "生态：传闻危险实体已在庞大的隧道网络中栖居。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FAUNA: Diverse, teeming with plant-life",
+                        "target":  "生态：多样化，并充满植物生命。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FAUNA: It\u0027s highly unlikely for complex life to exist here.",
+                        "target":  "生态：这里极不可能存在复杂生命。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FAUNA: Unknown",
+                        "target":  "生态：未知",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=moon-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FireExit",
+                        "target":  "消防出口",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=location-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Flooded",
+                        "target":  "涨水状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Foggy",
+                        "target":  "起雾状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=weather; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY: This moon is overlooked due to its twin moon, Vow.",
+                        "target":  "历史：这颗卫星因其双生卫星 Vow 而常被忽视。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Rainy",
+                        "target":  "雨天状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Stormy",
+                        "target":  "雷暴",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "POPULATION:",
+                        "target":  "种群数量：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS: March undergoes constant drizzling weather. Its terrain is more expansive.",
+                        "target":  "环境：March 长期细雨连绵，地形更加开阔。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS: Similar to its twin moon, 41-Experimentation, featuring far more jagged and weathered terrain.",
+                        "target":  "环境：类似其双子卫星 41-Experimentation，但地形更加参差且风化严重。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY: 220-Assurance is far younger than its counterpart. Discovered not long before 41-Experimentation.",
+                        "target":  "历史：220-Assurance 比它的对应卫星年轻得多，发现时间略早于 41-Experimentation。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS: Its planet orbits white dwarf star, making for inhospitable, cold conditions. Constant blizzards decrease visibility.",
+                        "target":  "环境：该行星围绕白矮星运行，环境寒冷且难以居住。持续暴风雪会降低能见度。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY: Not discovered for quite some time due to its close orbit around gas giant Big Grin. However it appears to have been used in secret.",
+                        "target":  "历史：由于紧密环绕气态巨行星 Big Grin，它很长时间未被发现。但这里似乎曾被秘密使用。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY: Several famous travelers went missing here, giving it some reputation. Their bodies are unlikely to be found due to the planet\u0027s conditions.",
+                        "target":  "历史：数位知名旅行者在此失踪，使这里有了一定名声。受行星环境影响，他们的遗体很可能无法找到。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONDITIONS: Believed to have splintered off from its cousin Assurance, Offense features similar jagged and dry conditions but differs in its ecosystem.",
+                        "target":  "环境：据信 Offense 从其近亲 Assurance 分裂而来，有相似的崎岖干燥环境，但生态系统不同。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY: Vow appears to have been inhabited by several colonies across its continents, but there is now no sign of life, and they have become a mystery.",
+                        "target":  "历史：Vow 的各大陆似乎曾有多个殖民地，但如今已无生命迹象，成了谜团。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY: It looks like this moon was mined for resources. It\u0027s easy to get lost within the giant industrial complex. There are many entrances to it littered about the landscape.",
+                        "target":  "历史：这颗卫星似乎曾被开采资源。巨型工业设施内很容易迷路，地表散布着许多入口。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HISTORY: 21-Offense is categorized as an asteroid moon and seems to have not existed on its own for more than several hundred years. The industrial artifacts here have suffered damage; it\u0027s believed they were built long before 21-Offense was splintered off.",
+                        "target":  "历史：21-Offense 归类为小行星卫星，似乎独立存在的时间不超过数百年。这里的工业遗物受损严重，推测它们早在 21-Offense 分裂出来之前就已建成。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "220-Assurance\n----------------------\n\nCONDITIONS: Similar to its twin moon, 41-Experimentation, featuring far more jagged and weathered terrain. \n\nHISTORY: 220-Assurance is far younger than its counterpart. Discovered not long before 41-Experimentation.\n\nFAUNA: Unknown\n\n",
+                        "target":  "220-Assurance\n----------------------\n\n环境：类似干涸沙漠。\n\n历史：220-Assurance 是 41-Experimentation 的双子卫星，因发现可销售资源而被独立开采。\n\n生物：生态系统支持领地性行为。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "41-Experimentation\n----------------------\n\nCONDITIONS: Arid. Low habitability, worsened by industrial artifacts.\n\nHISTORY: Not discovered for quite some time due to its close orbit around gas giant Big Grin. However it appears to have been used in secret.\n\nFAUNA: Unknown\n\n",
+                        "target":  "41-Experimentation\n----------------------\n\n环境：干燥，地形崎岖，工业遗址明显。\n\n历史：曾是工业实验设施所在地，现已废弃。\n\n生物：有少量危险实体活动报告。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "56-Vow\n----------------------\n\nCONDITIONS: Humid.\n\nHISTORY: Vow appears to have been inhabited by several colonies across its continents, but there is now no sign of life, and they have become a mystery.\n\nFAUNA: Diverse, teeming with plant-life\n\n",
+                        "target":  "56-Vow\n----------------------\n\n环境：湿润，有茂密森林和桥梁遗迹。\n\n历史：旧设施散落在林地之中，能见度较差。\n\n生物：森林内存在活跃且具领地性的实体。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "68-Artifice\n----------------------\n\nCONDITIONS: Abandoned facilities are littered across the landscape, which was once teeming with life. \n\nHISTORY: Weapons and classified technology has been found at various sites on the surface, dating back at least two hundred years.\n\nFAUNA: It\u0027s rumored that active machinery has been left behind.\n\n",
+                        "target":  "68-Artifice\n----------------------\n\n环境：遭受持续风暴侵袭的工业区。\n\n历史：这里的设施保留了大量高价值设备，但地面危险程度极高。\n\n生物：危险实体密度高，建议做好撤离计划。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "8-Titan\n----------------------\n\nCONDITIONS: A frozen, flat landscape.\n\nHISTORY: It looks like this moon was mined for resources. It\u0027s easy to get lost within the giant industrial complex. There are many entrances to it littered about the landscape.\n\nFAUNA: Dangerous entities have been rumored to take residence in the vast network of tunnels.\n\n",
+                        "target":  "8-Titan\n----------------------\n\n环境：冰冻且平坦的地貌。\n\n历史：这颗卫星似乎曾被用于资源开采。巨型工业建筑群内部极易迷路，地表散布着多个入口。\n\n生物：传闻危险实体栖居在庞大的隧道网络中。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "21-Offense\n----------------------\n\nCONDITIONS: Believed to have splintered off from its cousin Assurance, Offense features similar jagged and dry conditions but differs in its ecosystem.\n\nHISTORY: 21-Offense is categorized as an asteroid moon and seems to have not existed on its own for more than several hundred years. The industrial artifacts here have suffered damage; it\u0027s believed they were built long before 21-Offense was splintered off.\n\nFAUNA: A competitive and toughened ecosystem supports aggressive lifeforms. Travellers to 21-Offense should know it\u0027s not for the faint of heart.\n\n",
+                        "target":  "21-Offense\n----------------------\n\n环境：干燥，地表布满岩石与工业残骸。\n\n历史：这颗卫星周围有大量碎片环，可能与过去的撞击事件有关。\n\n生物：敌对实体出现频率偏高。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "61-March\n----------------------\n\nCONDITIONS: March undergoes constant drizzling weather. Its terrain is more expansive.\n\nHISTORY: This moon is overlooked due to its twin moon, Vow. \n\nFAUNA: Unknown\n\n",
+                        "target":  "61-March\n----------------------\n\n环境：常年降雨的森林地貌。\n\n历史：这里的设施入口分散，地表路径容易混淆。\n\n生物：森林生态支持多种危险生物。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    }
+                ]
+}

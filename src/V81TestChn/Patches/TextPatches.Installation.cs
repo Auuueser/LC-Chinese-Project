@@ -48,6 +48,7 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(HUDManager), "DisplayDaysLeft", nameof(HudManagerDisplayDaysLeftPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "SetShipLeaveEarlyVotesText", nameof(HudManagerSetShipLeaveEarlyVotesTextPostfix), ref patched);
         PatchPrefix(harmony, typeof(HUDManager), "ReadDialogue", nameof(HudManagerReadDialoguePrefix), ref patched);
+        PatchPostfix(harmony, typeof(HUDManager), "ReadDialogue", nameof(HudManagerReadDialoguePostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "UpdateBoxesSpectateUI", nameof(HudManagerUpdateBoxesSpectateUiPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "SetSpectatingTextToPlayer", nameof(HudManagerSetSpectatingTextToPlayerPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "FillEndGameStats", nameof(HudManagerFillEndGameStatsPostfix), ref patched);

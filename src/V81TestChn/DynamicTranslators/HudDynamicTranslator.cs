@@ -12,6 +12,7 @@ internal static partial class TranslationService
             LooksLikeVoteTextCheap(source) ||
             LooksLikeDaysLeftTextCheap(source) ||
             LooksLikeShipLeaveEarlyWarningTextCheap(source) ||
+            LooksLikeHudStatusLineCheap(source) ||
             LooksLikeHudNotificationTextCheap(source);
 
         public static bool Translate(DynamicTextDomain domain, string? source, out string translated)
@@ -44,6 +45,7 @@ internal static partial class TranslationService
             return TranslateRandomSeedFast(source, out translated) ||
                    TranslateVotesFast(source, out translated) ||
                    TranslateDaysLeftFast(source, out translated) ||
+                   TranslateHudStatusLineFast(source, out translated) ||
                    TranslateShipLeaveEarlyWarning(source, out translated) ||
                    TranslateHudNotificationFast(source, out translated);
         }
@@ -302,6 +304,356 @@ internal static partial class TranslationService
 
             translated = $"\u5269\u4f59 {days} \u5929";
             return true;
+        }
+
+        private static bool TranslateHudStatusLineFast(string source, out string translated)
+        {
+            translated = source;
+            var trimmed = StripRichTextTagsCheap(source).Trim();
+            if (trimmed.Length == 0)
+            {
+                return false;
+            }
+
+            var match = SafeRegexMatch(trimmed, @"^Page\s+(?<page>[^/]+)/(?<total>[^/]+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u7b2c {match.Groups["page"].Value.Trim()}/{match.Groups["total"].Value.Trim()} \u9875";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Seed\s*:\s*(?<seed>[0-9]+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u79cd\u5b50\uff1a{match.Groups["seed"].Value}";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Power\s*:\s*(?<current>\d+)\s*/\s*(?<max>\d+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u7535\u91cf\uff1a{match.Groups["current"].Value} / {match.Groups["max"].Value}";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<volume>\d+)%\s+volume$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u97f3\u91cf {match.Groups["volume"].Value}%";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^\((?<percent>.+?)%\s+Battery\s+Life\)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\uff08{match.Groups["percent"].Value.Trim()}% \u7535\u6c60\u7535\u91cf\uff09";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<percent>.+?)%\s*\((?<remaining>.+?)\s+remaining\)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{match.Groups["percent"].Value.Trim()}%\uff08\u5269\u4f59 {match.Groups["remaining"].Value.Trim()}\uff09";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Found\s+(?<count>\d+)\s+items\s+with\s+a\s+total\s+value\s+of\s+(?<value>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u627e\u5230 {match.Groups["count"].Value} \u4ef6\u7269\u54c1\uff0c\u603b\u4ef7\u503c {match.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
+            if (TryTranslateMultilineStatus(trimmed, out translated))
+            {
+                return true;
+            }
+
+            if (TryTranslateScannerTotalStatus(source, out translated) ||
+                TryTranslateSimpleStatusLine(trimmed, out translated))
+            {
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Player\s+(?<player>.+?)\s+is\s+now\s+connecting$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u73a9\u5bb6 {match.Groups["player"].Value.Trim()} \u6b63\u5728\u8fde\u63a5";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<count>\d+)\s+Players\s+Connecting!!$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{match.Groups["count"].Value} \u540d\u73a9\u5bb6\u6b63\u5728\u8fde\u63a5\uff01\uff01";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^there\s+are\s+still\s+(?<count>\d+)\s+Players\s+connecting!!$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u4ecd\u6709 {match.Groups["count"].Value} \u540d\u73a9\u5bb6\u6b63\u5728\u8fde\u63a5\uff01\uff01";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Press\s+(?<key>.+?)\s+to\s+stop\s+teleport$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u6309 {match.Groups["key"].Value.Trim()} \u505c\u6b62\u4f20\u9001";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryTranslateMultilineStatus(string trimmed, out string translated)
+        {
+            translated = trimmed;
+            var normalized = trimmed.Replace("\r\n", "\n");
+
+            foreach (var (label, localizedLabel) in new[]
+                     {
+                         ("Dance", "\u8df3\u821e"),
+                         ("EMPTY", "\u7a7a"),
+                         ("Point", "\u6307\u5411")
+                     })
+            {
+                if (!normalized.StartsWith(label + "\n", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var rest = normalized[(label.Length + 1)..];
+                if (rest.Length == 0)
+                {
+                    return false;
+                }
+
+                translated = localizedLabel + "\n" + rest;
+                return true;
+            }
+
+            if (SafeRegexMatch(normalized, @"^Just\s+do\s+what\s+she\s+says\.\.\.\.\n*[|]+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant).Success)
+            {
+                translated = "\u7167\u5979\u8bf4\u7684\u505a\u2026\u2026\n||||";
+                return true;
+            }
+
+            if (SafeRegexMatch(normalized, @"^KEEP\s+YOUR\s+TOP\s+SPEED\n*[|]+$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant).Success)
+            {
+                translated = "\u4fdd\u6301\u6700\u9ad8\u901f\u5ea6\n||||";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryTranslateScannerTotalStatus(string source, out string translated)
+        {
+            translated = source;
+            var normalized = StripRichTextTagsCheap(source).Replace("\r\n", "\n");
+            var leadingNewline = normalized.StartsWith("\n", StringComparison.Ordinal);
+            var match = SafeRegexMatch(
+                normalized.Trim(),
+                @"^Total\s+Scanned\s*:\s*(?<scanned>.+?)\s+Ship\s+Total\s*:\s*(?<ship>.+)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            translated = (leadingNewline ? "\n" : string.Empty) +
+                         $"\u626b\u63cf\u603b\u8ba1\uff1a{match.Groups["scanned"].Value.Trim()} \u98de\u8239\u603b\u503c\uff1a{match.Groups["ship"].Value.Trim()}";
+            return true;
+        }
+
+        private static bool TryTranslateSimpleStatusLine(string trimmed, out string translated)
+        {
+            translated = trimmed;
+            if (trimmed.Length == 0)
+            {
+                return false;
+            }
+
+            var match = SafeRegexMatch(trimmed, @"^(?<label>[^:\r\n]+):\s*(?<mode>ALL|NONE)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                var label = BuildTerminalLocalizedItemName(match.Groups["label"].Value.Trim());
+                var mode = match.Groups["mode"].Value.Equals("ALL", StringComparison.OrdinalIgnoreCase) ? "\u5168\u90e8" : "\u65e0";
+                translated = $"{label}\uff1a{mode}";
+                return true;
+            }
+
+            foreach (var (label, localizedLabel) in new[]
+                     {
+                         ("Credits", "\u4fe1\u7528\u70b9"),
+                         ("CREDITS", "\u4fe1\u7528\u70b9"),
+                         ("DAY", "\u65e5\u671f"),
+                         ("TIME", "\u65f6\u95f4"),
+                         ("WEATHER", "\u5929\u6c14"),
+                         ("SCRAP IN SHIP", "\u98de\u8239\u5185\u5e9f\u6599"),
+                         ("SHIP", "\u98de\u8239"),
+                         ("MOON", "\u536b\u661f"),
+                         ("Value", "\u4ef7\u503c"),
+                         ("Default", "\u9ed8\u8ba4\u503c"),
+                         ("LOCKED", "\u9501\u5b9a\u72b6\u6001"),
+                         ("Ping", "\u5ef6\u8fdf"),
+                         ("FILTER", "\u8fc7\u6ee4\u5668"),
+                         ("SORT", "\u6392\u5e8f"),
+                         ("CHARACTERS LEFT", "\u5269\u4f59\u5b57\u7b26\u6570")
+                     })
+            {
+                if (TryTranslateColonStatus(trimmed, label, localizedLabel, out translated))
+                {
+                    return true;
+                }
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Inventory\s+slot\s+(?<value>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u7269\u54c1\u680f\u69fd\u4f4d {match.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Favorites\s+(?<value>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u6536\u85cf {match.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Loading\s+(?<value>.+?)\s+server\s+list\.\.\.$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u6b63\u5728\u52a0\u8f7d {match.Groups["value"].Value.Trim()} \u670d\u52a1\u5668\u5217\u8868\u2026\u2026";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<name>.+?)\s+\((?<count>.+?)\s+uses\s+remaining\)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{BuildTerminalLocalizedItemName(match.Groups["name"].Value.Trim())}\uff08\u5269\u4f59 {match.Groups["count"].Value.Trim()} \u6b21\u4f7f\u7528\uff09";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<name>.+?)\s+\((?<label>.+?)\s*:\s*(?<value>.+?)\s+remaining\)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{BuildTerminalLocalizedItemName(match.Groups["name"].Value.Trim())}\uff08{match.Groups["label"].Value.Trim()}\uff1a\u5269\u4f59 {match.Groups["value"].Value.Trim()}\uff09";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Lost\s+(?<value>.+?)\s+scrap$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u635f\u5931 {match.Groups["value"].Value.Trim()} \u5e9f\u6599";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Flat\s+Body\s+Of\s+(?<value>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{BuildTerminalLocalizedItemName(match.Groups["value"].Value.Trim())} \u7684\u538b\u6241\u9057\u4f53";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Received\s+from\s+(?<value>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u6765\u81ea {match.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<value>.+?)'s\s+Crew$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{match.Groups["value"].Value.Trim()} \u7684\u5c0f\u961f";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<value>.+?)\s+has\s+been\s+disabled!$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{match.Groups["value"].Value.Trim()} \u5df2\u88ab\u7981\u7528\uff01";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^(?<value>.+?)\s+Submit$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"{match.Groups["value"].Value.Trim()}\uff1a\u63d0\u4ea4\u5185\u5bb9";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Line\s+Break\s+(?<value>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u6362\u884c\u7b26 {match.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^Amount\s*:\s*(?<value>\d{1,2})\.$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u6570\u91cf\uff1a{match.Groups["value"].Value}\u3002";
+                return true;
+            }
+
+            match = SafeRegexMatch(trimmed, @"^You've made\.\.\s*(?<value>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u4f60\u5df2\u83b7\u5f97\u2026\u2026{match.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
+            if (SafeRegexMatch(trimmed, @"^Disconnected\s+due\s+to\s+host\s+shutting\s+down\.?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant).Success)
+            {
+                translated = "\u623f\u4e3b\u5173\u95ed\u623f\u95f4";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryTranslateColonStatus(string trimmed, string label, string localizedLabel, out string translated)
+        {
+            translated = trimmed;
+            if (!trimmed.StartsWith(label, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var index = label.Length;
+            if (index >= trimmed.Length || trimmed[index] != ':')
+            {
+                return false;
+            }
+
+            var value = trimmed[(index + 1)..].TrimStart(' ', '\t');
+            translated = value.StartsWith("\n", StringComparison.Ordinal)
+                ? localizedLabel + "\uff1a" + value
+                : localizedLabel + "\uff1a" + value.Trim();
+            return true;
+        }
+
+        private static bool LooksLikeHudStatusLineCheap(string? source)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                return false;
+            }
+
+            var text = StripRichTextTagsCheap(source).TrimStart();
+            return text.StartsWith("Credits:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("CREDITS:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("DAY:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("TIME:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("WEATHER:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("SCRAP IN SHIP:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("Total Scanned:", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("Found ", StringComparison.OrdinalIgnoreCase) ||
+                   text.IndexOf("Battery Life", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static bool LooksLikeHudNotificationTextCheap(string? source)

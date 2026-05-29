@@ -2,6 +2,7 @@ namespace V81TestChn;
 
 internal static class ConfigSections
 {
+    public const string AutomaticTranslation = "02 Performance - Automatic Translation";
     public const string CustomLocalization = "01 基础 - 自定义本地化";
     public const string InfectionStatus = "01 基础 - 感染状态";
     public const string Performance = "02 性能 - 运行时预算";

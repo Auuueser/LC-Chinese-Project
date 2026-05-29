@@ -1,0 +1,1080 @@
+{
+    "schema_version":  1,
+    "version":  1,
+    "domain":  "settings",
+    "role":  "runtime-json-split",
+    "locale":  "zh-CN",
+    "generated_from":  "translations-source/clean-translation-draft.zh-CN.json",
+    "source_seed_path":  "translations-source/clean-source-seed.json",
+    "source_seed_sha256":  "0a3cfa42e167b7e832d8de4279c994c5d986d1d6c27e11014aa16ab5698c443b",
+    "draft_sha256":  "27bb6a97a6067333b71208ab52e4ab5989886938141354ebd653b421affaceee",
+    "runtime_json_path":  "translations-clean/zh-CN.runtime.json",
+    "runtime_json_sha256":  "33a28fff89a52387d21697973cfd6a9cb247ffc3493c5a3ca62d90277a0d3934",
+    "runtime_packaged":  true,
+    "runtime_loader":  "inert-split-artifact; monolith remains active loader input",
+    "entry_count":  177,
+    "entries":  [
+                    {
+                        "source":  "[ Back ]",
+                        "target":  "[ 返回 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=core-ui; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Inventory full!",
+                        "target":  "物品栏满了！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=core-ui; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[Hands full]",
+                        "target":  "[ 双手已满 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=core-ui; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Confirm ]",
+                        "target":  "[ 确认 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=core-ui; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Confirm",
+                        "target":  "确认",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=core-ui; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Confirm changes?",
+                        "target":  "确认更改",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=core-ui; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "You have cancelled the order.",
+                        "target":  "你已取消订单。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=hud-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Continue ]",
+                        "target":  "[ 继续进行 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Delete files and restart]",
+                        "target":  "[ 删除文件并重新开始]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Play again ]",
+                        "target":  "[ 再来一局 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Refresh ]",
+                        "target":  "[ 刷新列表 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Remove my score ]",
+                        "target":  "[ 移除我的成绩 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ At least two players needed to start! ]",
+                        "target":  "[ 开局至少需要两名玩家！ ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Must be server host. ]",
+                        "target":  "[ 只有主机玩家可以操作。 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Players are loading. ]",
+                        "target":  "[ 玩家仍在载入。 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Back",
+                        "target":  "\u003e 返回",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "\u003e Back to menu",
+                        "target":  "\u003e 返回",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Cancel",
+                        "target":  "\u003e 取消",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "\u003e Change keybinds",
+                        "target":  "\u003e 修改按键绑定",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Confirm changes",
+                        "target":  "\u003e 确认更改",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "\u003e Host",
+                        "target":  "\u003e 建立主机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "\u003e Invite friends",
+                        "target":  "\u003e 邀请好友",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "\u003e Join a crew",
+                        "target":  "\u003e 加入游戏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "\u003e Join LAN session",
+                        "target":  "\u003e 加入局域网房间",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e LAN",
+                        "target":  "\u003e 局域网模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Online",
+                        "target":  "\u003e 在线模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Quit",
+                        "target":  "\u003e 退出游戏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "\u003e Reset all to default",
+                        "target":  "\u003e 将全部选项还原默认",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Resume",
+                        "target":  "\u003e 继续游戏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Set to defaults",
+                        "target":  "\u003e 设回默认值",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Settings",
+                        "target":  "\u003e 基础设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "(Launched in LAN mode)",
+                        "target":  "（已用局域网模式启动）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "(Recommended)",
+                        "target":  "（推荐选项）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Allow remote connections",
+                        "target":  "允许远端连接",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "APPLY",
+                        "target":  "套用设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Audio",
+                        "target":  "声音设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "BACK",
+                        "target":  "返回",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Brightness",
+                        "target":  "画面亮度",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "ACCESSIBILITY",
+                        "target":  "辅助功能设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Adjust screen brightness until the symbol on the right is barely visible.",
+                        "target":  "调整屏幕亮度，直到右侧符号刚好隐约可见。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Arachnophobia Mode",
+                        "target":  "蜘蛛恐惧辅助模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[D-pad down]",
+                        "target":  "[十字键下]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[D-pad up]",
+                        "target":  "[十字键上]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[LMB]",
+                        "target":  "[鼠标左键]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[RMB]",
+                        "target":  "[鼠标右键]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[R-Trigger]",
+                        "target":  "[右扳机键]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[TAB]",
+                        "target":  "TAB",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-label; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "  CONFIRM",
+                        "target":  "  确认",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "  LAN",
+                        "target":  "  局域网模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "  Online",
+                        "target":  "  在线模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  " (NEW)",
+                        "target":  "（新增）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  " Results",
+                        "target":  " 结果列表",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "An error occured when syncing the scene! The host might not have loaded in.",
+                        "target":  "同步场景时出错！主机可能尚未载入完成。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-error; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "An error occured while spawning into the game. Please report the glitch!",
+                        "target":  "进入游戏生成角色时出错。请反馈这个异常！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-error; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Connecting to host...",
+                        "target":  "正在连接主机端……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Connecting to server...",
+                        "target":  "正在连接服务器……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Connection failed.",
+                        "target":  "连接未能建立。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-error; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Connection failed. Try again?",
+                        "target":  "连接未能建立。要再试一次吗？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-error; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Controller",
+                        "target":  "控制器设备",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Controller connected",
+                        "target":  "控制器已接入",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Controller disconnected",
+                        "target":  "控制器连接已断开",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=input-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Controllers",
+                        "target":  "控制器列表",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Controls",
+                        "target":  "操控设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Current input device:",
+                        "target":  "当前使用的输入设备：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Current input device: \n ",
+                        "target":  "当前使用的输入设备：\n ",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Default",
+                        "target":  "默认配置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Delete",
+                        "target":  "删除",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "DISABLED",
+                        "target":  "未启用",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-state; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "DISCARD",
+                        "target":  "取消更改",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Discard changes",
+                        "target":  "取消更改",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Display",
+                        "target":  "显示画面",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Display mode:",
+                        "target":  "画面显示模式：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Do you want to delete File 1?",
+                        "target":  "要删除 1 号存档吗？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=save-file; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "ENABLED",
+                        "target":  "已启用",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-state; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Enter a lobby name!",
+                        "target":  "先填写大厅名称！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Enter a room code...",
+                        "target":  "输入房间代码……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Enter a tag...",
+                        "target":  "输入标签……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Enter server tag...",
+                        "target":  "输入服务器标签……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Error! Could not get the lobby data. Are you offline?",
+                        "target":  "错误！无法取得大厅数据。你是否处于离线状态？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-error; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "File 1",
+                        "target":  "1 号存档",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=save-file; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "File 2",
+                        "target":  "2 号存档",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=save-file; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "File 3",
+                        "target":  "3 号存档",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=save-file; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "File incompatible!",
+                        "target":  "存档文件不兼容！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=save-file; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Flip Screen Horizontally",
+                        "target":  "将画面左右翻转",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Frame rate cap:",
+                        "target":  "最大帧率限制：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Friends-only",
+                        "target":  "仅限好友",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Fullscreen",
+                        "target":  "全屏显示",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Gamma",
+                        "target":  "伽马亮度",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Gamma/Brightness:",
+                        "target":  "伽马值/画面亮度：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Go back",
+                        "target":  "返回",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Graphics",
+                        "target":  "图形画面",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Head Bobbing",
+                        "target":  "头部晃动效果",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Host",
+                        "target":  "主机玩家",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Host disconnected!",
+                        "target":  "房主断开连接",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-error; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Host LAN Server:",
+                        "target":  "开设局域网服务器：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Host quit! Ending game for client.",
+                        "target":  "主机已退出！客户端游戏即将结束。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-error; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Indirect lighting",
+                        "target":  "间接光照效果",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Input: ",
+                        "target":  "输入项：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Inside",
+                        "target":  "内部区域",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Invite friends",
+                        "target":  "邀请好友加入",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "IP Adresss...",
+                        "target":  "IP 地址……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Join",
+                        "target":  "加入",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Key",
+                        "target":  "钥匙",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Key:",
+                        "target":  "键位：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Keybinds",
+                        "target":  "键位绑定",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Kick",
+                        "target":  "踢出玩家",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Kick from server?",
+                        "target":  "要从服务器中踢出吗？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Kick out ",
+                        "target":  "踢出玩家：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "LAN",
+                        "target":  "局域网联机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "LAUNCH MODE",
+                        "target":  "启动连接模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Launch mode:",
+                        "target":  "启动连接模式：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Level selection",
+                        "target":  "关卡选择界面",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Local-only",
+                        "target":  "仅限本地",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "  DISABLED",
+                        "target":  "  已禁用",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Open",
+                        "target":  "\u003e 打开项目",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Save",
+                        "target":  "\u003e 保存项目",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "A member of the server has blocked you!",
+                        "target":  "服务器中的一名成员已屏蔽你！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Amount:",
+                        "target":  "数额：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "An error occured while syncing ship objects! The file may be corrupted. Please report the glitch!",
+                        "target":  "同步飞船物件时发生错误！文件可能已损坏。请报告这个异常！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=sync-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "BACK    ",
+                        "target":  "返回",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=core-ui; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Base",
+                        "target":  "基础项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Brightness:",
+                        "target":  "亮度设置：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Capacity",
+                        "target":  "容量上限",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CHALLENGE",
+                        "target":  "挑战模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Change",
+                        "target":  "调整",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Change suit",
+                        "target":  "更换工服",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Clear",
+                        "target":  "清空",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Close",
+                        "target":  "关闭窗口",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Connection was not approved!",
+                        "target":  "连接未获批准！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Continue",
+                        "target":  "继续前进",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CREW:",
+                        "target":  "船员：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "disconnected",
+                        "target":  "连接已断开",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=network-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Don\u0027t forget to share",
+                        "target":  "别忘了分享出去",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-hint; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "DustClouds",
+                        "target":  "尘云天气项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=config-key; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Enable chat",
+                        "target":  "开启聊天",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Enemies",
+                        "target":  "敌对实体",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=category-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "False",
+                        "target":  "否",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=boolean-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Feiopar",
+                        "target":  "黑豹",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=proper-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "File",
+                        "target":  "档案",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Game",
+                        "target":  "游戏设置页",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Gameplay",
+                        "target":  "玩法设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "General",
+                        "target":  "常规项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Global",
+                        "target":  "全局范围",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Motion Blur",
+                        "target":  "运动模糊效果",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Settings",
+                        "target":  "设置项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You are already in a lobby!",
+                        "target":  "你已经在大厅中！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Press B to move and place objects in the ship, E to cancel.",
+                        "target":  "按 B 在船内移动并放置物体，按 E 取消。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Lobby",
+                        "target":  "大厅界面",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Lobby is full!",
+                        "target":  "大厅人数已满！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Windowed fullscreen",
+                        "target":  "无边框全屏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Cancelled ejection sequence.\n\n",
+                        "target":  "已取消弹射流程。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Invert Y-Axis",
+                        "target":  "反转 Y 轴方向",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONTROLS",
+                        "target":  "操控设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-heading; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CONFIRM",
+                        "target":  "确认选择",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "DISPLAY",
+                        "target":  "画面显示",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-heading; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Apply",
+                        "target":  "应用设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Back",
+                        "target":  "返回",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=button; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Join room",
+                        "target":  "加入",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Join Room",
+                        "target":  "加入",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort:worldwide",
+                        "target":  "排序：全球",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort:near",
+                        "target":  "排序：附近",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort:far",
+                        "target":  "排序：远处",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Off",
+                        "target":  "关闭",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "No device found",
+                        "target":  "未找到设备",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "(click to refresh)",
+                        "target":  "（点击刷新）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Happy Monday.",
+                        "target":  "周一快乐。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Happy Tuesday.",
+                        "target":  "周二快乐。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Happy Wednesday.",
+                        "target":  "周三快乐。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Happy Thursday.",
+                        "target":  "周四快乐。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Happy Friday.",
+                        "target":  "周五快乐。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Happy Saturday.",
+                        "target":  "周六快乐。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Happy Sunday.",
+                        "target":  "周日快乐。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Utility Slot",
+                        "target":  "工具槽位",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Utility slot",
+                        "target":  "工具槽位",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "utility slot",
+                        "target":  "工具槽位",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Equipped to utility belt!",
+                        "target":  "已装备到工具槽位！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Press TAB to select the utility belt. This can only hold one-handed tools.",
+                        "target":  "按 TAB 选择工具槽位。工具槽位只能存放单手工具。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    }
+                ]
+}

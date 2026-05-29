@@ -20,10 +20,22 @@ internal static partial class TranslationService
                  trimmed.IndexOf("\u65b0\u4f59\u989d", System.StringComparison.Ordinal) >= 0 ||
                  trimmed.IndexOf("\u65b0\u9918\u984d", System.StringComparison.Ordinal) >= 0);
             return trimmed.StartsWith("You have requested to order ", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.StartsWith("Do you want to buy ", System.StringComparison.OrdinalIgnoreCase) ||
                    looksLikeOrderedConfirmation ||
                    trimmed.StartsWith("The Company is buying", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.IndexOf(" OFF!", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   trimmed.IndexOf(" UP!", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   trimmed.EndsWith(" purchased vehicle on route.", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.EndsWith(" purchased items on route.", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.StartsWith("You can't afford ", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.StartsWith("You need at least ", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.StartsWith("Amount:", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.StartsWith("Waiting for crew", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.StartsWith("Waiting for Client", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.StartsWith("You have been kicked", System.StringComparison.OrdinalIgnoreCase) ||
                    trimmed.Equals("Cancelled order.", System.StringComparison.OrdinalIgnoreCase) ||
                    trimmed.Equals("Entered broadcast code.", System.StringComparison.OrdinalIgnoreCase) ||
+                   trimmed.Equals("Can only be used while in Orbit", System.StringComparison.OrdinalIgnoreCase) ||
                    trimmed.Equals("You have cancelled the order.", System.StringComparison.OrdinalIgnoreCase);
         }
 
@@ -61,6 +73,104 @@ internal static partial class TranslationService
             if (trimmed.Equals("Entered broadcast code.", System.StringComparison.OrdinalIgnoreCase))
             {
                 translated = "\u5df2\u8f93\u5165\u5e7f\u64ad\u4ee3\u7801\u3002";
+                return true;
+            }
+
+            if (trimmed.Equals("Can only be used while in Orbit", System.StringComparison.OrdinalIgnoreCase))
+            {
+                translated = source.EndsWith("\n\n", System.StringComparison.Ordinal)
+                    ? "\u53ea\u80fd\u5728\u8f68\u9053\u4e2d\u4f7f\u7528\n\n"
+                    : "\u53ea\u80fd\u5728\u8f68\u9053\u4e2d\u4f7f\u7528";
+                return true;
+            }
+
+            var buyMatch = SafeRegexMatch(
+                trimmed,
+                @"^Do\s+you\s+want\s+to\s+buy\s+(?<item>.+?)\s+for\s+a\s+total\s+cost\s+of\s+(?<cost>.+?)\.?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (buyMatch.Success)
+            {
+                translated = $"\u662f\u5426\u4ee5 {NormalizeTransactionCost(buyMatch.Groups["cost"].Value)} \u7684\u603b\u4ef7\u8d2d\u4e70 {BuildTerminalLocalizedItemName(buyMatch.Groups["item"].Value.Trim())}\uff1f";
+                return true;
+            }
+
+            var saleMatch = SafeRegexMatch(
+                trimmed,
+                @"^(?<item>.+?)\s+\$(?<price>[0-9.]+)\s+\((?<amount>.+?)\s+(?<direction>OFF|UP)!\)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (saleMatch.Success)
+            {
+                var item = BuildTerminalLocalizedItemName(saleMatch.Groups["item"].Value.Trim());
+                var direction = saleMatch.Groups["direction"].Value.Equals("OFF", System.StringComparison.OrdinalIgnoreCase)
+                    ? "\u5df2\u964d\u4ef7"
+                    : "\u5df2\u6da8\u4ef7";
+                translated = $"{item} ${saleMatch.Groups["price"].Value}\uff08{saleMatch.Groups["amount"].Value.Trim()} {direction}\uff01\uff09";
+                return true;
+            }
+
+            var purchasedMatch = SafeRegexMatch(
+                trimmed,
+                @"^(?<name>[^\r\n]+?)\s+purchased\s+(?<kind>vehicle|items)\s+on\s+route\.$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (purchasedMatch.Success)
+            {
+                var name = purchasedMatch.Groups["name"].Value.Trim();
+                translated = purchasedMatch.Groups["kind"].Value.Equals("vehicle", System.StringComparison.OrdinalIgnoreCase)
+                    ? $"{name} \u7684\u8f7d\u5177\u6b63\u5728\u914d\u9001\u3002"
+                    : $"{name} \u7684\u5df2\u8d2d\u7269\u54c1\u6b63\u5728\u914d\u9001\u3002";
+                return true;
+            }
+
+            var affordMatch = SafeRegexMatch(
+                trimmed,
+                @"^You\s+can't\s+afford\s+(?<value>.+?)\.?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (affordMatch.Success)
+            {
+                translated = $"\u4f60\u4e70\u4e0d\u8d77 {affordMatch.Groups["value"].Value.Trim()}\u3002";
+                return true;
+            }
+
+            var needMatch = SafeRegexMatch(
+                trimmed,
+                @"^You\s+need\s+at\s+least\s+(?<value>.+?)\.?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (needMatch.Success)
+            {
+                translated = $"\u81f3\u5c11\u9700\u8981 {needMatch.Groups["value"].Value.Trim()}\u3002";
+                return true;
+            }
+
+            var amountMatch = SafeRegexMatch(
+                trimmed,
+                @"^Amount\s*:\s*(?<amount>\d{1,2})\.$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (amountMatch.Success)
+            {
+                translated = $"\u6570\u91cf\uff1a{amountMatch.Groups["amount"].Value}\u3002";
+                return true;
+            }
+
+            var kickedMatch = SafeRegexMatch(
+                source.Trim(),
+                @"^You\s+have\s+been\s+kicked\r?\nReason:\s*(?<reason>.+)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (kickedMatch.Success)
+            {
+                translated = $"\u4f60\u5df2\u88ab\u8e22\u51fa\n\u539f\u56e0\uff1a{kickedMatch.Groups["reason"].Value.Trim()}";
+                return true;
+            }
+
+            var waitMatch = SafeRegexMatch(
+                source.Trim(),
+                @"^Waiting\s+for\s+(?<kind>crew|Client)\.\.\.\r?\n\r?\nPlayers\s+loaded:\s*(?<current>\d+)\s*/\s*(?<total>\d+)(?<tail>[\s\S]*)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (waitMatch.Success)
+            {
+                var waiting = waitMatch.Groups["kind"].Value.Equals("crew", System.StringComparison.OrdinalIgnoreCase)
+                    ? "\u6b63\u5728\u7b49\u5f85\u8239\u5458\u2026\u2026"
+                    : "\u6b63\u5728\u7b49\u5f85\u5ba2\u6237\u7aef\u2026\u2026";
+                translated = $"{waiting}\n\n\u73a9\u5bb6\u52a0\u8f7d\uff1a{waitMatch.Groups["current"].Value}/{waitMatch.Groups["total"].Value}{waitMatch.Groups["tail"].Value}";
                 return true;
             }
 

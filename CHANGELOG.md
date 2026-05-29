@@ -2,10 +2,18 @@
 
 ## 中文
 
+### 3.0.0 - 独立运行时本地化更新
+
+- 移除对既有第三方汉化和字体修补运行时链路的依赖，文本替换、字体 fallback、贴图替换与兼容逻辑均由本插件独立处理。
+- 切换到自维护的干净运行时词库，覆盖物品、怪物、终端、HUD、星球信息、交互提示、设置菜单、联机大厅和结算界面等常用场景。
+- 新增默认关闭的自动翻译功能，可通过配置接入 HTTP 翻译提供方，并使用缓存、长度限制、并发限制和后台请求避免阻塞主线程。
+- 重做中文 TextMeshPro fallback 与本地化贴图资源，改善菜单、弹窗、感染提示、结算画面和飞船提示的显示稳定性。
+- 改进图标类模组兼容处理，保留原版英文物品 key 供图标匹配使用，仅在显示层输出中文名称。
+- 补全并统一多处用户可见译名和交互提示，包含怪物/物品术语、加入房间、房间可见性、调试菜单、飞船降落、公司解雇和绩效报告等界面。
+
 ### 0.2.3 - 修复 0.2.2 必要运行时文件缺失
 
 - 修复 0.2.2 发布包中缺失的必要运行时文件，该问题可能导致插件部分功能异常或无法正常加载。
-
 ### 0.2.2 - 菜单稳定性、配置可读性与文本覆盖更新
 
 - 改进快捷菜单、游戏设置和退出确认界面的本地化时机，减少首次打开或反复打开时的峰值卡顿，并降低首帧短暂显示英文原文的概率。
@@ -42,10 +50,18 @@
 
 ## English
 
+### 3.0.0 - Independent runtime localization update
+
+- Removed runtime reliance on existing third-party translation and font-patching runtimes; text replacement, font fallback, texture replacement, and compatibility logic are now handled by this plugin.
+- Switched to a maintained clean runtime glossary covering items, enemies, terminal pages, HUD text, moon information, interaction prompts, settings, lobbies, and endgame screens.
+- Added an optional automatic translation feature, disabled by default, with an HTTP provider hook, cache, text-length limits, pending-request limits, and background requests to avoid main-thread stalls.
+- Rebuilt Chinese TextMeshPro fallback and localized texture resources to improve menu, popup, infection HUD, endgame, and ship-message display stability.
+- Improved icon-mod compatibility by preserving vanilla English item keys for matching while translating display text separately.
+- Completed and standardized visible wording for item/enemy names, join-room flow, room visibility, debug menu actions, ship landing prompts, company-fired screens, and performance reports.
+
 ### 0.2.3 - Fix missing required runtime files from 0.2.2
 
 - Fixed missing required runtime files in the 0.2.2 release package, which could cause partial plugin malfunction or failure to load.
-
 ### 0.2.2 - Menu stability, readable configuration, and text coverage update
 
 - Improved localization timing for the quick menu, game settings, and leave-game confirmation screens, reducing peak stutter on first open or repeated opens and lowering the chance of a one-frame English flash.

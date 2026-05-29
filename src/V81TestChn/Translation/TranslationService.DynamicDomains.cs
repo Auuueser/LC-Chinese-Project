@@ -29,6 +29,11 @@ internal static partial class TranslationService
             return FinishKnownDynamicTranslation(source, ref translated, "FixedSceneLabel.Fast");
         }
 
+        if (TryTranslateShortLabelText(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "ShortLabel.Fast");
+        }
+
         if (TryTranslateShipMonitorTextFast(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "ShipMonitor.Fast");
@@ -42,6 +47,12 @@ internal static partial class TranslationService
         if (PlanetInfoDynamicTranslator.TranslateFast(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "PlanetInfo.Fast");
+        }
+
+        if (ControlTipTranslator.CanHandleCheap(source) &&
+            ControlTipTranslator.Translate(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "ControlTip.Full.Fast");
         }
 
         if (TryTranslateStandaloneControlTextFast(source, out translated))

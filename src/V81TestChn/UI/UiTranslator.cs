@@ -59,6 +59,13 @@ internal static class UiTranslator
                         AlertTextureReplacementService.TryReplaceSystemOnlineText(text, "UiTranslator.Roots.TMP");
                         tmpTranslated++;
                     }
+                    else if (AutomaticTranslationService.TryTranslateOrQueue(text.text, out translated))
+                    {
+                        text.text = translated;
+                        FontFallbackService.ApplyFallback(text, translated);
+                        AlertTextureReplacementService.TryReplaceSystemOnlineText(text, "UiTranslator.Roots.TMP");
+                        tmpTranslated++;
+                    }
                     else
                     {
                         FontFallbackService.ApplyFallback(text, text.text);
@@ -86,6 +93,12 @@ internal static class UiTranslator
                         AlertTextureReplacementService.TryReplaceSystemOnlineText(text, "UiTranslator.Roots.UI.Text");
                         uiTranslated++;
                     }
+                    else if (AutomaticTranslationService.TryTranslateOrQueue(text.text, out translated))
+                    {
+                        text.text = translated;
+                        AlertTextureReplacementService.TryReplaceSystemOnlineText(text, "UiTranslator.Roots.UI.Text");
+                        uiTranslated++;
+                    }
                     else
                     {
                         AlertTextureReplacementService.TryReplaceSystemOnlineText(text, "UiTranslator.Roots.UI.Text");
@@ -107,6 +120,12 @@ internal static class UiTranslator
                     }
 
                     if (TranslationService.TryTranslate(text.text, out var translated))
+                    {
+                        text.text = translated;
+                        AlertTextureReplacementService.TryReplaceSystemOnlineText(text, "UiTranslator.Roots.TextMesh");
+                        uiTranslated++;
+                    }
+                    else if (AutomaticTranslationService.TryTranslateOrQueue(text.text, out translated))
                     {
                         text.text = translated;
                         AlertTextureReplacementService.TryReplaceSystemOnlineText(text, "UiTranslator.Roots.TextMesh");

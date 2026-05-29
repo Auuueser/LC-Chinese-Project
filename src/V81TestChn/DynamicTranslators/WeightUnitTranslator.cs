@@ -15,17 +15,22 @@ internal static partial class TranslationService
             }
 
             var stripped = StripRichTextTagsCheap(source).Trim();
-            if (stripped.Equals("lb", StringComparison.OrdinalIgnoreCase))
+            if (stripped.Equals("lb", StringComparison.OrdinalIgnoreCase) ||
+                stripped.Equals("kg", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
 
-            if (!stripped.EndsWith("lb", StringComparison.OrdinalIgnoreCase))
+            var unitLength = stripped.EndsWith("lb", StringComparison.OrdinalIgnoreCase) ||
+                             stripped.EndsWith("kg", StringComparison.OrdinalIgnoreCase)
+                ? 2
+                : 0;
+            if (unitLength == 0)
             {
                 return false;
             }
 
-            var number = stripped[..^2].Trim();
+            var number = stripped[..^unitLength].Trim();
             return LooksLikeSimpleNumber(number);
         }
 
@@ -51,8 +56,7 @@ internal static partial class TranslationService
             StringBuilder? builder = null;
             for (var i = 0; i < source.Length - 1; i++)
             {
-                if ((source[i] != 'l' && source[i] != 'L') ||
-                    (source[i + 1] != 'b' && source[i + 1] != 'B') ||
+                if (!TryGetUnitReplacement(source, i, out var replacement) ||
                     HasAsciiLetterBefore(source, i) ||
                     HasAsciiLetterAfter(source, i + 1))
                 {
@@ -66,7 +70,7 @@ internal static partial class TranslationService
                     builder.Append(source, 0, i);
                 }
 
-                builder.Append('\u78c5');
+                builder.Append(replacement);
                 i++;
             }
 
@@ -78,14 +82,43 @@ internal static partial class TranslationService
             if (source.Length > 0)
             {
                 var last = source[^1];
-                if (source.Length < 2 ||
-                    !((source[^2] == 'l' || source[^2] == 'L') && (last == 'b' || last == 'B')))
+                if (source.Length < 2)
+                {
+                    builder.Append(last);
+                }
+                else if (!((source[^2] == 'l' || source[^2] == 'L') && (last == 'b' || last == 'B')) &&
+                         !((source[^2] == 'k' || source[^2] == 'K') && (last == 'g' || last == 'G')))
                 {
                     builder.Append(last);
                 }
             }
 
             return builder.ToString();
+        }
+
+        private static bool TryGetUnitReplacement(string source, int index, out string replacement)
+        {
+            replacement = string.Empty;
+            if (index + 1 >= source.Length)
+            {
+                return false;
+            }
+
+            var first = source[index];
+            var second = source[index + 1];
+            if ((first == 'l' || first == 'L') && (second == 'b' || second == 'B'))
+            {
+                replacement = "\u78c5";
+                return true;
+            }
+
+            if ((first == 'k' || first == 'K') && (second == 'g' || second == 'G'))
+            {
+                replacement = "\u5343\u514b";
+                return true;
+            }
+
+            return false;
         }
 
         private static bool LooksLikeSimpleNumber(string value)

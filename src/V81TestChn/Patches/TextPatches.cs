@@ -176,6 +176,16 @@ internal static partial class TextPatches
         HudEndGameLocalizationService.ApplyDialogueSegments(dialogueArray, "HUDManager.ReadDialogue");
     }
 
+    private static void HudManagerReadDialoguePostfix(HUDManager __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        HudEndGameLocalizationService.ApplyDialogueHud(__instance, "HUDManager.ReadDialogue.postfix");
+    }
+
     [HarmonyPatch(typeof(HUDManager), "AddChatMessage")]
     [HarmonyPostfix]
     private static void HudManagerAddChatMessagePostfix(HUDManager __instance)
@@ -466,6 +476,8 @@ internal static partial class TextPatches
         }
 
         HudEndGameLocalizationService.TryLocalizeSpectateDeadLabel(__instance, "TMP_Text.post_set_text");
+        HudEndGameLocalizationService.TryNormalizePlayersFiredText(__instance, "TMP_Text.post_set_text.players-fired");
+        HudEndGameLocalizationService.TryNormalizeDialogueBoxText(__instance, "TMP_Text.post_set_text.dialogue");
         if (isMapScreenText)
         {
             // Plugin.Log.LogInfo("RoomCreateProbe TmpMapScreenSetText postfix after spectate-dead");
@@ -525,7 +537,6 @@ internal static partial class TextPatches
     {
         FontFallbackAuditService.RecordFontAssetSnapshot(__instance, "TMP_FontAsset.Awake.before-fallback");
         FontFallbackService.OnFontAssetAwake(__instance);
-        EmbeddedFontPatcherService.PatchFontAsset(__instance, "TMP_FontAsset.Awake");
         FontFallbackAuditService.RecordFontAssetSnapshot(__instance, "TMP_FontAsset.Awake.after-fallback");
     }
 
@@ -626,6 +637,15 @@ internal static partial class TextPatches
             return true;
         }
 
+        if (AutomaticTranslationService.TryTranslateOrQueue(value, out translated))
+        {
+            value = translated;
+            FontFallbackService.ApplyFallback(__instance, translated);
+            ApplyBootSplashTypography(__instance, translated);
+            Plugin.ReportTranslationHit();
+            return true;
+        }
+
         RuntimeTextCollector.Record(__instance, value);
         return false;
     }
@@ -674,6 +694,13 @@ internal static partial class TextPatches
             return true;
         }
 
+        if (AutomaticTranslationService.TryTranslateOrQueue(value, out translated))
+        {
+            value = translated;
+            Plugin.ReportTranslationHit();
+            return true;
+        }
+
         RuntimeTextCollector.Record(__instance, value);
         return false;
     }
@@ -695,6 +722,11 @@ internal static partial class TextPatches
 
         if (TranslationService.TryTranslateKnownDynamicTextFast(value, out var translated) ||
             TranslationService.TryTranslateFastExact(value, out translated))
+        {
+            value = translated;
+            Plugin.ReportTranslationHit();
+        }
+        else if (AutomaticTranslationService.TryTranslateOrQueue(value, out translated))
         {
             value = translated;
             Plugin.ReportTranslationHit();
@@ -864,6 +896,14 @@ internal static partial class TextPatches
         ApplyBootSplashTypography(__instance, rawText);
         if (TranslationService.TryTranslateKnownDynamicTextFast(rawText, out var translated) ||
             TranslationService.TryTranslateFastExact(rawText, out translated))
+        {
+            sourceText = new StringBuilder(translated);
+            FontFallbackService.ApplyFallback(__instance, translated);
+            ApplyBootSplashTypography(__instance, translated);
+            FontFallbackService.ApplySystemOnlineProbeFix(__instance, "TMP_Text.SetText(StringBuilder)", translated);
+            Plugin.ReportTranslationHit();
+        }
+        else if (AutomaticTranslationService.TryTranslateOrQueue(rawText, out translated))
         {
             sourceText = new StringBuilder(translated);
             FontFallbackService.ApplyFallback(__instance, translated);

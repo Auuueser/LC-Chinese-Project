@@ -971,7 +971,7 @@ internal static class TargetedUiTranslator
 
         for (var i = 0; i < item.toolTips.Length; i++)
         {
-            var translated = TranslateDynamic(item.toolTips[i]);
+            var translated = TranslationService.TranslateHeldItemControlTip(item.toolTips[i]);
             if (translated != item.toolTips[i])
             {
                 item.toolTips[i] = translated;
@@ -1560,7 +1560,12 @@ internal static class TargetedUiTranslator
             return true;
         }
 
-        return TranslationService.TryTranslate(source, out translated);
+        if (TranslationService.TryTranslate(source, out translated))
+        {
+            return true;
+        }
+
+        return AutomaticTranslationService.TryTranslateOrQueue(source, out translated);
     }
 
     private static bool WasTranslationProcessed(Component component, string? text)
@@ -1645,6 +1650,13 @@ internal static class TargetedUiTranslator
                 changed = true;
                 Plugin.ReportTranslationHit();
             }
+            else if (AutomaticTranslationService.TryTranslateOrQueue(option.text, out value))
+            {
+                option.text = value;
+                translated++;
+                changed = true;
+                Plugin.ReportTranslationHit();
+            }
 
             MarkDropdownOptionProcessed(TmpDropdownOptionTextCache, dropdownId, i, option.text);
         }
@@ -1678,6 +1690,13 @@ internal static class TargetedUiTranslator
             }
 
             if (TranslationService.TryTranslate(option.text, out var value))
+            {
+                option.text = value;
+                translated++;
+                changed = true;
+                Plugin.ReportTranslationHit();
+            }
+            else if (AutomaticTranslationService.TryTranslateOrQueue(option.text, out value))
             {
                 option.text = value;
                 translated++;

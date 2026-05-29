@@ -1,0 +1,750 @@
+{
+    "schema_version":  1,
+    "version":  1,
+    "domain":  "items",
+    "role":  "runtime-json-split",
+    "locale":  "zh-CN",
+    "generated_from":  "translations-source/clean-translation-draft.zh-CN.json",
+    "source_seed_path":  "translations-source/clean-source-seed.json",
+    "source_seed_sha256":  "0a3cfa42e167b7e832d8de4279c994c5d986d1d6c27e11014aa16ab5698c443b",
+    "draft_sha256":  "27bb6a97a6067333b71208ab52e4ab5989886938141354ebd653b421affaceee",
+    "runtime_json_path":  "translations-clean/zh-CN.runtime.json",
+    "runtime_json_sha256":  "33a28fff89a52387d21697973cfd6a9cb247ffc3493c5a3ca62d90277a0d3934",
+    "runtime_packaged":  true,
+    "runtime_loader":  "inert-split-artifact; monolith remains active loader input",
+    "entry_count":  122,
+    "entries":  [
+                    {
+                        "source":  "Got scrap!",
+                        "target":  "拿到废料了！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=hud-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Inverse Teleporter",
+                        "target":  "逆向传送器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "It will teleport whoever is currently being monitored on the ship\u0027s radar.",
+                        "target":  "它会传送当前在飞船雷达上被监控的人。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Picked up scrap",
+                        "target":  "废料已拿起",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Press the button and step onto the inverse teleporter while it activates.",
+                        "target":  "按下按钮，并在反向传送装置启动时站上去。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Press the button to activate the teleporter.",
+                        "target":  "按下按钮即可启动传送装置。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-info; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Returned the item from storage!",
+                        "target":  "物品已从仓储中取回！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=storage; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Teleporter",
+                        "target":  "传送器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "\nThese jamming tunes are great for a morale boost on your crew!\n\n",
+                        "target":  "\n这些劲爆曲目能给整支小队提提士气！\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\nThis device will get you around anywhere! Just use it responsibly!\n\n",
+                        "target":  "\n这台设备能把你送往各种地方！请务必谨慎使用！\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Airhorn",
+                        "target":  "气喇叭",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Ammo",
+                        "target":  "弹药",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Apparatus",
+                        "target":  "核心装置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bell",
+                        "target":  "铃铛",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Belt bag",
+                        "target":  "腰包",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Big bolt",
+                        "target":  "大螺栓",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Binoculars",
+                        "target":  "望远镜",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Body",
+                        "target":  "尸体",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Body collected!",
+                        "target":  "遗体已完成回收！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-feedback; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Bone",
+                        "target":  "骨头",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Boombox",
+                        "target":  "手提音响",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bottles",
+                        "target":  "瓶子",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Brush",
+                        "target":  "刷子",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bubblegum",
+                        "target":  "泡泡糖",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bunkbeds\n\n",
+                        "target":  "上下铺床架\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=furniture-name; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Candy",
+                        "target":  "糖果",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Cash register",
+                        "target":  "收银机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Chemical jug",
+                        "target":  "化学液罐",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "clipboard",
+                        "target":  "文件夹板",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Clock",
+                        "target":  "时钟",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Clown horn",
+                        "target":  "小丑喇叭",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Comedy",
+                        "target":  "喜剧面具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Control pad",
+                        "target":  "控制面板",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Cookie pan",
+                        "target":  "饼干烤盘",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Cupboard\n\n",
+                        "target":  "置物柜\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=furniture-name; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Deal with those pesky weeds!",
+                        "target":  "用它处理那些烦人的杂草！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Dust pan",
+                        "target":  "簸箕",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Ear",
+                        "target":  "耳朵",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Easter egg",
+                        "target":  "彩蛋",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Egg",
+                        "target":  "蛋",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Egg beater",
+                        "target":  "打蛋器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Extension ladder",
+                        "target":  "伸缩梯",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Fancy lamp",
+                        "target":  "华丽台灯",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "File cabinet\n\n",
+                        "target":  "文件柜\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=furniture-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Flashlight",
+                        "target":  "手电筒",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Flask",
+                        "target":  "酒壶",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Follow instructions manual provided with the canister.",
+                        "target":  "请按罐具附带的说明手册操作。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Foot",
+                        "target":  "脚",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "For digging! The Company does not condone violence or harm to local ecosystems.",
+                        "target":  "用于挖掘！公司不认可暴力行为，也不鼓励破坏当地生态。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Fridge",
+                        "target":  "冰箱",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=furniture-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Garbage lid",
+                        "target":  "垃圾桶盖",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Gift",
+                        "target":  "礼物",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Gold bar",
+                        "target":  "金条",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Golden cup",
+                        "target":  "金杯",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Hairdryer",
+                        "target":  "吹风机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Hand",
+                        "target":  "手",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Hear other players when the wakie talkie is in your inventory.",
+                        "target":  "只要对讲机在背包里，就能听到其他玩家的语音。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Heart",
+                        "target":  "心脏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Hive",
+                        "target":  "蜂巢",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Hold the cord to activate the loud horn.",
+                        "target":  "拉住绳索即可鸣响大号角。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Homemade flashbang",
+                        "target":  "自制闪光弹",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-name; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "If you like this product, try out the Pro Flashlight!",
+                        "target":  "喜欢这款产品的话，也试试专业手电吧！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "If your Cruiser is lost or destroyed, you can get one free replacement.",
+                        "target":  "若巡航车丢失或损毁，你可以免费领取一次替换车。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-description; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Cannot return from storage while the ship is landing or leaving.\n\n",
+                        "target":  "飞船正在降落或离开时，无法从仓储取回物品。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=storage; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "(Honking)",
+                        "target":  "(鸣笛中)",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=vehicle; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "(Radar booster)",
+                        "target":  "（雷达增强器）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=equipment; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "* Inverse Teleporter",
+                        "target":  "* 反向传送器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=endgame-death; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "* Teleporter",
+                        "target":  "* 传送器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=endgame-death; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[ Trying ignition ]",
+                        "target":  "[ 正在试点火 ]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=vehicle; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Apparatice",
+                        "target":  "装置核心",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Backwater Gunkfish",
+                        "target":  "死水泥鱼",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bee hive",
+                        "target":  "蜂巢",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bee suit",
+                        "target":  "蜂服",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=suit; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Brake lever",
+                        "target":  "刹车杆",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=vehicle; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Brass bell",
+                        "target":  "铜铃",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bullet",
+                        "target":  "子弹",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bunkbeds",
+                        "target":  "双层床",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=furniture; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Bunny suit",
+                        "target":  "兔子装",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=suit; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Charges batteries",
+                        "target":  "为电池充能",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-action; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Classic painting",
+                        "target":  "古典画",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Coffee mug",
+                        "target":  "咖啡杯",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Coil",
+                        "target":  "弹簧头",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Common",
+                        "target":  "常见级",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=rarity-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Company Cruiser",
+                        "target":  "公司巡航车",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=vehicle; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Cozy lights",
+                        "target":  "暖光灯串",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Cruiser",
+                        "target":  "巡航车",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=vehicle; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Cupboard",
+                        "target":  "橱柜",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Data chip",
+                        "target":  "数据芯片",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Dentures",
+                        "target":  "假牙",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Disco ball",
+                        "target":  "迪斯科球",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Dog house",
+                        "target":  "狗屋",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Double-barrel",
+                        "target":  "双管霰弹枪",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Electric chair",
+                        "target":  "电椅",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-label; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "File Cabinet",
+                        "target":  "文件柜",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-label; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Gift box",
+                        "target":  "礼盒",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-label; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Jetpack",
+                        "target":  "喷气背包",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "My flashlight didn\u0027t even go back there, the beam just went dark",
+                        "target":  "我的手电光甚至照不到那里，光束直接暗了下去",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Scrap value",
+                        "target":  "废料价值",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sell scrap for cash.",
+                        "target":  "出售废料换取现金。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Shovel",
+                        "target":  "铲子",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Shovels cannot equip to your utility belt.",
+                        "target":  "铲子不能装备到工具槽位。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Walkie",
+                        "target":  "对讲机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Walkie-talkie",
+                        "target":  "对讲机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Pro-flashlight",
+                        "target":  "专业手电",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "* Shovel  x2",
+                        "target":  "* 铲子 x2",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "* Walkie-talkies x4",
+                        "target":  "* 对讲机四台",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Used to communicate with any crew member from any distance, no walkie talkie required!",
+                        "target":  "可与任意距离外的船员通信，不需要对讲机！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The inverse teleporter is a modified teleporter which will teleport you to a random position outside the ship.",
+                        "target":  "反向传送器是改装传送器，会把你传送到飞船外的随机位置。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Go here to drop off any valuable scrap you\u0027ve collected while on the job. The rate of return updates hourly and fluctuates over the course of several days.",
+                        "target":  "前往此处交付工作中收集的贵重废料。回收率每小时更新，并会在数日内波动。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Used to communicate with any crew member from any distance, no walkie talkie required! The horn can be heard from anywhere. But what does it mean? That\u0027s up to you",
+                        "target":  "可与任意距离外的船员通信，不需要对讲机！号角在任何地方都能听见。但它代表什么？由你决定",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Press the button to activate the teleporter. It will teleport whoever is currently being monitored on the ship\u0027s radar. They will not be able to keep any of their held items through the teleport. It takes about ten seconds to recharge",
+                        "target":  "按下按钮启动传送器。它会传送当前由飞船雷达监控的目标。被传送者无法保留手持物品。充能约需十秒",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Press the button to activate the teleporter. It will teleport whoever is currently being monitored on the ship\u0027s radar. They will not be able to keep any of their held items through the teleport. It takes about ten seconds to recharge.",
+                        "target":  "按下按钮启动传送器。它会传送当前由飞船雷达监控的目标。被传送者无法保留手持物品。充能约需十秒。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The inverse teleporter is a modified teleporter which will teleport you to a random position outside the ship. All your items will be dropped at the teleporter before transport. The inverse teleporter can be used by everyone at once and has a 3.5 minute cooldown",
+                        "target":  "反向传送器是改造版传送器，会把你传送到飞船外的随机位置。传送前你的所有物品会掉在传送器旁。反向传送器可让所有人同时使用，冷却时间为 3.5 分钟。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the Company Cruiser. Your new balance is [playerCredits].\n\nWe are so confident in the quality of this product, it comes with a life-time warranty! If your Cruiser is lost or destroyed, you can get one free replacement. Items cannot be purchased while the vehicle is en route.\n\n",
+                        "target":  "已订购公司巡航车。你的新余额为 [playerCredits]。\n\n我们对这件产品的质量很有信心，因此附带终身保修！如果巡航车遗失或被摧毁，你可获得一次免费替换。车辆在运输途中时无法购买物品。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the inverse teleporter! Your new balance is [playerCredits].\nPress [B] to rearrange objects in your ship and [V] to confirm.\n\nPress the button and step onto the inverse teleporter while it activates.\n",
+                        "target":  "已订购反向传送器！你的新余额为 [playerCredits]。\n按 [B] 重新摆放飞船内物品，按 [V] 确认。\n\n启动后站上反向传送器，它会在激活时把你送出飞船。\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the teleporter! Your new balance is [playerCredits].\nPress the button to activate the teleporter. It will teleport whoever is currently being monitored on the ship\u0027s radar. You will not be able to keep any of your held items through the teleport. It takes about 10 seconds to recharge.\n\nPress [B] to rearrange objects in your ship and [V] to confirm.",
+                        "target":  "已订购传送器！你的新余额为 [playerCredits]。\n按下按钮即可启动传送器。它会传送当前由飞船雷达监控的目标。传送时无法保留任何手持物品。充能约需 10 秒。\n\n按 [B] 重新摆放飞船内物品，按 [V] 确认。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "DISCLAIMER: The inverse teleporter can only transport you out, not in, and you may become trapped. The Company is not responsible for injury or replacement of heads and limbs induced by quantum entanglement and bad luck",
+                        "target":  "免责声明：反向传送器只能把你送出去，不能把你送回来，你可能会被困住。因量子纠缠和坏运气导致的受伤、头部或肢体更换，公司概不负责",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Days on the job: 25\nScrap value collected: $530\nItems bought: 89521\nDeaths: 3651\nSteps taken: 60816069\n",
+                        "target":  "工作天数：25\n已收集废料价值：$530\n购买物品数：89521\n死亡次数：3651\n行走步数：60816069\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "V80 includes a full rework of March, 3 new creatures, and numerous misc. gameplay improvements and settings, as well as overhauls to increase performance.\nThe next update will include more creatures and scrap.\n\nOthers must update their game to play with you on this version.\n\n\nHave fun!",
+                        "target":  "V80 包含对 March 的完整重做、3 种新生物，以及许多杂项玩法改进和设置；同时还进行了多项提升性能的重构。\n下一次更新会加入更多生物和废料。\n\n其他玩家必须更新游戏，才能在这个版本与你同玩。\n\n\n祝你玩得开心！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=version-message; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Steering wheel",
+                        "target":  "方向盘",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=item-label; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Tea Kettle",
+                        "target":  "茶壶",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-label; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Gold Bar",
+                        "target":  "金条",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=scrap-label; status=user-approved-terminology"
+                    }
+                ]
+}

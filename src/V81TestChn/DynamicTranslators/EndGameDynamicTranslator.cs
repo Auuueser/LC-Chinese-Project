@@ -212,6 +212,26 @@ internal static partial class TranslationService
                 return true;
             }
 
+            var overtimeMatch = SafeRegexMatch(
+                trimmed,
+                @"^Your\s+current\s+overtime\s+bonus\s+is\s+(?<value>.+)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (overtimeMatch.Success)
+            {
+                translated = $"\u5f53\u524d\u52a0\u73ed\u5956\u52b1\u4e3a {overtimeMatch.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
+            var totalCreditsMatch = SafeRegexMatch(
+                trimmed,
+                @"^Your\s+new\s+total\s+credits\s+will\s+be\s+(?<value>.+)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (totalCreditsMatch.Success)
+            {
+                translated = $"\u65b0\u7684\u603b\u4fe1\u7528\u70b9\u5c06\u4e3a {totalCreditsMatch.Groups["value"].Value.Trim()}";
+                return true;
+            }
+
             return false;
         }
 
@@ -219,15 +239,20 @@ internal static partial class TranslationService
         {
             translated = source;
             var trimmed = source.Trim();
-            if (string.Equals(trimmed, "YOU ARE FIRED.", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(trimmed, "YOU ARE FIRED.", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(trimmed, "YOU ARE FIRED", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(trimmed, "\u4f60\u88ab\u89e3\u96c7\u4e86\uff01", StringComparison.Ordinal) ||
+                string.Equals(trimmed, "\u4f60\u5df2\u88ab\u516c\u53f8\u89e3\u96c7\u3002", StringComparison.Ordinal))
             {
-                translated = "\u4f60\u88ab\u89e3\u96c7\u4e86\uff01";
+                translated = "\u4f60\u5df2\u88ab\u516c\u53f8\u89e3\u96c7";
                 return true;
             }
 
-            if (string.Equals(trimmed, "You did not meet the profit quota before the deadline.", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(trimmed, "You did not meet the profit quota before the deadline.", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.IndexOf("\u5229\u6da6\u6307\u6807", StringComparison.Ordinal) >= 0 ||
+                trimmed.IndexOf("\u76ee\u6807\u91d1\u989d", StringComparison.Ordinal) >= 0)
             {
-                translated = "\u4f60\u672a\u80fd\u5728\u622a\u6b62\u65e5\u671f\u524d\u8fbe\u5230\u76ee\u6807\u91d1\u989d";
+                translated = "\u672a\u80fd\u6309\u671f\u5b8c\u6210\u5229\u6da6\u6307\u6807";
                 return true;
             }
 
@@ -264,6 +289,35 @@ internal static partial class TranslationService
         private static bool TranslateSpectatingStatus(string source, out string translated)
         {
             translated = source;
+            var suffixMatch = SafeRegexMatch(
+                source,
+                @"^(?<open>[<\(\uff08])?\s*Spectating\s*[:\uff1a]\s*(?<name>.+?)\s*(?<close>[>\)\uff09])?(?:\s*(?<suffix>\[[^\]]+\]))?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (suffixMatch.Success)
+            {
+                var suffixName = suffixMatch.Groups["name"].Value.Trim();
+                if (suffixName.Length == 0)
+                {
+                    return false;
+                }
+
+                var suffixOpen = suffixMatch.Groups["open"].Value;
+                var suffixClose = suffixMatch.Groups["close"].Value;
+                var suffixValue = $"\u6b63\u5728\u65c1\u89c2\uff1a{suffixName}";
+                translated = suffixOpen == "<" || suffixClose == ">"
+                    ? $"<{suffixValue}>"
+                    : suffixOpen.Length > 0 || suffixClose.Length > 0
+                        ? $"\uff08{suffixValue}\uff09"
+                        : suffixValue;
+                var suffix = suffixMatch.Groups["suffix"].Value;
+                if (suffix.Length > 0)
+                {
+                    translated += " " + suffix;
+                }
+
+                return true;
+            }
+
             var match = SafeRegexMatch(
                 source,
                 @"^(?<open>[<\(（])?\s*Spectating\s*[:：]\s*(?<name>.+?)\s*(?<close>[>\)）])?$",

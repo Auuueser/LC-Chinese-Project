@@ -1,0 +1,2964 @@
+{
+    "schema_version":  1,
+    "version":  1,
+    "domain":  "gameplay",
+    "role":  "runtime-json-split",
+    "locale":  "zh-CN",
+    "generated_from":  "translations-source/clean-translation-draft.zh-CN.json",
+    "source_seed_path":  "translations-source/clean-source-seed.json",
+    "source_seed_sha256":  "0a3cfa42e167b7e832d8de4279c994c5d986d1d6c27e11014aa16ab5698c443b",
+    "draft_sha256":  "27bb6a97a6067333b71208ab52e4ab5989886938141354ebd653b421affaceee",
+    "runtime_json_path":  "translations-clean/zh-CN.runtime.json",
+    "runtime_json_sha256":  "33a28fff89a52387d21697973cfd6a9cb247ffc3493c5a3ca62d90277a0d3934",
+    "runtime_packaged":  true,
+    "runtime_loader":  "inert-split-artifact; monolith remains active loader input",
+    "entry_count":  491,
+    "entries":  [
+                    {
+                        "source":  "Land ship : [LMB]",
+                        "target":  "降落飞船：[LMB]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ship; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Start game : [LMB]",
+                        "target":  "开始本局：[LMB]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ship; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Start ship : [LMB]",
+                        "target":  "启动舰船：[LMB]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=ship; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[No items available]",
+                        "target":  "[当前没有可用物品]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[No items in stock!]",
+                        "target":  "[库存里没有物品！]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\u003e Credits",
+                        "target":  "\u003e 制作名单",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "AS MUCH PROFIT AS POSSIBLE",
+                        "target":  "尽量赚到最高利润",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CHALLENGE MOON",
+                        "target":  "挑战卫星",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Challenge Moon ",
+                        "target":  "挑战卫星 ",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Credits",
+                        "target":  "制作人员名单",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "DROP ITEM AHEAD",
+                        "target":  "前方请放下物品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "EMERGENCY WEATHER ALERT",
+                        "target":  "紧急气象警告",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item:",
+                        "target":  "条目：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Locked (pickable)",
+                        "target":  "已上锁（可撬开）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "PROFIT:",
+                        "target":  "收益：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ship Monitors",
+                        "target":  "飞船监控屏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=json-short; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "An error occured!",
+                        "target":  "发生了异常错误！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=error-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "An error occured! Try again.\n\n",
+                        "target":  "发生了异常错误！请再试一次。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=error-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "ERROR",
+                        "target":  "错误提示",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=error-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Can\u0027t stay closed forever",
+                        "target":  "不可能一直关着",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=flavor-text; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Dance",
+                        "target":  "舞蹈动作",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=emote; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Defense",
+                        "target":  "防御属性",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=stat-label; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "enter test maze",
+                        "target":  "进入测试用迷宫",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=debug-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Error occured when a player attempted to join the server! Restart the application and please report the glitch!",
+                        "target":  "玩家尝试加入服务器时发生错误！请重启程序，并报告此故障！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=error-message; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "exit maze",
+                        "target":  "离开迷宫",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=debug-command; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Hair brush",
+                        "target":  "发梳",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Hairbrush",
+                        "target":  "随身梳子",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Half",
+                        "target":  "半数",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "HALT!",
+                        "target":  "立即停步！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Hazard suit",
+                        "target":  "防危套装",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Help",
+                        "target":  "帮助菜单",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Hiding - Sep 30",
+                        "target":  "躲藏 - 9月30日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Home base",
+                        "target":  "本部基地",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "However it appears to have been used in secret.",
+                        "target":  "但它似乎曾被秘密使用。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Hygrodere",
+                        "target":  "史莱姆",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Hygroderes",
+                        "target":  "史莱姆群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Icons",
+                        "target":  "图标组",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Idea - Sep 18",
+                        "target":  "想法 - 9月18日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ignore",
+                        "target":  "忽略此项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Important objects",
+                        "target":  "重要物体清单",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "INSTABILITY:",
+                        "target":  "失稳程度：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Interact",
+                        "target":  "进行交互",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Intern",
+                        "target":  "实习员工",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It can only stun for as long as you keep the current flowing.",
+                        "target":  "只有持续通电时，它才能维持眩晕效果。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It must be activated.",
+                        "target":  "需要先激活它。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It takes about 10 seconds to recharge.",
+                        "target":  "大约需要 10 秒重新充能。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "It takes about ten seconds to recharge.",
+                        "target":  "大约需要十秒重新充能。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item drop",
+                        "target":  "放下物品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item inspect",
+                        "target":  "物品查看",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item name:",
+                        "target":  "物品名：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item primary use",
+                        "target":  "物品主用键",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item Secondary use",
+                        "target":  "物品副用键",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item switch left",
+                        "target":  "向左切换物品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item switch right",
+                        "target":  "向右切换物品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Item Tertiary use",
+                        "target":  "物品第三用途",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Items",
+                        "target":  "物品项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Items missed!",
+                        "target":  "有物品遗漏！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jack-o-Lantern",
+                        "target":  "万圣南瓜灯",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "JackOLantern",
+                        "target":  "南瓜灯物品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jagged and weathered terrain. ",
+                        "target":  "锯齿状且饱经风化的地形。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jar of pickles",
+                        "target":  "酸黄瓜玻璃罐",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jeb",
+                        "target":  "杰布老板",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jesters",
+                        "target":  "小丑群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "joined the ship",
+                        "target":  "已登船",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jump",
+                        "target":  "跳跃动作",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Kicked",
+                        "target":  "已被移出",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=h-l-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Magazine",
+                        "target":  "期刊册",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Magic 7 ball",
+                        "target":  "七号魔法球",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Magnifying glass",
+                        "target":  "手持放大镜",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Main entrance",
+                        "target":  "主入口门",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Maneaters",
+                        "target":  "食人株群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Mapper",
+                        "target":  "测绘装置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Mask Hornets",
+                        "target":  "面具蜂群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Master volume",
+                        "target":  "主音量控制",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Master volume:",
+                        "target":  "主音量控制：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Mauling",
+                        "target":  "撕扯伤害",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Maximized window",
+                        "target":  "最大化窗口",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Metal sheet",
+                        "target":  "金属薄板",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "MeteorShower",
+                        "target":  "陨星雨天气",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Microphone",
+                        "target":  "麦克风设备",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Microwave",
+                        "target":  "微波炉",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "MODE: Push to talk",
+                        "target":  "模式：按键发言",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "MODE: Voice activation",
+                        "target":  "模式：语音触发",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Moon",
+                        "target":  "卫星条目",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Mug",
+                        "target":  "饮用杯",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Multiplier",
+                        "target":  "倍率值",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Mummy - Aug 24",
+                        "target":  "木乃伊 - 8月24日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Must be in your hand and pressed down to transmit voice.",
+                        "target":  "必须拿在手上并按住，才能传输语音。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Name",
+                        "target":  "名称栏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Name your server...",
+                        "target":  "为服务器命名……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "New Text",
+                        "target":  "新文本项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Next",
+                        "target":  "下一项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "No available servers to join.",
+                        "target":  "暂无可加入服务器。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "No entries to display!",
+                        "target":  "没有可显示条目！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "None",
+                        "target":  "无项目",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Nonsense - Sep 27",
+                        "target":  "胡言乱语 - 9月27日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Normal",
+                        "target":  "常规状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Note",
+                        "target":  "便条",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Notes:",
+                        "target":  "注记列表：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Notes:\n* Most lazy employee\n* Most paranoid employee\n* Sustained the most injuries",
+                        "target":  "记录：\n* 最懒员工\n* 最多疑员工\n* 受伤最多",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Notes: \n",
+                        "target":  "记录：\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Number to spawn:",
+                        "target":  "刷出数量：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Nutcrackers",
+                        "target":  "胡桃夹子群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "October 10th 1968",
+                        "target":  "1968 年 10 月 10 日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Old Bird",
+                        "target":  "旧鸟机体",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Old phone",
+                        "target":  "老式电话",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Online",
+                        "target":  "在线状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Option A",
+                        "target":  "选项甲",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Other commands:",
+                        "target":  "可用其他命令：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=m-p-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "QUOTA: \n$0 / $509",
+                        "target":  "当前配额：\n$0 / $509",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Radar boosters come with many uses",
+                        "target":  "雷达增强器用途很多",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Radar boosters come with many uses!",
+                        "target":  "雷达增强器有很多用途！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Radar-booster",
+                        "target":  "雷达增强器设备",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "RadMech",
+                        "target":  "辐射机甲",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Random seed:",
+                        "target":  "随机种子：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Random seed: 5185915",
+                        "target":  "随机种子编号：5185915",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Randomizer",
+                        "target":  "随机化器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Real Job - Oct 1",
+                        "target":  "正式工作 - 10月1日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "REBIND CONTROLLERS",
+                        "target":  "重新设置控制器绑定",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "RECEIVING SIGNAL",
+                        "target":  "信号接收中",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Red Locust",
+                        "target":  "赤色蝗虫",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Red Locust Bees",
+                        "target":  "赤色蝗蜂群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Red pill",
+                        "target":  "红色药片",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Red soda",
+                        "target":  "红罐汽水",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Remap",
+                        "target":  "重新指定按键",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "REMAP CONTROLS",
+                        "target":  "重新映射控制",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Remote",
+                        "target":  "遥控装置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Repeated, firm presses on the trigger aimed at the root of the weed is all you need!",
+                        "target":  "对准杂草根部，连续而有力地扣动扳机就够了！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Replace furniture",
+                        "target":  "替换家具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Reset credits to 200. ",
+                        "target":  "将信用点重置为 200。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Resolution",
+                        "target":  "分辨率设置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "result:",
+                        "target":  "输出结果：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Revive players",
+                        "target":  "复活玩家",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Ribcage",
+                        "target":  "胸肋骨架",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ring",
+                        "target":  "金属戒指",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ring bell",
+                        "target":  "敲响铃铛",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Roaming Locust",
+                        "target":  "游荡蝗虫",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Roaming locusts",
+                        "target":  "游荡蝗群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Robot Toy",
+                        "target":  "玩具机器人",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Romantic table",
+                        "target":  "浪漫小桌",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Rotate: ",
+                        "target":  "旋转方向：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Rubber Ducky",
+                        "target":  "橡胶鸭",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Rumored active machinery left behind.",
+                        "target":  "传闻这里遗留着仍在运转的机械。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Safe",
+                        "target":  "保险柜",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "SAFETY COMPUTER",
+                        "target":  "安全终端计算机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Save File",
+                        "target":  "存档文件",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Screams - Sep 13",
+                        "target":  "尖叫 - 9月13日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Secure door",
+                        "target":  "安保门",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sent transmission.\n\n",
+                        "target":  "传输已发送。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "September 27, 1968",
+                        "target":  "1968 年 9 月 27 日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "September 30, 1968",
+                        "target":  "1968 年 9 月 30 日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Server name",
+                        "target":  "服务器名称栏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Server name:",
+                        "target":  "服务器名称栏：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "SHADOW",
+                        "target":  "暗影",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Shell",
+                        "target":  "弹壳",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Shells",
+                        "target":  "弹壳组",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ship",
+                        "target":  "舰船",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Shotgun",
+                        "target":  "霰弹武器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Shotgun shell",
+                        "target":  "霰弹枪弹壳",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Shower",
+                        "target":  "淋浴设施",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sign",
+                        "target":  "手势标记",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Signal Translator",
+                        "target":  "信号文本转换器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Table",
+                        "target":  "桌子家具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Tattered metal sheet",
+                        "target":  "破旧金属板",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Tea kettle",
+                        "target":  "茶水壶",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Team Synergy - Oct 10",
+                        "target":  "团队协同 - 10月10日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Teeth",
+                        "target":  "牙齿样本",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Television",
+                        "target":  "电视机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Terminal",
+                        "target":  "终端机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Terrain / Grass Detail",
+                        "target":  "地形 / 草地细节",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The Company must minimize risk of damage to proprietary hardware. Goodbye!",
+                        "target":  "公司必须尽量降低专有设备受损风险。再见！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "the date we last saw Rich is September 7, 1968",
+                        "target":  "我们最后见到 Rich 的日期是 1968 年 9 月 7 日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The extension ladder can reach as high as nine meters!",
+                        "target":  "这把伸缩梯最高能伸到九米！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The game will now close so you can restart it.",
+                        "target":  "游戏即将关闭，以便你重新启动。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The horn can be heard from anywhere.",
+                        "target":  "号角声可从任何地方听到。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The host has not loaded or has already landed their ship.",
+                        "target":  "主机尚未加载完成，或飞船已经降落。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The host was not accepting connections.",
+                        "target":  "主机没有接受连接。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The message must be under 10 letters.",
+                        "target":  "消息必须少于 10 个字母。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The most affordable light source. It\u0027s even waterproof",
+                        "target":  "最实惠的光源，而且还能防水",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The most affordable light source. It\u0027s even waterproof!",
+                        "target":  "最实惠的光源，而且还能防水！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The most specialized self-protective equipment, capable of sending upwards of 80,000 volts",
+                        "target":  "最专业的自卫装备，可释放高达 80,000 伏电压",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The most specialized self-protective equipment, capable of sending upwards of 80,000 volts!",
+                        "target":  "最专业的自卫装备，可释放高达 80,000 伏电压！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The rate of return updates hourly and fluctuates over the course of several days.",
+                        "target":  "回收报价每小时刷新，并会在数天内上下浮动。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The server host disconnected.",
+                        "target":  "房主断开连接",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "The server is full!",
+                        "target":  "服务器已满员！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The server no longer exists!",
+                        "target":  "该服务器已不存在！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The surface of Embrion is scorchingly hot.",
+                        "target":  "Embrion 表面温度极高。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The survival kit includes these necessities in a convenient package! :",
+                        "target":  "生存套件把这些必需品打包在一起，十分方便！：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Their behaviour is stubborn and fearless to a fault.",
+                        "target":  "它们性情顽固，且无畏到近乎缺陷。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Their bodies are unlikely to be found due to the planet\u0027s conditions.",
+                        "target":  "受行星环境影响，他们的遗体很可能无法找回。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Their main weaknesses are their intelligence and complete lack of hearing.",
+                        "target":  "它们的主要弱点是智力有限且完全没有听觉。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Their planet of origin is unknown",
+                        "target":  "它们的起源行星未知",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "There are many entrances to it littered about the landscape.",
+                        "target":  "景观各处散布着许多通向其中的入口。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "These are the items in storage:",
+                        "target":  "仓库内有以下物品：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "These jamming tunes are great for a morale boost on your crew",
+                        "target":  "这些劲爆曲子很适合提升船员士气",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "These jamming tunes are great for a morale boost on your crew!",
+                        "target":  "这些劲爆曲子很适合提升船员士气！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "They are dangerous to humans",
+                        "target":  "它们对人类很危险",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "They are relentless hunters, typically at the top of their food chain.",
+                        "target":  "它们是无情的猎手，通常位于食物链顶端。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "They are social, hunting in very large packs.",
+                        "target":  "它们具有群居性，会以庞大群体狩猎。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "They can hold 15 utility items at one time.",
+                        "target":  "它们一次可携带 15 件工具物品。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "They pose little threat and have a generally passive temperament towards humans",
+                        "target":  "它们威胁不大，对人类通常较为被动。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "They will not be able to keep any of their held items through the teleport.",
+                        "target":  "传送后他们无法保留手持物品。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This device will get you around anywhere! Just use it responsibly",
+                        "target":  "这个装置能带你到处移动！请负责任地使用",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This device will get you around anywhere! Just use it responsibly!",
+                        "target":  "这个装置能带你到处移动！请负责任地使用！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This is locked from the demo version!\n\n",
+                        "target":  "演示版本中此项被锁定！\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This is the weekly challenge moon. You have one day to make as much profit as possible.",
+                        "target":  "这是每周挑战卫星。你只有一天时间尽可能获取利润。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This item is not in stock!",
+                        "target":  "此物品暂无库存！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This item is not in stock!\n\n",
+                        "target":  "此物品暂无库存！\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This moon is overlooked due to its twin moon, Vow.",
+                        "target":  "这颗卫星因其双生卫星 Vow 而常被忽视。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This selection rotates per-quota. Be sure to check back next week",
+                        "target":  "此选择会随每次配额轮换。记得下周回来查看",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Thumper",
+                        "target":  "半身鱼",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "True",
+                        "target":  "真值",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Tulip Snake",
+                        "target":  "郁金香飞蛇",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Turn furniture",
+                        "target":  "旋转家具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Turn page : [Q/E]",
+                        "target":  "翻页：[Q/E]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Turn safety off: [Q]",
+                        "target":  "解除保险：[Q]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Turn safety on: [Q]",
+                        "target":  "开启保险：[Q]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Turret",
+                        "target":  "自动炮塔",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Typing...",
+                        "target":  "正在输入……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "TZP-Inhalant",
+                        "target":  "TZP 吸入喷剂",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ultra",
+                        "target":  "超高档",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Unable to join because you have been banned!",
+                        "target":  "无法加入：你已被封禁！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Uncapped",
+                        "target":  "取消上限",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Unconfirmed changes!",
+                        "target":  "存在未应用的更改！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Unknown",
+                        "target":  "未知状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Unlikely for complex life to exist",
+                        "target":  "复杂生命存在概率很低",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use it to scale any cliff and reach for the stars!",
+                        "target":  "用它攀上任何峭壁，触碰星辰！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use key: [R-trigger]",
+                        "target":  "钥匙使用：[R-trigger]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use monitor (V-Sync)",
+                        "target":  "跟随显示器同步（V-Sync）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use the light switch to enable cozy lights.",
+                        "target":  "使用灯光开关启用舒适照明。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use the light switch to enable the disco.",
+                        "target":  "使用灯光开关启用迪斯科灯光。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use the main lever at the front desk to enter orbit.",
+                        "target":  "使用前台主拉杆进入轨道。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use the ship computer terminal to access secure doors.",
+                        "target":  "使用飞船电脑终端访问安保门。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Useful for keeping in touch!",
+                        "target":  "适合保持联络！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "V-type engine",
+                        "target":  "V 型发动机",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Vain shroud",
+                        "target":  "虚荣蔓藤",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Value",
+                        "target":  "价值项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Value:",
+                        "target":  "价值：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Value: ",
+                        "target":  "估值：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Value: ???",
+                        "target":  "价值：???",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "VALUE: $20",
+                        "target":  "估值：$20",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Value: $258",
+                        "target":  "估值：$258",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "VALUE: $40",
+                        "target":  "估值：$40",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "VISIBILITY LOW!\\n\\nSteam leak detected in area",
+                        "target":  "可见度低！\\n\\n区域内发现蒸汽泄漏",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Voice activation",
+                        "target":  "语音触发模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Voice chat",
+                        "target":  "队内语音聊天",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Voice volume",
+                        "target":  "语音播放音量",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Waiting for crew...",
+                        "target":  "等待船员……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Walk : [W/A/S/D]",
+                        "target":  "行走：[W/A/S/D]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Walk back",
+                        "target":  "向后行走",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Walk forward",
+                        "target":  "向前行走",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Walk left",
+                        "target":  "向左行走",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Walk right",
+                        "target":  "向右行走",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Waning forests. Abandoned facilities littered across the landscape.",
+                        "target":  "衰败的森林。废弃设施散落在地貌各处。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Warning",
+                        "target":  "警告提示",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "WARNING: Modifying Lethal Company is not recommended.",
+                        "target":  "警告：不推荐改动 Lethal Company。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Warning: TZP gas may impact the brain with extended exposure.",
+                        "target":  "警告：长时间接触 TZP 气体可能影响脑部。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=t-w-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Yield sign",
+                        "target":  "让行标志牌",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "YOU ARE FIRED.",
+                        "target":  "你已被公司解雇",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "You are in LAN mode. When allowing remote connections through LAN, please ensure you have sufficient network security such as a firewall and/or VPN.",
+                        "target":  "当前为局域网模式。允许通过 LAN 远程连接时，请确认网络有足够防护，例如防火墙或 VPN。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You are joining/leaving too fast!",
+                        "target":  "加入或退出过于频繁！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You can see stored items in the terminal by using command \u0027STORAGE\u0027",
+                        "target":  "可在终端输入 \u0027STORAGE\u0027 查看已存放物品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You have a free warranty!",
+                        "target":  "本次享有免费保修！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You have blocked someone in this server!",
+                        "target":  "此服务器中有你屏蔽的玩家！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Your connection timed out before you could load in. Try again?",
+                        "target":  "连接在载入完成前超时。要重试吗？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Your files could not be loaded and may be corrupted. To start the game, the files can be deleted.",
+                        "target":  "存档文件无法载入，可能已经损坏。若要启动游戏，可以删除这些文件。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Your rank: ",
+                        "target":  "你的评级：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Zap gun",
+                        "target":  "电弧枪",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Zap gun:",
+                        "target":  "电弧枪：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Zed Dog",
+                        "target":  "Zed 犬",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You selected the Challenge Moon save file. You can\u0027t route to another moon during the challenge.\n\n",
+                        "target":  "你选择的是挑战卫星存档。在挑战期间不能规划前往其他卫星的航线。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You will keep your employee rank. Your ship and credits will be reset.",
+                        "target":  "你将保留员工评级。飞船与信用点会被重置。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You will not be able to keep any of your held items through the teleport.",
+                        "target":  "通过传送时无法保留手持物品。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "You\u0027ll never feel useless again!",
+                        "target":  "从今以后你会一直派得上用场！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Your ability to move LONG distances while carrying HEFTY objects will be second to none!",
+                        "target":  "搬运重物时进行长距离移动的能力将无人能及！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Your electric chair can be activated by any powerful source of voltage!",
+                        "target":  "你的电椅可由任意强电压源启动！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Zeekerss",
+                        "target":  "Zeekerss（原作者）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=xz-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Servers",
+                        "target":  "服务器列表",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Set time:",
+                        "target":  "设定时间值：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "SET-UP",
+                        "target":  "初始化配置",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Snare flea",
+                        "target":  "绊缚跳蚤",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Snare fleas",
+                        "target":  "绊缚跳蚤群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sneakers",
+                        "target":  "轻便运动鞋",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Soccer ball",
+                        "target":  "足球玩具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sofa chair",
+                        "target":  "沙发椅",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Something went wrong!",
+                        "target":  "发生异常！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort: far",
+                        "target":  "排序：远处",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort: Friends",
+                        "target":  "排序：仅好友",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort: near",
+                        "target":  "排序：附近",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort: Similar rank",
+                        "target":  "排序：相近等级",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort: Top 20",
+                        "target":  "排序：前 20",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sort: worldwide",
+                        "target":  "排序：全球",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=user-approved-terminology"
+                    },
+                    {
+                        "source":  "Spawn creature",
+                        "target":  "生成生物",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Spawn item",
+                        "target":  "生成物品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Spawn truck",
+                        "target":  "生成载货卡车",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Speed:",
+                        "target":  "速度：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Spore lizard",
+                        "target":  "孢子蜥蜴个体",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Spore lizards",
+                        "target":  "孢子蜥蜴群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Spray paint",
+                        "target":  "喷漆道具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Spring",
+                        "target":  "弹簧",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sprint",
+                        "target":  "奔跑",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Started server, joining...",
+                        "target":  "服务器已启动，正在加入……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "started the ship",
+                        "target":  "已启动飞船",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Stats",
+                        "target":  "数据统计",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Steepness",
+                        "target":  "坡度",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sticky note",
+                        "target":  "便签纸",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Stingray",
+                        "target":  "魟鱼样本",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Stop sign",
+                        "target":  "停车标志牌",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Strangulation",
+                        "target":  "勒颈窒息",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Stun grenade",
+                        "target":  "闪爆手雷",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Submit chat",
+                        "target":  "提交聊天内容",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Suffocation",
+                        "target":  "窒息",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sustained the most injuries",
+                        "target":  "受伤最多",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Sustained the most injuries.",
+                        "target":  "受伤最多。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Swing of things - Aug 27",
+                        "target":  "事情上手了 - 8月27日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Switched radar to player.",
+                        "target":  "雷达已切换至玩家。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Switching radar cam view.",
+                        "target":  "正在切换雷达摄像机视图。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "SYSTEMS ONLINE",
+                        "target":  "系统已上线",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Similar to its twin moon, 41-Experimentation, featuring far more jagged and weathered terrain.",
+                        "target":  "与它的孪生月球 41-Experimentation 相似，但地形更崎岖，也更受风化侵蚀。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Since you removed the power cell on that floor...\nI\u0027m detecting increased amounts of radiation coming from a few precise points in that area.",
+                        "target":  "自从你取下那层的电池后……\n我检测到该区域几个精确位置释放出更强的辐射。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Switched radar to player.\n\n",
+                        "target":  "雷达已切换至玩家。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Switching radar cam view.\n\n",
+                        "target":  "正在切换雷达摄像机视角。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=s-short-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "TIP:",
+                        "target":  "提示信息：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Locked",
+                        "target":  "锁定状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Landmine",
+                        "target":  "爆炸地雷",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Welcome!",
+                        "target":  "欢迎回来！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Weather alert!",
+                        "target":  "天气危险警报！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "To read the manual:",
+                        "target":  "阅读操作手册：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Press Z to inspect closely. Press Q and E to flip the pages.",
+                        "target":  "按 Z 近距离查看；按 Q 和 E 翻页。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Point",
+                        "target":  "点数",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Price",
+                        "target":  "价格值",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Leader",
+                        "target":  "队长",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Player",
+                        "target":  "玩家项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Public",
+                        "target":  "公开",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Toilet",
+                        "target":  "马桶",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "TOTAL:",
+                        "target":  "合计：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Weight",
+                        "target":  "重量值",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Window",
+                        "target":  "窗口显示",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Gravity",
+                        "target":  "重力",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Outside",
+                        "target":  "室外区域",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Weather",
+                        "target":  "天气类型",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Gunshots",
+                        "target":  "枪声",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Loud horn",
+                        "target":  "高音号角",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Paycheck!",
+                        "target":  "工资到账！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "CarStealer",
+                        "target":  "生成车辆",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Lockpicker",
+                        "target":  "开锁器道具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Part-timer",
+                        "target":  "兼职员工",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Pill bottle",
+                        "target":  "药片瓶",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Weed killer",
+                        "target":  "除草喷剂",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Push to talk",
+                        "target":  "按住键说话",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Vain shrouds",
+                        "target":  "虚华帷幕",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Push to talk:",
+                        "target":  "按键通话：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "PILOT COMPUTER",
+                        "target":  "导航电脑",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Lands the ship.",
+                        "target":  "降落飞船",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Training manual",
+                        "target":  "培训手册",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Look sensitivity",
+                        "target":  "镜头灵敏度",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Look sensitivity:",
+                        "target":  "镜头灵敏度：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "PERFORMANCE REPORT",
+                        "target":  "绩效报告",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "Press \"/\" to talk.",
+                        "target":  "按“/”说话。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "With challenge moon",
+                        "target":  "挑战卫星",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "TO MEET PROFIT QUOTA",
+                        "target":  "用于完成利润指标",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Toggle invincibility",
+                        "target":  "切换无敌状态",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Oxygen critically low!",
+                        "target":  "氧气严重不足！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Toy cube",
+                        "target":  "玩具立方体",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Player #0",
+                        "target":  "玩家编号 #0",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Toy robot",
+                        "target":  "机器人玩具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Toy train",
+                        "target":  "火车玩具",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "collected!",
+                        "target":  "收集完成！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Green suit",
+                        "target":  "绿色套装",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Large axle",
+                        "target":  "大型车轴",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "PlayerName",
+                        "target":  "玩家名",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Toothpaste",
+                        "target":  "牙膏管",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "was kicked",
+                        "target":  "被踢出",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  " collected!",
+                        "target":  "已收集！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Pajama suit",
+                        "target":  "睡衣套装",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Plastic cup",
+                        "target":  "一次性塑料杯",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Purple suit",
+                        "target":  "紫色套装",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "TOGGLE LOG:",
+                        "target":  "切换日志：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "TOTAL: [to]",
+                        "target":  "合计：[to]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Welcome mat",
+                        "target":  "迎宾垫",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the ",
+                        "target":  "已下单购买 ",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Picking lock",
+                        "target":  "正在开锁",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Plastic fish",
+                        "target":  "塑料鱼摆件",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Toilet paper",
+                        "target":  "厕纸卷",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Tulip snakes",
+                        "target":  "郁金香蛇类",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Wedding ring",
+                        "target":  "婚戒",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "kill-on-sight",
+                        "target":  "见敌即清除",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Kitchen knife",
+                        "target":  "厨房用刀",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Laser pointer",
+                        "target":  "镭射指示器",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Player Audios",
+                        "target":  "玩家语音音频",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Welcome back!",
+                        "target":  "欢迎归来！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Puffer",
+                        "target":  "鼓气怪",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Welcoem to the error console",
+                        "target":  "欢迎进入错误控制台",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Would you like to leave the game?",
+                        "target":  "是否要离开本局？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "PRIVATE means you must send invites through Steam for players to join.",
+                        "target":  "仅限好友：玩家需要通过 Steam 邀请加入。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Warning! No response from crew, which has not returned. Emergency code activated.",
+                        "target":  "警告！未收到返航船员回应。紧急代码已启动。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Knee",
+                        "target":  "膝部",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Prev",
+                        "target":  "上一项",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Local",
+                        "target":  "本地模式",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Time:",
+                        "target":  "时间：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Windy",
+                        "target":  "强风",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Oxygen",
+                        "target":  "氧气量",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Price:",
+                        "target":  "价格：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Tongue",
+                        "target":  "舌部",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "FPS: 59",
+                        "target":  "帧率：59",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Planets",
+                        "target":  "行星列表",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Tragedy",
+                        "target":  "悲剧",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Whistle",
+                        "target":  "哨子",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Goldfish",
+                        "target":  "金鱼",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Gunkfish",
+                        "target":  "黏液鱼",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "LassoMan",
+                        "target":  "套索人",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Painting",
+                        "target":  "绘画作品",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Player #",
+                        "target":  "玩家编号 ",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Thumpers",
+                        "target":  "半身鱼群",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Confirm: ",
+                        "target":  "确认：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=user-approved-wording"
+                    },
+                    {
+                        "source":  "DUE: $200",
+                        "target":  "需支付：$200",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Let go : [LMB]",
+                        "target":  "松开：[LMB]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Overtime bonus",
+                        "target":  "加班奖励",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Perfume bottle",
+                        "target":  "香氛瓶",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "$1401 Collected",
+                        "target":  "累计收集 $1401",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Goodbye - Sep 7",
+                        "target":  "再见 - 9月7日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "OVERTIME BONUS:",
+                        "target":  "加班奖励：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "was left behind",
+                        "target":  "被留在了后面",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Whoopie cushion",
+                        "target":  "恶作剧坐垫",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Plushie pajama man",
+                        "target":  "睡衣小人玩偶",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Equip to belt : [E]",
+                        "target":  "装备到工具槽位：[E]",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "For testing purposes",
+                        "target":  "仅用于测试",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Casualties (x1): -20%",
+                        "target":  "伤亡惩罚（x1）：-20%",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Grugga Cinematography",
+                        "target":  "Grugga 摄影",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "TOGGLE LOG: SHIFT + H",
+                        "target":  "显示/隐藏日志：SHIFT + H",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Don\u0027t forget to share!",
+                        "target":  "记得分给队友！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Found journal entry: \u0027",
+                        "target":  "找到日志条目：“",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Welcome to Version 80!",
+                        "target":  "欢迎来到 80 版！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Weekly Challenge Results",
+                        "target":  "本周挑战成绩",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Amount: [variableAmount].",
+                        "target":  "订购数量：[variableAmount]。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Too late on moon to land!",
+                        "target":  "当前卫星时间太晚，无法降落！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "ENTERING THE ATMOSPHERE...",
+                        "target":  "进入大气层中……",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Letter Of Resignation - Oct 13",
+                        "target":  "辞职信 - 10月13日",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-exact-ui-status; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Please have a good night, and work hard.",
+                        "target":  "祝你夜晚愉快，并努力工作。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "But what does it mean? That\u0027s up to you!",
+                        "target":  "但这代表什么？由你决定！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Travellers to 21-Offense should know it\u0027s not for the faint of heart.",
+                        "target":  "前往 21-Offense 的旅行者应明白，这里不适合胆小者。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Lock-pickers will unlock your limitless potential for efficiency on the job.",
+                        "target":  "开锁器会解放你在工作效率上的无限潜能。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Vow appears to have been inhabited by several colonies across its continents",
+                        "target":  "Vow 的各大陆似乎曾有多个殖民地居住",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Due to this and their other harmful effects on many ecosystems and agriculture",
+                        "target":  "由于这些原因及其对许多生态系统和农业的其他危害",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Previously mined for its rich industrial resources, Liquidation is now largely an ocean moon.",
+                        "target":  "Liquidation 曾因丰富工业资源而被开采，如今大部分区域是海洋卫星。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Use the \"PING\" command before the radar booster\u0027s name to play a special sound from the device.",
+                        "target":  "在雷达增强器名称前使用“PING”命令，让设备播放特殊声音。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "220-Assurance is far younger than its counterpart. Discovered not long before 41-Experimentation.",
+                        "target":  "220-Assurance 比它的对应卫星年轻得多，发现时间略早于 41-Experimentation。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This safe and legal medicine can be administered to see great benefits to your performance on the job!",
+                        "target":  "这种安全合法药剂可显著提升你的工作表现！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The signal transmitter can be activated with the \"transmit\" command followed by any message under 10 letters.",
+                        "target":  "信号发射器可用“transmit”命令加少于 10 个字符的消息激活。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Deal with those pesky weeds! Repeated, firm presses on the trigger aimed at the root of the weed is all you need!",
+                        "target":  "处理那些烦人的杂草！瞄准根部，反复而坚定地扣动扳机即可。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Weapons and classified technology has been found at various sites on the surface, dating back at least two hundred years.",
+                        "target":  "地表多处地点发现了武器和机密技术，历史至少可追溯两百年。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This is the weekly challenge moon. Make as much profit as possible in one day. You can retry it as many times as you like.",
+                        "target":  "这是每周挑战卫星。一天内尽可能赚取利润，可不限次数重试。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "To keep it targeted as long as possible, pull the gun side-to-side to counter the bend and fight against the pull of the electric beam.",
+                        "target":  "为尽量保持瞄准，请左右拉动枪身抵消弯折，并对抗电束拉力。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Lock-pickers will unlock your limitless potential for efficiency on the job. Powered by proprietary AI software, they will get you access through any locked door",
+                        "target":  "开锁器将释放你在工作效率上的无限潜力。它由专有 AI 软件驱动，可帮你通过任何上锁的门",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Welcome to\\n",
+                        "target":  "欢迎抵达\\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ejecting crew now.\n\n",
+                        "target":  "立即执行船员弹射。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Toggling radar cam\n\n",
+                        "target":  "正在切换雷达摄像头\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Pinged radar booster.\n\n",
+                        "target":  "雷达增强器 ping 已发送。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Entered broadcast code.\n\n",
+                        "target":  "广播代码已录入。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Flashed radar booster.\n\n\n",
+                        "target":  "已闪烁雷达增强器。\n\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[DATA CORRUPTED OR OVERWRITTEN]\n\n",
+                        "target":  "[数据已损坏或被覆盖]\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "\nPlease describe your role in a team dynamic: ",
+                        "target":  "\n请描述你在团队协作中的角色：",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[There was no action supplied with the word.]\n\n",
+                        "target":  "[该词没有提供对应操作。]\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "[This action was not compatible with this object.]\n\n",
+                        "target":  "[该操作与此对象不兼容。]\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered bee suits! Your new balance is [playerCredits].\n\n",
+                        "target":  "已订购蜜蜂套装！你的新余额为 [playerCredits]。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the fridge! Your new balance is [playerCredits].\n",
+                        "target":  "已订购冰箱！你的新余额为 [playerCredits]。\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered bunny suits! Your new balance is [playerCredits].\n\n",
+                        "target":  "已订购兔子套装！你的新余额为 [playerCredits]。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered green suits! Your new balance is [playerCredits].\n\n",
+                        "target":  "已订购绿色套装！你的新余额为 [playerCredits]。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered hazard suits! Your new balance is [playerCredits].\n\n",
+                        "target":  "已订购防护套装！你的新余额为 [playerCredits]。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered pajama suits! Your new balance is [playerCredits].\n\n",
+                        "target":  "已订购睡衣套装！你的新余额为 [playerCredits]。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered purple suits! Your new balance is [playerCredits].\n\n",
+                        "target":  "已订购紫色套装！你的新余额为 [playerCredits]。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the dog house! Your new balance is [playerCredits].\n",
+                        "target":  "已订购狗屋！你的新余额为 [playerCredits]。\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the microwave! Your new balance is [playerCredits].\n",
+                        "target":  "已订购微波炉！你的新余额为 [playerCredits]。\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the sofa chair! Your new balance is [playerCredits].\n",
+                        "target":  "已订购沙发椅！你的新余额为 [playerCredits]。\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This experience has been designed for in-game voice chat, so I recommend giving it a try.\n\n",
+                        "target":  "此体验围绕游戏内语音聊天设计，建议你尝试使用。\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This experience has been designed for in-game voice chat, so I recommend giving it a try.\\n\\n",
+                        "target":  "此体验围绕游戏内语音聊天设计，建议你尝试使用。\\n\\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=medium-exact-help; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This safe and legal medicine can be administered to see great benefits to your performance on the job! Your ability to move LONG distances while carrying HEFTY objects will be second to none! Warning: TZP gas may impact the brain with extended exposure. Follow instructions manual provided with the canister",
+                        "target":  "这种安全合法的药剂可经由吸入施用，并能短暂提升你的能力。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered cozy lights! Your new balance is [playerCredits].\nUse the light switch to enable cozy lights.\n\n",
+                        "target":  "已订购温馨灯饰！你的新余额为 [playerCredits]。\n\n按 [B] 重新摆放飞船内物品，按 [V] 确认。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Ordered the table! Your new balance is [playerCredits].\nPress [B] to rearrange objects in your ship and [V] to confirm.\n",
+                        "target":  "已订购桌子！你的新余额为 [playerCredits]。\n\n按 [B] 重新摆放飞船内物品，按 [V] 确认。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The delivery vehicle cannot hold more than 12 items\nat a time. Please pick up your items when they land!",
+                        "target":  "运输载具一次不能容纳超过 12 件物品。\n物品落地后请及时取走！",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "The delivery vehicle cannot hold more than 12 items\nat a time. Please pick up your items when they land!\n\n\n",
+                        "target":  "运输载具一次不能容纳超过 12 件物品。\n物品落地后请及时取走！\n\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "This selection rotates per-quota. Be sure to check back next week!\n____________________________\n\n[unlockablesSelectionList]\n",
+                        "target":  "此选择会随每次指标周期轮换。现在就购买你中意的物品吧！\n\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-product-config; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "To keep it targeted as long as possible, pull the gun side-to-side to counter the bend and fight against the pull of the electric beam. It can only stun for as long as you keep the current flowing",
+                        "target":  "若要尽量长时间锁住目标，左右拉动枪身来抵消弯折，并对抗电束的牵引。只有在你持续供电时，它才能保持击晕效果",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Jess says the golden planet is just a story. I said  I KNOW, I\u0027m not an idiot. Well she said i should quit, and she quits if i do. so shes staying",
+                        "target":  "Jess 说黄金星球只是个故事。我说我知道，我又不是白痴。然后她说我该辞职，如果我辞她也辞。所以她还留着",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "he says we would have to get our own private flight to go to the cordinates, and who knows what would actually be there. So, what if its nothing?",
+                        "target":  "他说我们得自己弄一趟私人航班去那些坐标，而且谁知道那里到底有什么。所以，如果那里什么都没有呢？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "i never heard dad like that. maybe i just dont get enugh sleep. jeesh, how am i gona do it now. maybe i should just open the thing up and look.",
+                        "target":  "我从没听过爸爸那样说话。也许只是我睡得不够。天啊，现在我要怎么办。也许我该把那东西打开看看。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "we sold some goods to the company today. i got m y nerves chilled listening to the WACKO soundfs behind the counter. No one else gave any. ??",
+                        "target":  "今天我们卖了些东西给公司。我听着柜台后面那些疯疯癫癫的声音，紧张得发冷。别人倒是一点不在乎。？？",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "i poured some grape juice in thtrough the vent. im so stupid, i dont know why. it wasnt much. i guess i just thought it wont hurt anything",
+                        "target":  "我往通风口里倒了点葡萄汁。我太蠢了，不知道为什么这么做。也没倒多少。我大概只是觉得这不会伤到什么东西",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "today we found a couple frying pans and a big nail. Worth almost nothing. what is the company even using it for",
+                        "target":  "今天我们找到几口平底锅和一根大钉子。几乎不值钱。公司到底拿这些东西干什么",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Engine part (x2) : $55\nPlastic fish : $30\nDog toy (x3) : $130\nMetal sheet (x3) : $110",
+                        "target":  "引擎零件 (x2)：$55\n塑料鱼：$30\n狗玩具 (x3)：$130\n金属板 (x3)：$110",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=short-technical-residue; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "OLD BIRDS\n\n The Old Bird is an autonomous, offensive weapon of war with a humanoid design. Measured at 19 feet tall and 11 feet wide, its two most defining visual features are the spotlight positioned on its head, capable of emitting 100,000 lumens, and the long-range acoustic device on its chest, sometimes referred to as a sound cannon. There are additional speakers on its shoulders used to broadcast sound a long distance. The Old Bird\u0027s left arm is a claw, and its right arm is a nozzle capable of both launching rocket-propelled grenades and torching at close-range with a very hot flame. Old Birds are one of the first extra-orbital weapons to be used and mass-produced.\\r\n The subject of who developed the Old Birds has been an intense debate since their first recorded appearance on December 18 of 2143, when a large number of Old Birds invaded the\n\nThe design of the Old Bird, down to the tempering of metals, appears intended to conceal its origin. It has been called the \"walking ransom letter.\" \\r\n Old Birds\u0027 legs function as rockets, which allows them to travel long distances and find targets efficiently. But the most likely reason this feature exists is to help them enter and land from orbit. The material and fuel Old Birds rely on is similar to those of passenger space craft from around 2130.\\r\nOld Birds land and stay at their target planet forever. Although they often have more than enough fuel for just one trip, no behavior has been found in their programming which suggests they could choose to \"migrate\". Still, there are unverified accounts of Old Birds travelling autonomously to a new planet after hundreds of years of dormancy. \\r\nThe Old Bird was historically referred to as the \"Al\", based off the code name it was given by the English military, the \"A16-L31\". In 2384, however, the song \"Old Birds\" released as a cult hit by the post-punk project Under Remora; just three years later, in his most famous work of the same name, street artist Land Eyrie depicted the automotons flying and landing between planets in an arrangement similar to a flock of geese--this is generally considered one of the most iconic and influential images of modern culture and solidified the modern nickname.\\r\n In 2356, 5-Embrion was classified as Condemned for the purposes of travel or settlement by the Boat; Old Birds were described by witness accounts as \"lining the horizon\". Though to this day they appear inoperative, there is a reasonable risk that many are still in sleep mode, so the planet will likely keep its status. The small moon was likely used as a testing ground for the Old Bird\u0027s flying and landing capabilities.",
+                        "target":  "旧型飞行兵器\n\n旧型飞行兵器是一种人形设计的自主进攻型战争武器。它高 19 英尺，宽 11 英尺，最显眼的两个视觉特征是头部探照灯和胸前的远程声学装置；前者可发出 100,000 流明光照，后者有时也被称为声炮。它肩部还有额外扬声器，可将声音广播到很远的距离。旧型飞行兵器的左臂是爪，右臂则是喷口，既能发射火箭推进榴弹，也能用极高温火焰进行近距离灼烧。旧型飞行兵器是最早投入使用并大规模生产的轨外武器之一。\n\n关于旧型飞行兵器究竟由谁开发，自 2143 年 12 月 18 日首次有记录出现以来一直争论激烈。当时，大量旧型飞行兵器入侵了\n\n旧型飞行兵器的设计，甚至包括金属回火方式，似乎都是为了隐藏其来源。它曾被称为“行走的勒索信”。\n\n旧型飞行兵器的腿部可作为火箭运作，使其能长距离移动并高效寻找目标。但这一功能最可能存在的原因，是帮助它们从轨道进入并着陆。旧型飞行兵器依赖的材料与燃料，与 2130 年前后客运航天器使用的材料和燃料相似。\n\n旧型飞行兵器会降落并永久停留在目标星球。虽然它们通常拥有远超单程所需的燃料，但在其程序中还没有发现任何行为表明它们能选择“迁徙”。不过，仍有未经证实的说法称，旧型飞行兵器在休眠数百年后会自主前往新的星球。\n\n旧型飞行兵器在历史上曾被称为“Al”，来源于英国军方给它的代号“A16-L31”。然而在 2384 年，后朋克项目 Under Remora 发布的歌曲《Old Birds》成为邪典热门；仅三年后，街头艺术家 Land Eyrie 在同名最著名作品中描绘了这些自动机在行星之间飞行和降落的景象，构图类似一群雁鸟。一般认为，这是现代文化中最具标志性、也最有影响力的图像之一，并巩固了今天这个昵称。\n\n2356 年，Boat 出于旅行与定居目的，将 5-Embrion 划为废弃禁区；目击记录称旧型飞行兵器“排列在地平线上”。虽然它们直到今天看似无法运作，但许多个体仍可能处于睡眠模式，因此该星球很可能继续维持这一状态。这颗小型卫星很可能曾被用作旧型飞行兵器飞行与着陆能力的测试场。\n",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=long-bestiary-narrative; status=draft-self-authored"
+                    }
+                ]
+}

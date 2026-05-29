@@ -93,6 +93,26 @@ internal static partial class TranslationService
         @"^(?<prefix>\s*)HIGH\s+FEVER\s+DETECTED!\s+REACHING\s+(?<fahrenheit>-?\d+)°F(?<suffix>\s*)$",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant,
         RegexTimeout);
+    private static readonly Regex AirFilterHealthRiskRegex = new(
+        @"^(?<prefix>\s*)HEALTH\s+RISK!\s+AIR\s+FILTER\s+OVERWHELMED\s+BY\s+PARTICULATES;?(?:\s+FILTER\s+INOPERATIVE!|\s+FILTER\s+QUALITY:\s*(?<quality>\d+)%?)?(?<suffix>\s*)$",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        RegexTimeout);
+    private static readonly Regex VisibilityLowSteamLeakRegex = new(
+        @"^(?<prefix>\s*)VISIBILITY\s+LOW!+\s+STEAM\s+LEAK\s+DETECTED\s+IN\s+AREA(?<suffix>\s*)$",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        RegexTimeout);
+    private static readonly Regex InfectionHazardStatusRegex = new(
+        @"HIGH\s+FEVER\s+DETECTED!+|FOREIGN\s+BODIES\s+DETECTED!+|IRREGULAR\s+BRAINWAVE\s+DETECTED!+",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        RegexTimeout);
+    private static readonly Regex LobbySortStatusRegex = new(
+        @"^(?<prefix>\s*)(?:Sort|\u6392\u5e8f)\s*[:\uff1a]\s*(?<mode>worldwide|near|far)(?<suffix>\s*)$",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        RegexTimeout);
+    private static readonly Regex ServerHostDisconnectedPopupRegex = new(
+        @"^(?<prefix>\s*)(?:(?:The\s+server\s+host\s+(?:disconnected|(?:\u5df2)?\u65ad\u5f00(?:\u4e86)?\u8fde\u63a5))|(?:\u7531\u4e8e)?\u623f\u4e3b(?:\u5173\u95ed(?:\u800c)?|\u5df2)?\u65ad\u5f00(?:\u4e86)?\u8fde\u63a5|\u623f\u4e3b\u5173\u95ed(?:\u8fde\u63a5|\u623f\u95f4)?)[\s\u3002.!\uff01]*(?<suffix>\s*)$",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        RegexTimeout);
     private static readonly Regex OrderedTerminalItemConfirmationRegex = new(
         @"^Ordered(?: the)?\s+(?!\d+\s)(?<item>.+?)[.!]\s*(?:Your new balance is|(?:\u4f60|\u60a8)\u7684(?:\u65b0\u4f59\u989d\u4e3a|\u65b0\u9918\u984d(?:\u70ba|\u4e3a)))\s*(?<credits>[$\u25a0]?\s*[+-]?\d+(?:\.\d+)?)\s*[\.\u3002]?(?<rest>[\s\S]*)$",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant,
@@ -261,6 +281,107 @@ internal static partial class TranslationService
     };
     private static readonly Dictionary<string, string> ControlTipActionEntries = new(StringComparer.OrdinalIgnoreCase)
     {
+        ["Access terminal"] = "\u8bbf\u95ee\u7ec8\u7aef",
+        ["Beam up"] = "\u4f20\u9001\u56de\u6765",
+        ["Beam out"] = "\u4f20\u9001\u51fa\u53bb",
+        ["Charge item"] = "\u7ed9\u7269\u54c1\u5145\u7535",
+        ["Check bag"] = "\u68c0\u67e5\u80cc\u5305",
+        ["Chop"] = "\u5288\u780d",
+        ["Close door"] = "\u5173\u95e8",
+        ["Drive"] = "\u9a7e\u9a76",
+        ["Empty Bag"] = "\u6e05\u7a7a\u80cc\u5305",
+        ["Climb"] = "\u6500\u722c",
+        ["Disable speaker"] = "\u5173\u95ed\u626c\u58f0\u5668",
+        ["Enter"] = "\u8fdb\u5165",
+        ["Feed"] = "\u5582\u98df",
+        ["Fire"] = "\u5f00\u706b",
+        ["Fire ( )( )"] = "\u5f00\u706b ( )( )",
+        ["Fire (O)( )"] = "\u5f00\u706b (O)( )",
+        ["Fire (O)(O)"] = "\u5f00\u706b (O)(O)",
+        ["Flip switch"] = "\u62e8\u52a8\u5f00\u5173",
+        ["Flashlight"] = "\u624b\u7535\u7b52",
+        ["Flush"] = "\u51b2\u6c34",
+        ["Free from head"] = "\u4ece\u5934\u90e8\u6323\u8131",
+        ["Get log"] = "\u83b7\u53d6\u65e5\u5fd7",
+        ["Hit pumpkin"] = "\u6572\u51fb\u5357\u74dc",
+        ["Hold"] = "\u6309\u4f4f",
+        ["Inspect"] = "\u67e5\u770b",
+        ["Inspect map"] = "\u67e5\u770b\u5730\u56fe",
+        ["Lift glass"] = "\u62ac\u8d77\u73bb\u7483\u7f69",
+        ["Open"] = "\u6253\u5f00",
+        ["Open door"] = "\u5f00\u95e8",
+        ["Open gift"] = "\u6253\u5f00\u793c\u7269",
+        ["Open/shut hood"] = "\u5f00\u5173\u5f15\u64ce\u76d6",
+        ["Park"] = "\u505c\u8f66",
+        ["Ping"] = "\u53d1\u9001 ping",
+        ["Place item"] = "\u653e\u7f6e\u7269\u54c1",
+        ["Place on door"] = "\u8d34\u5230\u95e8\u4e0a",
+        ["Play record"] = "\u64ad\u653e\u5531\u7247",
+        ["Play music"] = "\u5f00\u59cb\u64ad\u653e\u97f3\u4e50",
+        ["Pop up ladder"] = "\u5c55\u5f00\u68af\u5b50",
+        ["Power button"] = "\u7535\u6e90\u6309\u94ae",
+        ["Press"] = "\u6309\u4e0b",
+        ["Pull cord"] = "\u62c9\u7ef3",
+        ["Pull down"] = "\u4e0b\u62c9",
+        ["Pull drawer"] = "\u62c9\u5f00\u62bd\u5c49",
+        ["Pull valve"] = "\u62c9\u52a8\u9600\u95e8",
+        ["Reload"] = "\u88c5\u586b",
+        ["Reload / Check ammo"] = "\u88c5\u586b / \u68c0\u67e5\u5f39\u836f",
+        ["Remove key"] = "\u53d6\u4e0b\u94a5\u5319",
+        ["Reverse"] = "\u5012\u8f66",
+        ["Ring bell"] = "\u6309\u94c3",
+        ["Rock"] = "\u6447\u52a8",
+        ["Rotate"] = "\u65cb\u8f6c\u7269\u4f53",
+        ["Scan for threat"] = "\u626b\u63cf\u5a01\u80c1",
+        ["Sell item"] = "\u51fa\u552e\u7269\u54c1",
+        ["Send voice"] = "\u53d1\u9001\u8bed\u97f3",
+        ["Set candles"] = "\u70b9\u71c3\u8721\u70db",
+        ["Shake can"] = "\u6447\u6643\u55b7\u7f50",
+        ["Spray"] = "\u55b7\u6d12",
+        ["Stab"] = "\u523a\u51fb",
+        ["Store item"] = "\u6536\u7eb3\u7269\u54c1",
+        ["Store tool"] = "\u6536\u7eb3\u5de5\u5177",
+        ["Switch camera"] = "\u5207\u6362\u6444\u50cf\u673a",
+        ["Switch lights"] = "\u5207\u6362\u706f\u5149",
+        ["Switch TV"] = "\u5207\u6362\u7535\u89c6",
+        ["Switch water"] = "\u6253\u5f00\u6c34\u9f99\u5934",
+        ["Swing hammer"] = "\u6325\u52a8\u9524\u51fb",
+        ["Swing shovel"] = "\u6325\u52a8\u94f2\u5b50",
+        ["Swing sign"] = "\u6325\u52a8\u6807\u724c",
+        ["Swing"] = "\u6325\u52a8",
+        ["Take TZP"] = "\u5438\u5165 TZP",
+        ["Tell autopilot ship to leave early"] = "\u547d\u4ee4\u81ea\u52a8\u9a7e\u9a76\u98de\u8239\u63d0\u524d\u79bb\u5f00",
+        ["The safety is off"] = "\u4fdd\u9669\u5df2\u5173\u95ed",
+        ["The safety is on"] = "\u4fdd\u9669\u5df2\u5f00\u542f",
+        ["Throw"] = "\u629b\u51fa",
+        ["Throw grenade"] = "\u6295\u63b7\u624b\u96f7",
+        ["Toggle laser"] = "\u5207\u6362\u6fc0\u5149",
+        ["Toggle"] = "\u5207\u6362",
+        ["Toggle light"] = "\u5207\u6362\u706f\u5149",
+        ["Toggle music"] = "\u5207\u6362\u97f3\u4e50",
+        ["Toss egg"] = "\u63b7\u51fa\u86cb",
+        ["Turn on booster"] = "\u542f\u52a8\u52a9\u63a8\u5668",
+        ["Turn on/off"] = "\u5f00\u5173",
+        ["Turn on"] = "\u5f00\u542f\u8bbe\u5907",
+        ["Turn safety off"] = "\u5173\u95ed\u4fdd\u9669",
+        ["Update map"] = "\u66f4\u65b0\u5730\u56fe",
+        ["Use airhorn"] = "\u4f7f\u7528\u6c14\u5587\u53ed",
+        ["Use binoculars"] = "\u4f7f\u7528\u671b\u8fdc\u955c",
+        ["Use item"] = "\u4f7f\u7528\u7269\u54c1",
+        ["Use bin"] = "\u4f7f\u7528\u5783\u573e\u7bb1",
+        ["Use cabinet"] = "\u4f7f\u7528\u67dc\u5b50",
+        ["Use cash register"] = "\u4f7f\u7528\u6536\u94f6\u673a",
+        ["Use DIY-Flashbang"] = "\u4f7f\u7528\u81ea\u5236\u95ea\u5149\u5f39",
+        ["Use drawer"] = "\u4f7f\u7528\u62bd\u5c49",
+        ["Use grenade"] = "\u4f7f\u7528\u624b\u96f7",
+        ["Use hairdryer"] = "\u4f7f\u7528\u5439\u98ce\u673a",
+        ["Use hood"] = "\u4f7f\u7528\u5f15\u64ce\u76d6",
+        ["Use horn"] = "\u4f7f\u7528\u5587\u53ed",
+        ["Use jetpack"] = "\u4f7f\u7528\u55b7\u6c14\u80cc\u5305",
+        ["Use key"] = "\u4f7f\u7528\u94a5\u5319",
+        ["Use remote"] = "\u4f7f\u7528\u9065\u63a7\u5668",
+        ["Wear mask"] = "\u6234\u4e0a\u9762\u5177",
+        ["Zoom"] = "\u7f29\u653e",
         ["Push"] = "\u63a8",
         ["Pull up"] = "\u62c9\u8d77",
         ["Pull switch"] = "\u62c9\u52a8\u5f00\u5173",
@@ -290,6 +411,32 @@ internal static partial class TranslationService
         ["Use door"] = "\u4f7f\u7528\u95e8",
         ["Exit"] = "\u79bb\u5f00"
     };
+    private static readonly Dictionary<string, string> ShortLabelEntries = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Battery life"] = "\u7535\u6c60\u7535\u91cf",
+        ["Boombox"] = "\u97f3\u54cd",
+        ["Extension ladder"] = "\u4f38\u7f29\u68af",
+        ["Flashlight"] = "\u624b\u7535\u7b52",
+        ["Items in storage"] = "\u5df2\u5165\u5e93\u7269\u54c1",
+        ["Jetpack"] = "\u55b7\u6c14\u98de\u884c\u80cc\u5305",
+        ["Lockpicker"] = "\u5f00\u9501\u5668",
+        ["Moons"] = "\u536b\u661f\u5217\u8868",
+        ["Note"] = "\u6ce8\u8bb0",
+        ["Pro flashlight"] = "\u4e13\u4e1a\u624b\u7535\u7b52",
+        ["Radar booster"] = "\u96f7\u8fbe\u589e\u5f3a\u5668",
+        ["Record player"] = "\u5531\u7247\u64ad\u653e\u673a",
+        ["Scan distance"] = "\u626b\u63cf\u8ddd\u79bb",
+        ["Scrap"] = "\u5e9f\u6599",
+        ["Scrap value on hand"] = "\u624b\u4e2d\u5e9f\u6599\u4ef7\u503c",
+        ["Shovel"] = "\u94f2\u5b50",
+        ["Size"] = "\u5c3a\u5bf8",
+        ["Spray paint"] = "\u55b7\u6f06\u7f50",
+        ["Stun grenade"] = "\u95ea\u7206\u624b\u96f7",
+        ["Total Scanned"] = "\u626b\u63cf\u603b\u6570",
+        ["TZP inhalant"] = "TZP \u5438\u5165\u5242",
+        ["Walkie talkie"] = "\u5bf9\u8bb2\u673a",
+        ["Weight"] = "\u91cd\u91cf"
+    };
     private static readonly Dictionary<string, string> TerminalBilingualOverrides = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Shovel"] = "\u94f2\u5b50",
@@ -303,6 +450,22 @@ internal static partial class TranslationService
         ["Box"] = "\u76d2\u5b50",
         ["Safe Box"] = "\u4fdd\u9669\u7bb1",
         ["Toolbox"] = "\u5de5\u5177\u7bb1",
+        ["Baboon hawk"] = "\u72d2\u72d2\u9e70",
+        ["Blob"] = "\u53f2\u83b1\u59c6",
+        ["Hygrodere"] = "\u53f2\u83b1\u59c6",
+        ["Bunker Spider"] = "\u5730\u5821\u8718\u86db",
+        ["Bush Wolf"] = "\u704c\u4e1b\u72fc",
+        ["Clay Surgeon"] = "\u526a\u53d1\u5e08",
+        ["Barber"] = "\u526a\u53d1\u5e08",
+        ["Crawler"] = "\u534a\u8eab\u9c7c",
+        ["Giant Sapsucker"] = "\u5de8\u578b\u51e0\u7ef4\u9e1f",
+        ["GiantKiwi"] = "\u5de8\u578b\u51e0\u7ef4\u9e1f",
+        ["Hoarding bug"] = "\u56e4\u79ef\u866b",
+        ["Hoarder Bug"] = "\u56e4\u79ef\u866b",
+        ["Kidnapper fox"] = "\u7ed1\u67b6\u72d0\u72f8",
+        ["MouthDog"] = "\u65e0\u773c\u730e\u72ac",
+        ["Eyeless Dog"] = "\u65e0\u773c\u730e\u72ac",
+        ["Nutcracker"] = "\u80e1\u6843\u5939\u5b50",
         ["Feiopar"] = "\u9ed1\u8c79",
         ["Cadaver Bloom"] = "\u5c38\u82b1",
         ["Cadaver Blooms"] = "\u5c38\u82b1",
@@ -421,6 +584,20 @@ internal static partial class TranslationService
         new("DOOR HYDRAULICS", "\u8231\u95e8\u6db2\u538b"),
         new("With detected mods", "\u5305\u542b\u5df2\u68c0\u6d4b\u5230\u7684\u6a21\u7ec4"),
         new("Press \"/\" to talk.", "\u6309 \"/\" \u8bf4\u8bdd\u3002"),
+        new("DEBUG/TEST", "\u8c03\u8bd5/\u6d4b\u8bd5"),
+        new("> LethalConfig", ">\u0020\u6a21\u7ec4\u914d\u7f6e"),
+        new("Toggle test room", "\u5207\u6362\u6d4b\u8bd5\u623f\u95f4"),
+        new("Discard", "\u53d6\u6d88"),
+        new("You cannot rejoin after being kicked.", "\u88ab\u8e22\u51fa\u540e\u65e0\u6cd5\u91cd\u65b0\u52a0\u5165"),
+        new("The server host disconnected", "\u623f\u4e3b\u65ad\u5f00\u8fde\u63a5"),
+        new("worldwide", "\u5168\u7403"),
+        new("near", "\u9644\u8fd1"),
+        new("far", "\u8fdc\u5904"),
+        new("\u6392\u5e8f:worldwide", "\u6392\u5e8f\uff1a\u5168\u7403"),
+        new("\u6392\u5e8f:near", "\u6392\u5e8f\uff1a\u9644\u8fd1"),
+        new("\u6392\u5e8f:far", "\u6392\u5e8f\uff1a\u8fdc\u5904"),
+        new("PUBLIC means your game will be visible on the server list for all to see.", "\u516c\u5f00\uff1a\u4f60\u7684\u6e38\u620f\u4f1a\u663e\u793a\u5728\u670d\u52a1\u5668\u5217\u8868\u4e2d\uff0c\u6240\u6709\u4eba\u90fd\u80fd\u770b\u5230\u3002"),
+        new("PUBLIC means your game will be visible on the lobby list by anyone on your network.", "\u516c\u5f00\uff1a\u540c\u4e00\u7f51\u7edc\u4e2d\u7684\u73a9\u5bb6\u53ef\u5728\u623f\u95f4\u5217\u8868\u770b\u5230\u4f60\u7684\u6e38\u620f\u3002"),
         new("Typing...", "\u8f93\u5165\u4e2d..."),
         new("Join", "\u52a0\u5165"),
         new("Delete", "\u5220\u9664"),
@@ -440,9 +617,9 @@ internal static partial class TranslationService
         new("NEW PROFIT QUOTA", "\u65b0\u5229\u6da6\u914d\u989d"),
         new("Overtime bonus:", "\u52a0\u73ed\u5956\u91d1\uff1a"),
         new("Overtime bonus", "\u52a0\u73ed\u5956\u91d1"),
-        new("Equip to belt : [E]", "\u88c5\u5907\u5230\u8170\u5e26\uff1a[E]"),
-        new("Equipped to utility belt!", "\u5df2\u88c5\u5907\u5230\u5de5\u5177\u8170\u5e26\uff01"),
-        new("Press TAB to select the utility belt. This can only hold one-handed tools.", "\u6309 TAB \u9009\u62e9\u5de5\u5177\u8170\u5e26\u3002\u5de5\u5177\u8170\u5e26\u53ea\u80fd\u5b58\u653e\u5355\u624b\u5de5\u5177\u3002"),
+        new("Equip to belt : [E]", "\u88c5\u5907\u5230\u5de5\u5177\u69fd\u4f4d\uff1a[E]"),
+        new("Equipped to utility belt!", "\u5df2\u88c5\u5907\u5230\u5de5\u5177\u69fd\u4f4d\uff01"),
+        new("Press TAB to select the utility belt. This can only hold one-handed tools.", "\u6309 TAB \u9009\u62e9\u5de5\u5177\u69fd\u4f4d\u3002\u5de5\u5177\u69fd\u4f4d\u53ea\u80fd\u5b58\u653e\u5355\u624b\u5de5\u5177\u3002"),
         new("(Dead)", "\uff08\u6b7b\u4ea1\uff09"),
         new("Deceased", "\u6b7b\u4ea1")
     };
@@ -483,8 +660,8 @@ internal static partial class TranslationService
 
         var loadedSources = new List<string>();
 
-        LoadPluginCfgDirectories(pluginDir, loadedSources);
-        LoadCfgDirectories(loadedSources);
+        LoadCleanRuntimeJson(pluginDir, loadedSources);
+        LoadCleanRuntimeCfgDirectories(pluginDir, loadedSources);
 
         CompositeEntries.AddRange(ExactMap
             .Where(entry => entry.Key.Length >= 4 && entry.Key != entry.Value)
@@ -506,6 +683,21 @@ internal static partial class TranslationService
         }
 
         if (MayBeHighFeverFahrenheitStatus(source) && TryTranslateHighFeverFahrenheitStatus(source, out translated))
+        {
+            translated = SanitizeTranslatedText(translated);
+            return true;
+        }
+
+        if (MayBeAirFilterHealthRiskStatus(source) && TryTranslateAirFilterHealthRiskStatus(source, out translated))
+        {
+            translated = SanitizeTranslatedText(translated);
+            return true;
+        }
+
+        if (TryTranslateServerHostDisconnectedPopup(source, out translated) ||
+            TryTranslateLobbySortStatus(source, out translated) ||
+            TryTranslateVisibilityLowSteamLeakStatus(source, out translated) ||
+            TryTranslateInfectionHazardStatus(source, out translated))
         {
             translated = SanitizeTranslatedText(translated);
             return true;
@@ -664,6 +856,31 @@ internal static partial class TranslationService
             return FinishKnownDynamicTranslation(source, ref translated, "HostModWarning");
         }
 
+        if (TryTranslateServerHostDisconnectedPopup(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "ServerHostDisconnectedPopup");
+        }
+
+        if (TryTranslateAirFilterHealthRiskStatus(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "AirFilterHealthRisk");
+        }
+
+        if (TryTranslateLobbySortStatus(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "LobbySortStatus");
+        }
+
+        if (TryTranslateVisibilityLowSteamLeakStatus(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "VisibilityLowSteamLeak");
+        }
+
+        if (TryTranslateInfectionHazardStatus(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "InfectionHazardStatus");
+        }
+
         if (TryTranslateTerminalOrderRequest(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "TerminalOrder");
@@ -674,6 +891,11 @@ internal static partial class TranslationService
             return FinishKnownDynamicTranslation(source, ref translated, "TerminalOrderedItem");
         }
 
+        if (TerminalDynamicTranslator.TranslateTerminalStatus(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "TerminalStatus");
+        }
+
         if (TryTranslateControlTipText(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "ControlTip");
@@ -682,6 +904,11 @@ internal static partial class TranslationService
         if (TryTranslateStandaloneControlText(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "ControlTip");
+        }
+
+        if (TryTranslateShortLabelText(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "ShortLabel");
         }
 
         if (TryTranslateScanValueText(source, out translated))
@@ -707,6 +934,11 @@ internal static partial class TranslationService
         if (TryTranslateDaysLeftText(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "DaysLeft");
+        }
+
+        if (HudDynamicTranslator.Translate(DynamicTextDomain.GeneralFast, source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "HudStatus");
         }
 
         if (TryTranslateSaveFileStatsTextFast(source, out translated))
@@ -1124,6 +1356,31 @@ internal static partial class TranslationService
         return translated.Length > 0;
     }
 
+    private static bool TryTranslateShortLabelText(string source, out string translated)
+    {
+        translated = source;
+        var stripped = StripRichTextTagsCheap(source).Trim();
+        if (stripped.Length < 2 || stripped.IndexOf('\n') >= 0)
+        {
+            return false;
+        }
+
+        if (!stripped.EndsWith(":", StringComparison.Ordinal) &&
+            !stripped.EndsWith("\uff1a", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var key = stripped[..^1].Trim();
+        if (!ShortLabelEntries.TryGetValue(key, out var localized))
+        {
+            return false;
+        }
+
+        translated = $"{localized}\uff1a";
+        return true;
+    }
+
     private static string BuildTerminalLocalizedItemName(string item)
     {
         var sourceName = NormalizeTerminalArticleItem(item);
@@ -1267,6 +1524,31 @@ internal static partial class TranslationService
             return SanitizeTranslatedText(highFeverFahrenheit);
         }
 
+        if (TryTranslateAirFilterHealthRiskStatus(source, out var airFilterHealthRisk))
+        {
+            return SanitizeTranslatedText(airFilterHealthRisk);
+        }
+
+        if (TryTranslateServerHostDisconnectedPopup(source, out var serverHostDisconnectedPopup))
+        {
+            return SanitizeTranslatedText(serverHostDisconnectedPopup);
+        }
+
+        if (TryTranslateLobbySortStatus(source, out var lobbySortStatus))
+        {
+            return SanitizeTranslatedText(lobbySortStatus);
+        }
+
+        if (TryTranslateVisibilityLowSteamLeakStatus(source, out var visibilityLowSteamLeak))
+        {
+            return SanitizeTranslatedText(visibilityLowSteamLeak);
+        }
+
+        if (TryTranslateInfectionHazardStatus(source, out var infectionHazardStatus))
+        {
+            return SanitizeTranslatedText(infectionHazardStatus);
+        }
+
         if (CustomLocalizationExtensionService.PreferCustomTranslations &&
             CustomLocalizationExtensionService.TryTranslate(source, out var customTranslation, allowRegex: true))
         {
@@ -1380,11 +1662,141 @@ internal static partial class TranslationService
         return true;
     }
 
+    private static bool TryTranslateAirFilterHealthRiskStatus(string? source, out string translated)
+    {
+        translated = source ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return false;
+        }
+
+        if (!TrySafeRegexMatch(AirFilterHealthRiskRegex, source, out var match) || !match.Success)
+        {
+            return false;
+        }
+
+        var quality = match.Groups["quality"].Success ? match.Groups["quality"].Value : string.Empty;
+        var hasInoperativeStatus = source.IndexOf("FILTER INOPERATIVE", StringComparison.OrdinalIgnoreCase) >= 0;
+        var status = !string.IsNullOrEmpty(quality)
+            ? $"\u8fc7\u6ee4\u8d28\u91cf\uff1a{quality}%"
+            : hasInoperativeStatus
+            ? "\u8fc7\u6ee4\u5931\u6548\uff01"
+            : "\u7a7a\u6c14\u8fc7\u6ee4\u5668\u8fc7\u8f7d\uff01";
+        translated = $"{match.Groups["prefix"].Value}\u5065\u5eb7\u98ce\u9669\uff01\n\u7a7a\u6c14\u8fc7\u6ee4\u5668\u88ab\u5fae\u7c92\u5835\u585e\uff1b\n{status}{match.Groups["suffix"].Value}";
+        return true;
+    }
+
+    private static bool TryTranslateVisibilityLowSteamLeakStatus(string? source, out string translated)
+    {
+        translated = source ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(source) ||
+            source.IndexOf("VISIBILITY", StringComparison.OrdinalIgnoreCase) < 0 ||
+            source.IndexOf("STEAM", StringComparison.OrdinalIgnoreCase) < 0 ||
+            source.IndexOf("LEAK", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return false;
+        }
+
+        if (!TrySafeRegexMatch(VisibilityLowSteamLeakRegex, source, out var match) || !match.Success)
+        {
+            return false;
+        }
+
+        translated = $"{match.Groups["prefix"].Value}\u80fd\u89c1\u5ea6\u4f4e\uff01\n\u533a\u57df\u5185\u53d1\u73b0\u84b8\u6c7d\u6cc4\u6f0f{match.Groups["suffix"].Value}";
+        return true;
+    }
+
+    private static bool TryTranslateInfectionHazardStatus(string? source, out string translated)
+    {
+        translated = source ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(source) ||
+            (source.IndexOf("DETECTED", StringComparison.OrdinalIgnoreCase) < 0 &&
+             source.IndexOf("FEVER", StringComparison.OrdinalIgnoreCase) < 0 &&
+             source.IndexOf("BRAINWAVE", StringComparison.OrdinalIgnoreCase) < 0))
+        {
+            return false;
+        }
+
+        if (!TrySafeRegexMatch(InfectionHazardStatusRegex, source, out var match) || !match.Success)
+        {
+            return false;
+        }
+
+        var updated = SafeRegexReplace(source, @"HIGH\s+FEVER\s+DETECTED!+", "\u68c0\u6d4b\u5230\u9ad8\u70e7\uff01\uff01\uff01", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        updated = SafeRegexReplace(updated, @"FOREIGN\s+BODIES\s+DETECTED!+", "\u53d1\u73b0\u5f02\u7269\uff01\uff01\uff01", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        updated = SafeRegexReplace(updated, @"IRREGULAR\s+BRAINWAVE\s+DETECTED!+", "\u8111\u6ce2\u5f02\u5e38\uff01\uff01\uff01", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        if (string.Equals(updated, source, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        translated = updated;
+        return true;
+    }
+
+    private static bool TryTranslateLobbySortStatus(string? source, out string translated)
+    {
+        translated = source ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(source) ||
+            (source.IndexOf("Sort", StringComparison.OrdinalIgnoreCase) < 0 &&
+             source.IndexOf("\u6392\u5e8f", StringComparison.Ordinal) < 0))
+        {
+            return false;
+        }
+
+        if (!TrySafeRegexMatch(LobbySortStatusRegex, source, out var match) || !match.Success)
+        {
+            return false;
+        }
+
+        var mode = match.Groups["mode"].Value.ToLowerInvariant();
+        var localizedMode = mode switch
+        {
+            "worldwide" => "\u5168\u7403",
+            "near" => "\u9644\u8fd1",
+            "far" => "\u8fdc\u5904",
+            _ => string.Empty
+        };
+
+        if (string.IsNullOrEmpty(localizedMode))
+        {
+            return false;
+        }
+
+        translated = $"{match.Groups["prefix"].Value}\u6392\u5e8f\uff1a{localizedMode}{match.Groups["suffix"].Value}";
+        return true;
+    }
+
+    private static bool TryTranslateServerHostDisconnectedPopup(string? source, out string translated)
+    {
+        translated = source ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return false;
+        }
+
+        if (!TrySafeRegexMatch(ServerHostDisconnectedPopupRegex, source, out var match) || !match.Success)
+        {
+            return false;
+        }
+
+        translated = $"{match.Groups["prefix"].Value}\u623f\u4e3b\u65ad\u5f00\u8fde\u63a5{match.Groups["suffix"].Value}";
+        return true;
+    }
+
     private static bool MayBeHighFeverFahrenheitStatus(string source)
     {
         return source.IndexOf("HIGH", StringComparison.OrdinalIgnoreCase) >= 0 &&
                source.IndexOf("FEVER", StringComparison.OrdinalIgnoreCase) >= 0 &&
                source.IndexOf("°F", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static bool MayBeAirFilterHealthRiskStatus(string source)
+    {
+        return source.IndexOf("HEALTH", StringComparison.OrdinalIgnoreCase) >= 0 &&
+               source.IndexOf("RISK", StringComparison.OrdinalIgnoreCase) >= 0 &&
+               source.IndexOf("AIR", StringComparison.OrdinalIgnoreCase) >= 0 &&
+               source.IndexOf("FILTER", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private static bool UseFahrenheitTemperature()
@@ -1499,7 +1911,7 @@ internal static partial class TranslationService
         translated = SafeRegexReplace(
             translated,
             @"^Equip\s+to\s+belt\s*:\s*\[E\]$",
-            "\u88c5\u5907\u5230\u8170\u5e26\uff1a[E]",
+            "\u88c5\u5907\u5230\u5de5\u5177\u69fd\u4f4d\uff1a[E]",
             RegexOptions.IgnoreCase);
         return !string.Equals(translated, source, StringComparison.Ordinal);
     }
@@ -1556,6 +1968,11 @@ internal static partial class TranslationService
 
     private static bool ShouldApplyCompositeEntryAsSubstring(string key)
     {
+        if (IsStandaloneMouseInputToken(key))
+        {
+            return false;
+        }
+
         if (key.Length >= 12)
         {
             return true;
@@ -1570,6 +1987,13 @@ internal static partial class TranslationService
         }
 
         return false;
+    }
+
+    private static bool IsStandaloneMouseInputToken(string key)
+    {
+        var trimmed = key.Trim();
+        return string.Equals(trimmed, "[LMB]", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(trimmed, "[RMB]", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool ShouldApplyForcedPhraseAsSubstring(string key)
@@ -3447,9 +3871,9 @@ internal static partial class TranslationService
         return false;
     }
 
-    private static void LoadJsonFallback(string pluginDir, List<string> loadedSources)
+    private static void LoadCleanRuntimeJson(string pluginDir, List<string> loadedSources)
     {
-        foreach (var path in ResolveJsonPaths(pluginDir))
+        foreach (var path in ResolveCleanRuntimeJsonPaths(pluginDir))
         {
             if (!File.Exists(path))
             {
@@ -3475,14 +3899,14 @@ internal static partial class TranslationService
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"TranslationService failed reading JSON '{path}': {ex.GetType().Name}: {ex.Message}");
+                Plugin.Log.LogWarning($"TranslationService failed reading clean runtime JSON '{path}': {ex.GetType().Name}: {ex.Message}");
             }
         }
     }
 
-    private static void LoadPluginCfgDirectories(string pluginDir, List<string> loadedSources)
+    private static void LoadCleanRuntimeCfgDirectories(string pluginDir, List<string> loadedSources)
     {
-        foreach (var dir in ResolvePluginCfgDirectories(pluginDir))
+        foreach (var dir in ResolveCleanRuntimeCfgDirectories(pluginDir))
         {
             if (!Directory.Exists(dir))
             {
@@ -3499,7 +3923,7 @@ internal static partial class TranslationService
                 {
                     if (ShouldSkipCfgFile(file))
                     {
-                        Plugin.Log.LogInfo($"TranslationService skipped non-text cfg '{file}'.");
+                        Plugin.Log.LogInfo($"TranslationService skipped non-text clean runtime cfg '{file}'.");
                         continue;
                     }
 
@@ -3508,41 +3932,7 @@ internal static partial class TranslationService
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"TranslationService failed reading cfg '{file}': {ex.GetType().Name}: {ex.Message}");
-                }
-            }
-        }
-    }
-
-    private static void LoadCfgDirectories(List<string> loadedSources)
-    {
-        foreach (var dir in ResolveCfgDirectories())
-        {
-            if (!Directory.Exists(dir))
-            {
-                continue;
-            }
-
-            var files = Directory.GetFiles(dir, "*.cfg")
-                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            foreach (var file in files)
-            {
-                try
-                {
-                    if (ShouldSkipCfgFile(file))
-                    {
-                        Plugin.Log.LogInfo($"TranslationService skipped non-text cfg '{file}'.");
-                        continue;
-                    }
-
-                    LoadCfgFile(file);
-                    loadedSources.Add(file);
-                }
-                catch (Exception ex)
-                {
-                    Plugin.Log.LogWarning($"TranslationService failed reading cfg '{file}': {ex.GetType().Name}: {ex.Message}");
+                    Plugin.Log.LogWarning($"TranslationService failed reading clean runtime cfg '{file}': {ex.GetType().Name}: {ex.Message}");
                 }
             }
         }
@@ -3633,6 +4023,21 @@ internal static partial class TranslationService
         pattern = string.Empty;
         replacement = string.Empty;
 
+        if (line.StartsWith("rex:", StringComparison.Ordinal))
+        {
+            var separator = FindCfgEntrySeparator(line);
+            if (separator <= 4)
+            {
+                return false;
+            }
+
+            pattern = line.Substring(4, separator - 4);
+            replacement = line.Substring(separator + 1);
+            pattern = UnescapeCfgValue(pattern);
+            replacement = UnescapeCfgValue(replacement);
+            return pattern.Length > 0;
+        }
+
         if (!(line.StartsWith("r:\"", StringComparison.Ordinal) || line.StartsWith("sr:\"", StringComparison.Ordinal)))
         {
             return false;
@@ -3672,7 +4077,7 @@ internal static partial class TranslationService
         }
 
         var mode = entry.mode?.Trim().ToLowerInvariant();
-        if (mode == "skip")
+        if (mode == "skip" || mode == "regex-preserve")
         {
             return;
         }
@@ -3867,24 +4272,16 @@ internal static partial class TranslationService
         return true;
     }
 
-    private static IEnumerable<string> ResolveJsonPaths(string pluginDir)
+    private static IEnumerable<string> ResolveCleanRuntimeJsonPaths(string pluginDir)
     {
-        yield return Path.Combine(pluginDir, "V81TestChn", "translations", "zh-CN.json");
-        yield return Path.Combine(pluginDir, "translations", "zh-CN.json");
+        yield return Path.Combine(pluginDir, "V81TestChn", "translations-clean", "zh-CN.runtime.json");
+        yield return Path.Combine(pluginDir, "translations-clean", "zh-CN.runtime.json");
     }
 
-    private static IEnumerable<string> ResolvePluginCfgDirectories(string pluginDir)
+    private static IEnumerable<string> ResolveCleanRuntimeCfgDirectories(string pluginDir)
     {
-        yield return Path.Combine(pluginDir, "V81TestChn", "translations-cfg", "zh-CN");
-        yield return Path.Combine(pluginDir, "V81TestChn", "translations-cfg", "zh-Hans");
-        yield return Path.Combine(pluginDir, "translations-cfg", "zh-CN");
-        yield return Path.Combine(pluginDir, "translations-cfg", "zh-Hans");
-    }
-
-    private static IEnumerable<string> ResolveCfgDirectories()
-    {
-        yield return Path.Combine(Paths.ConfigPath, "translations", "zh-CN");
-        yield return Path.Combine(Paths.ConfigPath, "translations", "zh-Hans");
+        yield return Path.Combine(pluginDir, "V81TestChn", "translations-clean", "cfg", "zh-CN");
+        yield return Path.Combine(pluginDir, "translations-clean", "cfg", "zh-CN");
     }
 
     private static bool ShouldSkipCfgFile(string path)

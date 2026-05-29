@@ -5,6 +5,32 @@ namespace V81TestChn;
 
 internal static partial class TranslationService
 {
+    public static string TranslateHeldItemControlTip(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return source ?? string.Empty;
+        }
+
+        var normalized = NormalizeHeldItemControlTipBinding(source);
+        if (ControlTipTranslator.Translate(normalized, out var translated))
+        {
+            return translated;
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeHeldItemControlTipBinding(string source)
+    {
+        var normalized = SafeRegexReplace(
+            source,
+            @"\[\s*\[?\s*(?:RMB|\u9f20\u6807\u53f3\u952e|\u53f3\u952e)\s*\]",
+            "[LMB]",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        return normalized;
+    }
+
     internal static class ControlTipTranslator
     {
         public static bool CanHandleCheap(string? source) =>
@@ -25,6 +51,16 @@ internal static partial class TranslationService
             }
 
             var trimmed = source.Trim();
+            var cooldownMatch = SafeRegexMatch(
+                trimmed,
+                @"^\[\s*Cooldown\s*[:\uff1a]\s*(?<seconds>\d+)\s*sec\.?\s*\]$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (cooldownMatch.Success)
+            {
+                translated = $"[\u51b7\u5374\uff1a{cooldownMatch.Groups["seconds"].Value} \u79d2]";
+                return true;
+            }
+
             var dropMatch = SafeRegexMatch(
                 trimmed,
                 @"^Drop\s+(?<item>.+?)\s*[:\uff1a]\s*(?<key>\[[^\]]+\])$",
@@ -36,9 +72,44 @@ internal static partial class TranslationService
                 return true;
             }
 
+            var throwMatch = SafeRegexMatch(
+                trimmed,
+                @"^Throw\s+(?<item>.+?)\s*[:\uff1a]\s*(?<key>\[[^\]]+\])$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (throwMatch.Success)
+            {
+                var item = BuildTerminalLocalizedItemName(throwMatch.Groups["item"].Value.Trim());
+                translated = $"\u6254\u51fa {item}\uff1a{throwMatch.Groups["key"].Value.Trim()}";
+                return true;
+            }
+
             var actionMatch = SafeRegexMatch(
                 trimmed,
                 @"^(?<action>.+?)\s*[:\uff1a]\s*(?<key>\[[^\]]+\])(?<suffix>.*)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (!actionMatch.Success)
+            {
+                return TranslateLooseControlAction(trimmed, out translated);
+            }
+
+            var action = NormalizeAction(actionMatch.Groups["action"].Value, out var actionImpliesHold);
+            if (!ControlTipActionEntries.TryGetValue(action, out var localizedAction))
+            {
+                return false;
+            }
+
+            var key = actionMatch.Groups["key"].Value.Trim();
+            var suffix = NormalizeSuffix(actionMatch.Groups["suffix"].Value, actionImpliesHold);
+            translated = $"{localizedAction}\uff1a{key}{suffix}";
+            return true;
+        }
+
+        private static bool TranslateLooseControlAction(string trimmed, out string translated)
+        {
+            translated = trimmed;
+            var actionMatch = SafeRegexMatch(
+                trimmed,
+                @"^(?<action>[^:\uff1a]+)\s*[:\uff1a]\s*(?<value>.+?)$",
                 RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             if (!actionMatch.Success)
             {
@@ -51,9 +122,13 @@ internal static partial class TranslationService
                 return false;
             }
 
-            var key = actionMatch.Groups["key"].Value.Trim();
-            var suffix = NormalizeSuffix(actionMatch.Groups["suffix"].Value, actionImpliesHold);
-            translated = $"{localizedAction}\uff1a{key}{suffix}";
+            var value = NormalizeLooseControlValue(actionMatch.Groups["value"].Value, actionImpliesHold);
+            if (value.Length == 0)
+            {
+                return false;
+            }
+
+            translated = $"{localizedAction}\uff1a{value}";
             return true;
         }
 
@@ -173,6 +248,27 @@ internal static partial class TranslationService
             }
 
             return normalized.Length == 0 ? string.Empty : $" {normalized}";
+        }
+
+        private static string NormalizeLooseControlValue(string value, bool actionImpliesHold)
+        {
+            var normalized = SafeRegexReplace(value ?? string.Empty, @"\s+", " ", RegexOptions.CultureInvariant).Trim();
+            if (normalized.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            if (normalized.StartsWith("Hold ", StringComparison.OrdinalIgnoreCase))
+            {
+                return "\u6309\u4f4f " + normalized["Hold ".Length..].Trim();
+            }
+
+            if (normalized.StartsWith("Toggle ", StringComparison.OrdinalIgnoreCase))
+            {
+                return "\u5207\u6362 " + normalized["Toggle ".Length..].Trim();
+            }
+
+            return actionImpliesHold ? "\u6309\u4f4f " + normalized : normalized;
         }
     }
 }

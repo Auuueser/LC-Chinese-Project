@@ -1,0 +1,199 @@
+{
+    "schema_version":  1,
+    "role":  "translation-clean-domain-splits",
+    "source_seed_path":  "translations-source/clean-source-seed.json",
+    "source_seed_sha256":  "0a3cfa42e167b7e832d8de4279c994c5d986d1d6c27e11014aa16ab5698c443b",
+    "draft_path":  "translations-source/clean-translation-draft.zh-CN.json",
+    "draft_sha256":  "27bb6a97a6067333b71208ab52e4ab5989886938141354ebd653b421affaceee",
+    "runtime_json_path":  "translations-clean/zh-CN.runtime.json",
+    "runtime_json_sha256":  "33a28fff89a52387d21697973cfd6a9cb247ffc3493c5a3ca62d90277a0d3934",
+    "runtime_cfg_path":  "translations-clean/cfg/zh-CN/clean-draft-runtime.cfg",
+    "runtime_cfg_sha256":  "100c5a874195bf544d40490412f48dc6eb8773e9576b8f89822a5c905ab9a7f7",
+    "runtime_packaged":  true,
+    "runtime_loader":  "inert-split-artifact; monolith remains active loader input",
+    "runtime_json_entry_count":  1673,
+    "domains":  [
+                    {
+                        "domain":  "bestiary",
+                        "seed_entry_count":  140,
+                        "draft_entry_count":  108,
+                        "runtime_json_entry_count":  108
+                    },
+                    {
+                        "domain":  "gameplay",
+                        "seed_entry_count":  624,
+                        "draft_entry_count":  491,
+                        "runtime_json_entry_count":  491
+                    },
+                    {
+                        "domain":  "hud",
+                        "seed_entry_count":  124,
+                        "draft_entry_count":  89,
+                        "runtime_json_entry_count":  89
+                    },
+                    {
+                        "domain":  "items",
+                        "seed_entry_count":  168,
+                        "draft_entry_count":  122,
+                        "runtime_json_entry_count":  122
+                    },
+                    {
+                        "domain":  "logs",
+                        "seed_entry_count":  47,
+                        "draft_entry_count":  46,
+                        "runtime_json_entry_count":  46
+                    },
+                    {
+                        "domain":  "moons",
+                        "seed_entry_count":  131,
+                        "draft_entry_count":  99,
+                        "runtime_json_entry_count":  99
+                    },
+                    {
+                        "domain":  "runtime-regex",
+                        "seed_entry_count":  246,
+                        "draft_entry_count":  244,
+                        "runtime_json_entry_count":  244
+                    },
+                    {
+                        "domain":  "settings",
+                        "seed_entry_count":  248,
+                        "draft_entry_count":  177,
+                        "runtime_json_entry_count":  177
+                    },
+                    {
+                        "domain":  "terminal",
+                        "seed_entry_count":  325,
+                        "draft_entry_count":  297,
+                        "runtime_json_entry_count":  297
+                    }
+                ],
+    "files":  [
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "bestiary",
+                      "path":  "translations-clean/split/zh-CN/bestiary.runtime.json",
+                      "sha256":  "6f7f5f6588f484a5643de5550f3a409cd03b248e387a5bdba33992a189c600d4",
+                      "entry_count":  108
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "bestiary",
+                      "path":  "translations-clean/split/cfg/zh-CN/bestiary.cfg",
+                      "sha256":  "4f5294366c0ac45a3615ded4ca6f5d7661bada9df64fed5ac61f8637484fc30a",
+                      "entry_count":  62
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "gameplay",
+                      "path":  "translations-clean/split/zh-CN/gameplay.runtime.json",
+                      "sha256":  "d099735c6576e56cbce4d391d9e5bf04cda8ed72bde9d9cf253a0268611542f7",
+                      "entry_count":  491
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "gameplay",
+                      "path":  "translations-clean/split/cfg/zh-CN/gameplay.cfg",
+                      "sha256":  "d3a8b5ce04bce84be261e1e1888f22641a0d447d425675625d44500a9a9d7828",
+                      "entry_count":  335
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "hud",
+                      "path":  "translations-clean/split/zh-CN/hud.runtime.json",
+                      "sha256":  "b1dabfee2545c8365ae8ef7d752c311bcbb239369f14c2b16f55f8d7570f8d25",
+                      "entry_count":  89
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "hud",
+                      "path":  "translations-clean/split/cfg/zh-CN/hud.cfg",
+                      "sha256":  "690e9379e4dda15e41040664c81c4777f73b02d606f84b3634df682d3c605362",
+                      "entry_count":  77
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "items",
+                      "path":  "translations-clean/split/zh-CN/items.runtime.json",
+                      "sha256":  "27d243884c600a327b03f9a2e11fa68d387fe5f67a0a03be0a6446ac41a99420",
+                      "entry_count":  122
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "items",
+                      "path":  "translations-clean/split/cfg/zh-CN/items.cfg",
+                      "sha256":  "156925f05148a6b3fbd240b7b13eec7845edc08c84f7c9f111bfb99dead2389f",
+                      "entry_count":  88
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "logs",
+                      "path":  "translations-clean/split/zh-CN/logs.runtime.json",
+                      "sha256":  "d42ae07f1210113341449935bd429d7b18d651d348028e82722eb3bd9a1964eb",
+                      "entry_count":  46
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "logs",
+                      "path":  "translations-clean/split/cfg/zh-CN/logs.cfg",
+                      "sha256":  "0e7621bd1ac6cff428ceaee7cf0d3f8174148baef563d29afcb961dd4aabf6cc",
+                      "entry_count":  36
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "moons",
+                      "path":  "translations-clean/split/zh-CN/moons.runtime.json",
+                      "sha256":  "3f081b91ccf8109d08beefb3b1aa8e030cd1b8169625f0132b644c951289aae8",
+                      "entry_count":  99
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "moons",
+                      "path":  "translations-clean/split/cfg/zh-CN/moons.cfg",
+                      "sha256":  "98aad4bb0dca7ab40642489e55e96cdd4335a62a20203dc85a76862298888e5a",
+                      "entry_count":  59
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "runtime-regex",
+                      "path":  "translations-clean/split/zh-CN/runtime-regex.runtime.json",
+                      "sha256":  "9da2ce2a32c96ba0e7c3e6acb4e7c76bad546b9f3e87b351b0d1f764d1398d7a",
+                      "entry_count":  244
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "runtime-regex",
+                      "path":  "translations-clean/split/cfg/zh-CN/runtime-regex.cfg",
+                      "sha256":  "4b1ad579cea16bbe21652a422eae0a5da14e4f9cd4ab0753d32643fe75076306",
+                      "entry_count":  232
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "settings",
+                      "path":  "translations-clean/split/zh-CN/settings.runtime.json",
+                      "sha256":  "b174a9a918400331ccc5d1c0eb769113074c18e5d837ddf223753eb62e5b9c09",
+                      "entry_count":  177
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "settings",
+                      "path":  "translations-clean/split/cfg/zh-CN/settings.cfg",
+                      "sha256":  "e6594fff2b14aa5f60b68332242c887ff521e1f414b1371d51512b219f1371ce",
+                      "entry_count":  130
+                  },
+                  {
+                      "role":  "runtime-json-split",
+                      "domain":  "terminal",
+                      "path":  "translations-clean/split/zh-CN/terminal.runtime.json",
+                      "sha256":  "aa89b984b0b0af2bbcf0f4aaa0378d59f5e3ef96e220e6da5700f6e2402b38c5",
+                      "entry_count":  297
+                  },
+                  {
+                      "role":  "runtime-cfg-split",
+                      "domain":  "terminal",
+                      "path":  "translations-clean/split/cfg/zh-CN/terminal.cfg",
+                      "sha256":  "9183c901931ea514b03b1658c8d8c5258d2aeb9571f539c2d6ac9a7b0fd2e245",
+                      "entry_count":  84
+                  }
+              ]
+}

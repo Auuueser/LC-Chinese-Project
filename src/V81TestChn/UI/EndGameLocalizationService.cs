@@ -13,6 +13,9 @@ internal static class EndGameLocalizationService
     private const string DeadLocalizedText = "\uff08\u6b7b\u4ea1\uff09";
     private const string DeceasedLocalizedText = "\u6b7b\u4ea1";
     private const string MissingLocalizedText = "\u5931\u8e2a";
+    private const string EndGameHeaderLocalizedText = "\u7ee9\u6548\u62a5\u544a";
+    private const string PlayersFiredTitleLocalizedText = "\u4f60\u5df2\u88ab\u516c\u53f8\u89e3\u96c7";
+    private const string PlayersFiredReasonLocalizedText = "\u672a\u80fd\u6309\u671f\u5b8c\u6210\u5229\u6da6\u6307\u6807";
     private const string TextureSubfolder = "textures";
     private const string EndgameAllPlayersDeadTextureFile = "EndgameAllPlayersDeadOverlay.png";
     private const string EndgameStatsBoxesTextureFile = "EndgameStatsBoxesLocalized.png";
@@ -42,6 +45,7 @@ internal static class EndGameLocalizationService
         }
 
         CleanupLegacyEndGameOverlays(hudManager.statsUIElements);
+        LocalizeEndGameHeader(hudManager.statsUIElements, stage);
         LocalizePenaltyTexts(hudManager.statsUIElements, stage);
         LocalizePlayerNotesTexts(hudManager.statsUIElements, stage);
         LocalizeRuntimeDeadTexts(hudManager, stage);
@@ -70,6 +74,7 @@ internal static class EndGameLocalizationService
         }
 
         TryApplyKnownDynamicText(hudManager.EndOfRunStatsText, stage, "PlayersFiredStatsText");
+        NormalizePlayersFiredScreenLayout(hudManager, stage);
         if (hudManager.playersFiredAnimator == null)
         {
             return;
@@ -86,6 +91,26 @@ internal static class EndGameLocalizationService
 
             TryApplyKnownDynamicText(text, stage, "PlayersFiredStatsFallback");
         }
+
+        NormalizePlayersFiredScreenLayout(hudManager, stage);
+    }
+
+    public static void TryNormalizePlayersFiredText(TMP_Text? text, string stage)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        var hudManager = HUDManager.Instance;
+        if (hudManager != null &&
+            !ReferenceEquals(text, hudManager.EndOfRunStatsText) &&
+            (hudManager.playersFiredAnimator == null || !text.transform.IsChildOf(hudManager.playersFiredAnimator.transform)))
+        {
+            return;
+        }
+
+        NormalizePlayersFiredText(text, stage, new HashSet<int>());
     }
 
     public static void ApplyChallengeSlotLocalization(ChallengeLeaderboardSlot? slot, string stage)
@@ -151,6 +176,155 @@ internal static class EndGameLocalizationService
         {
             TryApplyKnownDynamicText(text, stage, "EndGamePlayerNotes");
         }
+    }
+
+    private static void LocalizeEndGameHeader(EndOfGameStatUIElements elements, string stage)
+    {
+        var root = elements.gradeLetter?.canvas?.transform ?? elements.quotaNumerator?.canvas?.transform;
+        if (root == null)
+        {
+            return;
+        }
+
+        foreach (var text in root.GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (text == null || !IsEndGameHeaderText(text))
+            {
+                continue;
+            }
+
+            text.gameObject.SetActive(true);
+            text.enabled = true;
+            text.enableWordWrapping = false;
+            text.overflowMode = TextOverflowModes.Overflow;
+            text.text = EndGameHeaderLocalizedText;
+            if (text.color.a < 0.9f)
+            {
+                var color = text.color;
+                color.a = 1f;
+                text.color = color;
+            }
+
+            FontFallbackService.ApplyFallback(text, EndGameHeaderLocalizedText);
+            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=EndGameHeader action=applied path={BuildPath(text.transform)} text={text.text}");
+            return;
+        }
+    }
+
+    private static bool IsEndGameHeaderText(TMP_Text text)
+    {
+        var path = BuildPath(text.transform);
+        if (string.Equals(text.name, "HeaderText", StringComparison.OrdinalIgnoreCase) &&
+            path.IndexOf("/EndgameStats/Text/HeaderText", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return true;
+        }
+
+        var trimmed = text.text?.Trim();
+        return string.Equals(trimmed, "PERFORMANCE REPORT", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(trimmed, "\u5de5\u4f5c\u7ee9\u6548\u62a5\u544a", StringComparison.Ordinal) ||
+               string.Equals(trimmed, EndGameHeaderLocalizedText, StringComparison.Ordinal);
+    }
+
+    private static void NormalizePlayersFiredScreenLayout(HUDManager hudManager, string stage)
+    {
+        var seen = new HashSet<int>();
+        NormalizePlayersFiredText(hudManager.EndOfRunStatsText, stage, seen);
+
+        if (hudManager.playersFiredAnimator == null)
+        {
+            return;
+        }
+
+        foreach (var text in hudManager.playersFiredAnimator.GetComponentsInChildren<TMP_Text>(true))
+        {
+            NormalizePlayersFiredText(text, stage, seen);
+        }
+    }
+
+    private static void NormalizePlayersFiredText(TMP_Text? text, string stage, HashSet<int> seen)
+    {
+        if (text == null || !seen.Add(text.GetInstanceID()))
+        {
+            return;
+        }
+
+        var trimmed = text.text?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return;
+        }
+
+        if (LooksLikePlayersFiredTitle(trimmed))
+        {
+            ApplyPlayersFiredTextLayout(text, PlayersFiredTitleLocalizedText, stage, "PlayersFiredTitle", 1900f, 180f, 32f, 72f);
+            return;
+        }
+
+        if (LooksLikePlayersFiredReason(trimmed))
+        {
+            ApplyPlayersFiredTextLayout(text, PlayersFiredReasonLocalizedText, stage, "PlayersFiredReason", 1900f, 110f, 22f, 40f);
+        }
+    }
+
+    private static bool LooksLikePlayersFiredTitle(string trimmed)
+    {
+        return string.Equals(trimmed, "YOU ARE FIRED.", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(trimmed, "YOU ARE FIRED", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(trimmed, "\u4f60\u88ab\u89e3\u96c7\u4e86\uff01", StringComparison.Ordinal) ||
+               string.Equals(trimmed, "\u4f60\u5df2\u88ab\u516c\u53f8\u89e3\u96c7\u3002", StringComparison.Ordinal) ||
+               string.Equals(trimmed, PlayersFiredTitleLocalizedText, StringComparison.Ordinal);
+    }
+
+    private static bool LooksLikePlayersFiredReason(string trimmed)
+    {
+        return string.Equals(trimmed, "You did not meet the profit quota before the deadline.", StringComparison.OrdinalIgnoreCase) ||
+               trimmed.IndexOf("\u5229\u6da6\u6307\u6807", StringComparison.Ordinal) >= 0 ||
+               trimmed.IndexOf("\u76ee\u6807\u91d1\u989d", StringComparison.Ordinal) >= 0;
+    }
+
+    private static void ApplyPlayersFiredTextLayout(
+        TMP_Text text,
+        string localized,
+        string stage,
+        string target,
+        float minWidth,
+        float minHeight,
+        float minFontSize,
+        float maxFontSize)
+    {
+        if (!string.Equals(text.text, localized, StringComparison.Ordinal))
+        {
+            text.text = localized;
+        }
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.alignment = TextAlignmentOptions.Center;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = minFontSize;
+        text.fontSizeMax = maxFontSize;
+        text.fontSize = Mathf.Clamp(text.fontSize, text.fontSizeMin, text.fontSizeMax);
+
+        var rectTransform = text.rectTransform;
+        if (rectTransform != null)
+        {
+            CenterPlayersFiredRectTransform(rectTransform, minWidth, minHeight);
+        }
+
+        FontFallbackService.ApplyFallback(text, localized);
+        Plugin.Log.LogInfo(
+            $"NativeRelay[{stage}] target={target} action=layout-applied path={BuildPath(text.transform)} " +
+            $"font={text.fontSize:0.#}/{text.fontSizeMin:0.#}-{text.fontSizeMax:0.#} text={text.text}");
+    }
+
+    private static void CenterPlayersFiredRectTransform(RectTransform rectTransform, float minWidth, float minHeight)
+    {
+        rectTransform.anchorMin = new Vector2(0.5f, rectTransform.anchorMin.y);
+        rectTransform.anchorMax = new Vector2(0.5f, rectTransform.anchorMax.y);
+        rectTransform.pivot = new Vector2(0.5f, rectTransform.pivot.y);
+        rectTransform.anchoredPosition = new Vector2(0f, rectTransform.anchoredPosition.y);
+        rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Max(rectTransform.rect.width, minWidth));
+        rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(rectTransform.rect.height, minHeight));
     }
 
     private static void TryApplyKnownDynamicText(TMP_Text? text, string stage, string target)
