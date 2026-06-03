@@ -1,6 +1,6 @@
 # LC Chinese Project
 
-Version: `3.0.0`
+Version: `3.1.0`
 
 ## 中文说明
 
@@ -17,6 +17,7 @@ LC Chinese Project 是面向 Lethal Company V81 测试环境维护的简体中�
 - 包含自制本地化文本与本地化 UI 贴图资源。
 - 兼容 RuntimeIcons、RuntimeIcons_BetterRotations 和 HoneeItemIcons，保留原版英文物品 key 供图标匹配使用，仅在显示层处理中文。
 - 支持自定义本地化与可选自动翻译。自动翻译默认关闭，开启后通过异步请求和本地缓存处理非原版英文文本。
+- 面向大型整合包提供可配置的运行时缓存与菜单处理预算，在保留原版和第三方文本覆盖的同时减少重复热路径工作。
 
 ### 安装
 
@@ -32,6 +33,16 @@ BepInEx/plugins/V81TestChn/textures/
 ```
 
 不要把整个包解压成 `BepInEx/plugins/package`，也不要在压缩包外额外套一层 `package/` 目录。
+
+### 主配置文件
+
+插件的主配置文件会生成在：
+
+```text
+BepInEx/config/LC Chinese Project.cfg
+```
+
+如果检测到旧版 `BepInEx/config/cn.codex.v81testchn.cfg`，且新配置文件尚不存在，插件会在启动时复制一份到新文件名。旧文件不会被自动删除。
 
 ### 自定义本地化
 
@@ -91,11 +102,29 @@ LogAutomaticTranslation = false
 
 HTTP provider 接收 JSON：`{ text, source, target }`。返回值可以是纯文本，也可以是包含翻译字段的 JSON。主线程文本钩子不会等待 provider 响应；可用结果会写入本地缓存并在后续显示中使用。
 
+### 大型整合包性能配置
+
+以下配置用于控制通用运行时文本路径的缓存规模和菜单处理节奏。默认值面向大型 r2modman profile，单独使用本模组时也保持较低开销。
+
+```ini
+[02 性能 - 运行时预算]
+LargeModpackTmpHookCacheLimit = 16384
+LargeModpackComponentTextCacheLimit = 16384
+LargeModpackHudScannerCacheLimit = 16384
+LargeModpackExternalCompatibilityCacheLimit = 4096
+LargeModpackFontFallbackCacheLimit = 16384
+MenuTranslationWorkBudgetPerFrame = 12
+EnableTargetedUiStyleRepairFastGate = true
+```
+
+缓存项都有上限和范围校验，配置变更会在运行时刷新。一般不建议低于默认值；只有在极端内存约束或排查特定 UI 样式问题时，才需要降低缓存或关闭样式修复快速门。
+
 ### 排查
 
 - 如果日志显示 `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`，通常说明插件 DLL 已加载，但 `translations-clean` 资源目录未被找到。
 - 如果输入文本被错误翻译，请优先检查终端输入、聊天输入、玩家名和大厅动态文本保护逻辑。
 - 如果图标类模组依赖原版英文物品名，本模组会尽量保留图标匹配 key，只在显示层翻译中文。
+- 如果大型整合包中菜单或 HUD 文本频繁刷新，请优先保留默认性能预算；它会减少重复扫描和重复样式修复，而不会关闭通用汉化路径。
 - 如果自定义本地化规则导致卡顿，请先禁用 regex，再逐步缩小规则范围。
 - 如果自动翻译 provider 不可用，插件会保留原文并跳过本次结果，不会阻塞 UI。
 
@@ -118,6 +147,7 @@ This project does not require existing third-party translation or font-patching 
 - Includes self-authored localization text and selected localized UI texture resources.
 - Keeps RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons compatible by preserving vanilla English item keys for icon matching while translating display text separately.
 - Supports custom localization and optional automatic translation. Automatic translation is disabled by default and uses asynchronous requests plus a local cache for non-vanilla English text.
+- Provides configurable runtime caches and menu work budgets for large modpacks, reducing repeated hot-path work while preserving vanilla and third-party text coverage.
 
 ### Installation
 
@@ -133,6 +163,16 @@ BepInEx/plugins/V81TestChn/textures/
 ```
 
 Do not install the package as `BepInEx/plugins/package`, and do not create a zip with an extra top-level `package/` directory.
+
+### Main Config File
+
+The main plugin config file is generated at:
+
+```text
+BepInEx/config/LC Chinese Project.cfg
+```
+
+If the legacy `BepInEx/config/cn.codex.v81testchn.cfg` exists and the new config file does not, the plugin copies the legacy file to the new name during startup. The legacy file is not deleted automatically.
 
 ### Custom Localization
 
@@ -177,11 +217,29 @@ LogAutomaticTranslation = false
 
 The HTTP provider receives JSON: `{ text, source, target }`. It may return plain text or JSON containing a translation field. Main-thread text hooks never wait for provider responses; usable results are cached locally and used on later displays.
 
+### Large Modpack Performance
+
+These settings control cache sizes and menu processing cadence for generic runtime text paths. Defaults are tuned for large r2modman profiles while remaining lightweight when this mod is installed alone.
+
+```ini
+[02 性能 - 运行时预算]
+LargeModpackTmpHookCacheLimit = 16384
+LargeModpackComponentTextCacheLimit = 16384
+LargeModpackHudScannerCacheLimit = 16384
+LargeModpackExternalCompatibilityCacheLimit = 4096
+LargeModpackFontFallbackCacheLimit = 16384
+MenuTranslationWorkBudgetPerFrame = 12
+EnableTargetedUiStyleRepairFastGate = true
+```
+
+Cache entries are bounded and range-checked, and config changes refresh at runtime. Keeping the defaults is recommended for large modpacks; reduce them only under strict memory limits or when diagnosing a specific UI style repair issue.
+
 ### Troubleshooting
 
 - If the log shows `TranslationService loaded 0 exact + 0 regex entries from 0 source(s).`, the plugin DLL loaded but the `translations-clean` resource directory was not found.
 - If input text is translated incorrectly, check terminal input, chat input, player names, and lobby dynamic text protection first.
 - If an icon mod depends on vanilla English item names, this mod preserves icon-matching keys where possible and translates display text separately.
+- If a large modpack refreshes menu or HUD text frequently, keep the default performance budget first; it reduces repeated scans and style repairs without disabling generic localization.
 - If custom localization rules cause stutter, disable regex first and reduce rule scope.
 - If the automatic translation provider is unavailable, the plugin keeps the original text and skips that result without blocking UI.
 

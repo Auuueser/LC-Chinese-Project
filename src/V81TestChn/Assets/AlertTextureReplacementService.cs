@@ -28,7 +28,7 @@ internal static class AlertTextureReplacementService
         public NativeTextRole Role { get; }
     }
 
-    private const int NativeTextRoleCacheLimit = 4096;
+    private const int NativeTextRoleCacheLimit = 16384;
     private const string SystemOnlineTitleObjectName = "TipLeft1";
     private const string SystemOnlineTitleFullPath = "Systems/UI/Canvas/IngamePlayerHUD/BottomMiddle/SystemsOnline/TipLeft1";
     private const string SystemOnlineTitlePathSuffix = "IngamePlayerHUD/BottomMiddle/SystemsOnline/TipLeft1";
@@ -37,13 +37,15 @@ internal static class AlertTextureReplacementService
     private const string RelaySceneName = "SampleSceneRelay";
     private const string SystemOnlineLocalizedText = "\u7cfb\u7edf\u5728\u7ebf";
     private const string EnteringAtmosphereLocalizedText = "\u6b63\u5728\u8fdb\u5165\u5927\u6c14\u5c42...";
-    private const string HazardLevelLocalizedText = "\u5371\u9669\u7b49\u7ea7\uff1a";
+    private const string HazardLevelLocalizedText = "\u98ce\u9669\u7ea7\u522b\uff1a";
     private const string LifeSupportOfflineLocalizedText = "[\u751f\u547d\u7ef4\u6301\uff1a\u79bb\u7ebf]";
     private static Coroutine? _systemOnlineWatcher;
     private static Coroutine? _fixedSceneLabelWatcher;
     private static HUDManager? _systemOnlineWatcherOwner;
     private static HUDManager? _fixedSceneLabelWatcherOwner;
-    private static readonly Dictionary<int, CachedNativeTextRole> NativeTextRoleCache = new();
+    private static bool _fixedSceneLabelSceneLoadedSubscribed;
+    private static string _fixedSceneLabelSceneLoadedStage = "SceneLoaded";
+    private static readonly Dictionary<int, CachedNativeTextRole> NativeTextRoleCache = new(NativeTextRoleCacheLimit);
     private static readonly Dictionary<string, string> FixedSceneLabels = new(StringComparer.Ordinal)
     {
         ["TO MEET PROFIT QUOTA"] = "\u4ee5\u8fbe\u5230\u5229\u6da6\u914d\u989d",
@@ -57,7 +59,10 @@ internal static class AlertTextureReplacementService
     };
     public static void Initialize(string pluginDir)
     {
-        Plugin.Log.LogInfo("Native relay title translation enabled; SYSTEMS ONLINE uses original TMP object only.");
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogInfo("Native relay title translation enabled; SYSTEMS ONLINE uses original TMP object only.");
+        }
     }
 
     public static void ForceApplySystemOnlineOverlay(HUDManager? hudManager, string stage)
@@ -69,8 +74,11 @@ internal static class AlertTextureReplacementService
             return;
         }
 
-        Plugin.Log.LogWarning($"NativeRelay[{stage}] target=SystemOnline action=not-found");
-        AuditSystemOnlineBranch(stage, hudManager);
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogWarning($"NativeRelay[{stage}] target=SystemOnline action=not-found");
+            AuditSystemOnlineBranch(stage, hudManager);
+        }
     }
 
     public static void BeginSystemOnlineExactPathWatcher(HUDManager? hudManager, string stage)
@@ -95,7 +103,11 @@ internal static class AlertTextureReplacementService
         var direct = FindSystemOnlineTitle(hudManager, allowGlobalFallback: true);
         if (direct == null)
         {
-            Plugin.Log.LogWarning($"NativeRelay[{stage}] target=SystemOnline action=not-found");
+            if (Plugin.RuntimeLocalizationLogsEnabled)
+            {
+                Plugin.Log.LogWarning($"NativeRelay[{stage}] target=SystemOnline action=not-found");
+            }
+
             return;
         }
 
@@ -112,7 +124,11 @@ internal static class AlertTextureReplacementService
         var title = FindEnteringAtmosphereTitle(hudManager);
         if (title == null)
         {
-            Plugin.Log.LogWarning($"NativeRelay[{stage}] target=EnteringAtmosphere action=not-found");
+            if (Plugin.RuntimeLocalizationLogsEnabled)
+            {
+                Plugin.Log.LogWarning($"NativeRelay[{stage}] target=EnteringAtmosphere action=not-found");
+            }
+
             return;
         }
 
@@ -180,14 +196,18 @@ internal static class AlertTextureReplacementService
             return;
         }
 
-        ResetFixedSceneLabelWatcherIfStale(hudManager);
-        if (_fixedSceneLabelWatcher != null)
+        if (SyncFixedSceneLabelsInRelayScene($"{stage}.initial") > 0)
         {
             return;
         }
 
         _fixedSceneLabelWatcherOwner = hudManager;
-        _fixedSceneLabelWatcher = hudManager.StartCoroutine(WaitForFixedSceneLabels(stage));
+        _fixedSceneLabelSceneLoadedStage = stage;
+        if (!_fixedSceneLabelSceneLoadedSubscribed)
+        {
+            SceneManager.sceneLoaded += OnRelaySceneLoadedForFixedLabels;
+            _fixedSceneLabelSceneLoadedSubscribed = true;
+        }
     }
 
     public static void Shutdown()
@@ -220,7 +240,28 @@ internal static class AlertTextureReplacementService
         _fixedSceneLabelWatcher = null;
         _systemOnlineWatcherOwner = null;
         _fixedSceneLabelWatcherOwner = null;
+        if (_fixedSceneLabelSceneLoadedSubscribed)
+        {
+            SceneManager.sceneLoaded -= OnRelaySceneLoadedForFixedLabels;
+            _fixedSceneLabelSceneLoadedSubscribed = false;
+        }
+
+        _fixedSceneLabelSceneLoadedStage = "SceneLoaded";
         NativeTextRoleCache.Clear();
+    }
+
+    private static void OnRelaySceneLoadedForFixedLabels(Scene scene, LoadSceneMode mode)
+    {
+        if (!string.Equals(scene.name, RelaySceneName, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        SyncFixedSceneLabelsInRelayScene($"{_fixedSceneLabelSceneLoadedStage}.scene-loaded");
+        SceneManager.sceneLoaded -= OnRelaySceneLoadedForFixedLabels;
+        _fixedSceneLabelSceneLoadedSubscribed = false;
+        _fixedSceneLabelWatcherOwner = null;
+        _fixedSceneLabelSceneLoadedStage = "SceneLoaded";
     }
 
     private static void ResetSystemOnlineWatcherIfStale(HUDManager currentHud)
@@ -283,6 +324,11 @@ internal static class AlertTextureReplacementService
             return;
         }
 
+        if (!MightBeNativeRelayCandidate(text))
+        {
+            return;
+        }
+
         var role = GetNativeTextRole(text);
         if (role == NativeTextRole.SystemOnline)
         {
@@ -318,12 +364,44 @@ internal static class AlertTextureReplacementService
         }
 
         ApplyLocalizedText(text, localized, stage, "FixedSceneLabel");
-        Plugin.Log.LogInfo($"NativeRelay[{stage}] target=FixedSceneLabel action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=FixedSceneLabel action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+        }
+
         return true;
     }
 
     public static void TryReplaceSystemOnlineText(UnityEngine.UI.Text? text, string stage)
     {
+    }
+
+    private static bool MightBeNativeRelayCandidate(TMP_Text text)
+    {
+        if (string.Equals(text.name, SystemOnlineTitleObjectName, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(text.name, EnteringAtmosphereTitleObjectName, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var value = text.text;
+        if (string.IsNullOrWhiteSpace(value) || value.Length > 160)
+        {
+            return false;
+        }
+
+        var index = 0;
+        while (index < value.Length && char.IsWhiteSpace(value[index]))
+        {
+            index++;
+        }
+
+        if (index >= value.Length)
+        {
+            return false;
+        }
+
+        return char.ToUpperInvariant(value[index]) is 'H' or 'P' or 'E' or 'F' or 'D' or 'Y' or 'T' or '[' or '(';
     }
 
     public static void TryReplaceSystemOnlineText(TextMesh? text, string stage)
@@ -354,18 +432,21 @@ internal static class AlertTextureReplacementService
         }
 
         ApplyLocalizedText(text, ResolveLocalizedText(text.text, SystemOnlineLocalizedText), stage, "SystemOnline");
-        Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SystemOnline action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SystemOnline action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+        }
     }
 
     private static IEnumerator WaitForSystemOnlineTitle(HUDManager hudManager, string stage)
     {
         const float timeoutSeconds = 12f;
-        const float intervalSeconds = 0.1f;
+        const float intervalSeconds = 0.25f;
         var elapsed = 0f;
 
         while (hudManager != null && elapsed < timeoutSeconds)
         {
-            var direct = FindSystemOnlineTitleByFullPath();
+            var direct = FindSystemOnlineTitleByHudPath(hudManager);
             if (IsExactSystemOnlineTitle(direct))
             {
                 ApplySystemOnlineNativeTranslation(direct!, $"{stage}.watcher");
@@ -378,7 +459,11 @@ internal static class AlertTextureReplacementService
             elapsed += intervalSeconds;
         }
 
-        Plugin.Log.LogWarning($"NativeRelay[{stage}.watcher] target=SystemOnline action=timeout");
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogWarning($"NativeRelay[{stage}.watcher] target=SystemOnline action=timeout");
+        }
+
         _systemOnlineWatcher = null;
         _systemOnlineWatcherOwner = null;
     }
@@ -386,7 +471,7 @@ internal static class AlertTextureReplacementService
     private static IEnumerator WaitForFixedSceneLabels(string stage)
     {
         const float timeoutSeconds = 8f;
-        const float intervalSeconds = 0.25f;
+        const float intervalSeconds = 0.5f;
         var elapsed = 0f;
 
         while (elapsed < timeoutSeconds)
@@ -403,7 +488,11 @@ internal static class AlertTextureReplacementService
             elapsed += intervalSeconds;
         }
 
-        Plugin.Log.LogWarning($"NativeRelay[{stage}.relay-scene] target=FixedSceneLabel action=timeout");
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogWarning($"NativeRelay[{stage}.relay-scene] target=FixedSceneLabel action=timeout");
+        }
+
         _fixedSceneLabelWatcher = null;
         _fixedSceneLabelWatcherOwner = null;
     }
@@ -498,6 +587,17 @@ internal static class AlertTextureReplacementService
         return directObject != null ? directObject.GetComponent<TMP_Text>() : null;
     }
 
+    private static TMP_Text? FindSystemOnlineTitleByHudPath(HUDManager? hudManager)
+    {
+        if (hudManager?.transform == null)
+        {
+            return null;
+        }
+
+        var direct = hudManager.transform.Find(SystemOnlineRelativePath);
+        return direct == null ? null : direct.GetComponent<TMP_Text>();
+    }
+
     private static TMP_Text? FindEnteringAtmosphereTitle(HUDManager? hudManager)
     {
         if (hudManager?.LoadingScreen == null)
@@ -564,6 +664,8 @@ internal static class AlertTextureReplacementService
         var trimmed = text.Trim();
         return string.Equals(trimmed, "HAZARD LEVEL:", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(trimmed, HazardLevelLocalizedText, StringComparison.Ordinal) ||
+               string.Equals(trimmed, "\u98ce\u9669\u7ea7\u522b:", StringComparison.Ordinal) ||
+               string.Equals(trimmed, "\u5371\u9669\u7b49\u7ea7\uff1a", StringComparison.Ordinal) ||
                string.Equals(trimmed, "\u5371\u9669\u7b49\u7ea7:", StringComparison.Ordinal);
     }
 
@@ -645,7 +747,10 @@ internal static class AlertTextureReplacementService
                 }
 
                 seen++;
-                Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SystemOnline action=audit exact={IsExactSystemOnlineTitle(text)} name={text.name} path={BuildPath(text.transform)} text={text.text}");
+                if (Plugin.RuntimeLocalizationLogsEnabled)
+                {
+                    Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SystemOnline action=audit exact={IsExactSystemOnlineTitle(text)} name={text.name} path={BuildPath(text.transform)} text={text.text}");
+                }
             }
         }
 
@@ -663,7 +768,9 @@ internal static class AlertTextureReplacementService
             return;
         }
 
-        if (!TranslationService.TryTranslate(text.text, out var translated) || string.IsNullOrWhiteSpace(translated))
+        if ((!TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.PlanetInfo, text.text, out var translated) &&
+             !TranslationService.TryTranslate(text.text, out translated)) ||
+            string.IsNullOrWhiteSpace(translated))
         {
             return;
         }
@@ -674,7 +781,10 @@ internal static class AlertTextureReplacementService
         }
 
         FontFallbackService.ApplyFallback(text, translated);
-        Plugin.Log.LogInfo($"NativeRelay[{stage}] target={target} action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogInfo($"NativeRelay[{stage}] target={target} action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+        }
     }
 
     private static string BuildPath(Transform? transform)
@@ -749,12 +859,14 @@ internal static class AlertTextureReplacementService
 
     private static void CacheNativeTextRole(TMP_Text text, NativeTextRole role)
     {
-        if (NativeTextRoleCache.Count >= NativeTextRoleCacheLimit)
+        var id = text.GetInstanceID();
+        if (NativeTextRoleCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit &&
+            !NativeTextRoleCache.ContainsKey(id))
         {
-            NativeTextRoleCache.Clear();
+            return;
         }
 
-        NativeTextRoleCache[text.GetInstanceID()] = new CachedNativeTextRole(GetParentInstanceId(text.transform), role);
+        NativeTextRoleCache[id] = new CachedNativeTextRole(GetParentInstanceId(text.transform), role);
     }
 
     private static int GetParentInstanceId(Transform? transform)

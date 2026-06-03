@@ -6,8 +6,23 @@ internal static class HudInteractionLocalizationService
 {
     public static void ApplyDisplayTip(ref string headerText, ref string bodyText)
     {
-        headerText = TargetedUiTranslator.TranslateDynamic(headerText);
-        bodyText = TargetedUiTranslator.TranslateDynamic(bodyText);
+        headerText = TranslateDisplayTipText(headerText);
+        bodyText = TranslateDisplayTipText(bodyText);
+    }
+
+    private static string TranslateDisplayTipText(string source)
+    {
+        if (ExternalEnglishCompatibilityService.TryTranslateDisplayTipText(source, out var externalTranslated))
+        {
+            return externalTranslated;
+        }
+
+        if (ExternalEnglishCompatibilityService.MightContainDisplayTipCompatibilityText(source))
+        {
+            return source;
+        }
+
+        return TargetedUiTranslator.TranslateDynamic(source);
     }
 
     public static void ApplyDisplayStatusEffect(ref string statusEffect)

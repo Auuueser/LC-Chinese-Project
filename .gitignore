@@ -21,6 +21,7 @@ build_font_project/
 tools/pydeps/
 
 # Local-only engineering, validation, and release tooling
+.codegraph/
 docs/engineering/
 lib/
 tests/

@@ -1,6 +1,7 @@
 using HarmonyLib;
 using GameNetcodeStuff;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using TMPro;
@@ -12,6 +13,8 @@ namespace V81TestChn;
 
 internal static partial class TextPatches
 {
+    private static readonly Dictionary<string, Type?> OptionalPatchTypeCache = new(StringComparer.Ordinal);
+
     private static int InstallTextPatches(Harmony harmony)
     {
         var patched = 0;
@@ -21,6 +24,7 @@ internal static partial class TextPatches
         PatchPrefix(harmony, typeof(MenuManager), "DisplayMenuNotification", nameof(MenuManagerDisplayMenuNotificationPrefix), ref patched);
         PatchPostfix(harmony, typeof(DeleteFileButton), "SetFileToDelete", nameof(DeleteFileButtonSetFileToDeletePostfix), ref patched);
         PatchPostfix(harmony, typeof(SaveFileUISlot), "OnEnable", nameof(SaveFileUISlotOnEnablePostfix), ref patched);
+        InstallExternalCompatibilityPatches(harmony, ref patched);
 
         PatchPostfix(harmony, typeof(PreInitSceneScript), "Start", nameof(PreInitSceneScriptStartPostfix), ref patched);
         PatchPostfix(harmony, typeof(PreInitSceneScript), "SetLaunchPanelsEnabled", nameof(PreInitSceneScriptSetLaunchPanelsEnabledPostfix), ref patched);
@@ -80,17 +84,28 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(RoundManager), "GenerateNewLevelClientRpc", nameof(RoundManagerGenerateNewLevelClientRpcPostfix), ref patched);
 
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPrefix), ref patched);
-        PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPostfix), ref patched);
-        PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.color)), nameof(TmpSetColorPrefix), ref patched);
-        PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.color)), nameof(TmpSetColorPostfix), ref patched);
+        if (IsGlobalTmpPostSetRepairEnabled)
+        {
+            PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPostfix), ref patched);
+        }
+
+        if (IsGlobalTmpColorHookEnabled)
+        {
+            PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.color)), nameof(TmpSetColorPrefix), ref patched);
+        }
+
         PatchPostfix(harmony, AccessTools.Method(typeof(TMP_FontAsset), "Awake"), nameof(TmpFontAssetAwakePostfix), ref patched);
         PatchPostfix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetTrigger), new[] { typeof(string) }), nameof(AnimatorSetTriggerPostfix), ref patched);
         PatchPrefix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetBool), new[] { typeof(string), typeof(bool) }), nameof(AnimatorSetBoolPrefix), ref patched);
         PatchPostfix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetBool), new[] { typeof(string), typeof(bool) }), nameof(AnimatorSetBoolPostfix), ref patched);
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(Text), nameof(Text.text)), nameof(UiTextSetTextPrefix), ref patched);
-        PatchPostfix(harmony, AccessTools.PropertySetter(typeof(Text), nameof(Text.text)), nameof(UiTextSetTextPostfix), ref patched);
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TextMesh), nameof(TextMesh.text)), nameof(TextMeshSetTextPrefix), ref patched);
-        PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TextMesh), nameof(TextMesh.text)), nameof(TextMeshSetTextPostfix), ref patched);
+        if (CustomLocalizationExtensionService.HasGlobalStyleRules)
+        {
+            PatchPostfix(harmony, AccessTools.PropertySetter(typeof(Text), nameof(Text.text)), nameof(UiTextSetTextPostfix), ref patched);
+            PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TextMesh), nameof(TextMesh.text)), nameof(TextMeshSetTextPostfix), ref patched);
+        }
+
         PatchPostfix(harmony, typeof(Terminal), "TextPostProcess", nameof(TerminalTextPostProcessPostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "LoadNewNode", nameof(TerminalLoadNewNodePostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "OnSubmit", nameof(TerminalOnSubmitPostfix), ref patched);
@@ -110,32 +125,55 @@ internal static partial class TextPatches
             AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(string), typeof(bool) }),
             nameof(TmpSetTextStringBoolPrefix),
             ref patched);
-        PatchPostfix(
-            harmony,
-            AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(string), typeof(bool) }),
-            nameof(TmpSetTextPostfix),
-            ref patched);
+        if (IsGlobalTmpPostSetRepairEnabled)
+        {
+            PatchPostfix(
+                harmony,
+                AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(string), typeof(bool) }),
+                nameof(TmpSetTextPostfix),
+                ref patched);
+        }
+
         PatchPrefix(
             harmony,
             AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(string), typeof(float) }),
             nameof(TmpSetTextStringFloatPrefix),
             ref patched);
-        PatchPostfix(
-            harmony,
-            AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(string), typeof(float) }),
-            nameof(TmpSetTextPostfix),
-            ref patched);
+        if (IsGlobalTmpPostSetRepairEnabled)
+        {
+            PatchPostfix(
+                harmony,
+                AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(string), typeof(float) }),
+                nameof(TmpSetTextPostfix),
+                ref patched);
+        }
+
         PatchPrefix(
             harmony,
             AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(StringBuilder) }),
             nameof(TmpSetTextStringBuilderPrefix),
             ref patched);
-        PatchPostfix(
-            harmony,
-            AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(StringBuilder) }),
-            nameof(TmpSetTextPostfix),
-            ref patched);
+        if (IsGlobalTmpPostSetRepairEnabled)
+        {
+            PatchPostfix(
+                harmony,
+                AccessTools.Method(typeof(TMP_Text), nameof(TMP_Text.SetText), new[] { typeof(StringBuilder) }),
+                nameof(TmpSetTextPostfix),
+                ref patched);
+        }
+
         return patched;
+    }
+
+    private static void InstallExternalCompatibilityPatches(Harmony harmony, ref int patched)
+    {
+        PatchOptionalPostfix(harmony, "LethalConfig.MonoBehaviours.ConfigMenu", "Open", nameof(LethalConfigConfigMenuOpenPostfix), ref patched);
+        PatchOptionalPrefix(harmony, "LethalConfig.MonoBehaviours.ConfigMenuNotification", "SetNotificationContent", nameof(LethalConfigNotificationSetContentPrefix), ref patched);
+        PatchOptionalPostfix(harmony, "LethalConfig.MonoBehaviours.ConfigMenuNotification", "Open", nameof(LethalConfigNotificationOpenPostfix), ref patched);
+        PatchOptionalPostfix(harmony, "OpenBodyCams.Overlay.OverlayManager", "UpdateText", nameof(OpenBodyCamsOverlayUpdateTextPostfix), ref patched);
+        PatchOptionalPostfix(harmony, "LCBetterSaves.Plugin", "InitializeBetterSaves", nameof(BetterSavesInitializeBetterSavesPostfix), ref patched);
+        PatchOptionalPostfix(harmony, "DeleteFileButton_BetterSaves", "UpdateFileToDelete", nameof(BetterSavesDeleteFileButtonUpdateFileToDeletePostfix), ref patched);
+        PatchOptionalPostfix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPostfix), ref patched);
     }
 
     private static void PatchPrefix(Harmony harmony, Type targetType, string targetMethod, string patchMethod, ref int patched)
@@ -156,6 +194,72 @@ internal static partial class TextPatches
     private static void PatchPostfix(Harmony harmony, MethodBase? original, string patchMethod, ref int patched)
     {
         Patch(harmony, original, prefixName: null, postfixName: patchMethod, ref patched);
+    }
+
+    private static void PatchOptionalPrefix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched)
+    {
+        PatchOptional(harmony, targetTypeName, targetMethod, patchMethod, prefix: true, ref patched);
+    }
+
+    private static void PatchOptionalPostfix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched)
+    {
+        PatchOptional(harmony, targetTypeName, targetMethod, patchMethod, prefix: false, ref patched);
+    }
+
+    private static void PatchOptional(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, bool prefix, ref int patched)
+    {
+        var targetType = FindLoadedTypeQuiet(targetTypeName);
+        if (targetType == null)
+        {
+            return;
+        }
+
+        var original = AccessTools.Method(targetType, targetMethod);
+        if (original == null)
+        {
+            Plugin.Log.LogWarning($"Optional compatibility patch skipped; target not found: {targetTypeName}.{targetMethod}");
+            return;
+        }
+
+        if (prefix)
+        {
+            PatchPrefix(harmony, original, patchMethod, ref patched);
+            return;
+        }
+
+        PatchPostfix(harmony, original, patchMethod, ref patched);
+    }
+
+    private static Type? FindLoadedTypeQuiet(string targetTypeName)
+    {
+        if (OptionalPatchTypeCache.TryGetValue(targetTypeName, out var cachedType))
+        {
+            return cachedType;
+        }
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            Type? type;
+            try
+            {
+                type = assembly.GetType(targetTypeName, throwOnError: false, ignoreCase: false);
+            }
+            catch (ReflectionTypeLoadException)
+            {
+                type = null;
+            }
+
+            if (type == null)
+            {
+                continue;
+            }
+
+            OptionalPatchTypeCache[targetTypeName] = type;
+            return type;
+        }
+
+        OptionalPatchTypeCache[targetTypeName] = null;
+        return null;
     }
 
     private static void Patch(Harmony harmony, MethodBase? original, string? prefixName, string? postfixName, ref int patched)

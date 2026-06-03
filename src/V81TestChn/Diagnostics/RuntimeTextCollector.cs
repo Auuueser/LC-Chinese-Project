@@ -22,6 +22,7 @@ internal static class RuntimeTextCollector
     private static ConfigEntry<int>? _maxCollectedRecords;
     private static ConfigEntry<bool>? _collectorUseFullTranslationCheck;
     private static string? _outputPath;
+    private static bool _enabledFast;
     private static bool _isInitialized;
     private static bool _maxRecordsWarningLogged;
     private static DateTime _nextFlushUtc;
@@ -38,7 +39,7 @@ internal static class RuntimeTextCollector
         }
     }
 
-    public static bool IsEnabled => _enabled?.Value == true;
+    public static bool IsEnabled => _enabledFast;
 
     public static void Initialize(string pluginDir, ConfigFile config)
     {
@@ -67,6 +68,8 @@ internal static class RuntimeTextCollector
             "CollectorUseFullTranslationCheck",
             false,
             "收集前是否使用完整翻译流程复查文本。默认关闭，避免诊断功能进入较重路径。");
+
+        _enabledFast = _enabled.Value;
 
         StopFlushTimer();
         lock (SyncRoot)
@@ -111,6 +114,7 @@ internal static class RuntimeTextCollector
         }
 
         _outputPath = null;
+        _enabledFast = false;
         _isInitialized = false;
         _maxRecordsWarningLogged = false;
         _collectorUseFullTranslationCheck = null;

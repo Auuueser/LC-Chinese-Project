@@ -2,6 +2,16 @@
 
 ## 中文
 
+### 3.1.0 - 覆盖稳定性与大型整合包性能更新
+
+重点提升大型整合包环境下的运行效率、动态界面显示稳定性，以及常见第三方 UI 文本的兼容表现。
+
+- 优化大型整合包下的运行时文本处理路径，减少高频 TMP 文本、目标 UI、扫描 HUD、字体 fallback 等场景中的重复处理，并新增可配置缓存与菜单处理预算。
+- 改进原版动态 UI 的显示一致性，降低星球信息、扫描 HUD、交互提示等界面出现旧文本残留、短暂英文回退或中英混排的概率。
+- 提升菜单和配置类界面的中文显示稳定性，改善固定宽度输入框、搜索框和占位文本在中文环境下的裁切与排版问题。
+- 扩展通用第三方文本兼容能力，使价格、折扣、战斗提示、HUD 通知等运行时英文文本能够更稳定地通过通用文本路径汉化。
+- 保持轻量化运行方式，在提升覆盖与兼容性的同时控制额外性能开销。
+
 ### 3.0.0 - 独立运行时本地化更新
 
 - 移除对既有第三方汉化和字体修补运行时链路的依赖，文本替换、字体 fallback、贴图替换与兼容逻辑均由本插件独立处理。
@@ -49,6 +59,16 @@
 - 使用当前运行时构建刷新 Thunderstore 包体和 GitHub 发布元数据。
 
 ## English
+
+### 3.1.0 - Coverage stability and large modpack performance update
+
+Focused on runtime efficiency in large modpacks, more stable dynamic UI display, and better compatibility for common third-party UI text.
+
+- Optimized runtime text processing in large modpacks by reducing repeated work in high-frequency TMP text, targeted UI, scanner HUD, and font fallback paths, with configurable cache limits and menu work budgets.
+- Improved vanilla dynamic UI consistency, reducing stale text, brief English fallback, and mixed-language output in planet information, scanner HUD, and interaction tip displays.
+- Improved Chinese display stability in menu and configuration UI, especially fixed-width input fields, search fields, and placeholder text.
+- Expanded generic third-party text compatibility so price, discount, combat, and HUD notification text can be localized more reliably through shared runtime text paths.
+- Kept runtime behavior lightweight, controlling extra performance overhead while improving coverage and compatibility.
 
 ### 3.0.0 - Independent runtime localization update
 

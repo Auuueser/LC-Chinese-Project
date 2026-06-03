@@ -8,10 +8,12 @@ internal static partial class TranslationService
     internal static class HudDynamicTranslator
     {
         public static bool CanHandleCheap(string? source) =>
+            LooksLikeLoadingInfoTextCheap(source) ||
             LooksLikeRandomSeedTextCheap(source) ||
             LooksLikeVoteTextCheap(source) ||
             LooksLikeDaysLeftTextCheap(source) ||
             LooksLikeShipLeaveEarlyWarningTextCheap(source) ||
+            LooksLikeCombatNotificationTextCheap(source) ||
             LooksLikeHudStatusLineCheap(source) ||
             LooksLikeHudNotificationTextCheap(source);
 
@@ -42,9 +44,11 @@ internal static partial class TranslationService
                 return false;
             }
 
-            return TranslateRandomSeedFast(source, out translated) ||
+            return TranslateLoadingInfoFast(source, out translated) ||
+                   TranslateRandomSeedFast(source, out translated) ||
                    TranslateVotesFast(source, out translated) ||
                    TranslateDaysLeftFast(source, out translated) ||
+                   TranslateCombatNotificationFast(source, out translated) ||
                    TranslateHudStatusLineFast(source, out translated) ||
                    TranslateShipLeaveEarlyWarning(source, out translated) ||
                    TranslateHudNotificationFast(source, out translated);
@@ -251,6 +255,103 @@ internal static partial class TranslationService
             return true;
         }
 
+        private static bool TranslateLoadingInfoFast(string source, out string translated)
+        {
+            translated = source;
+            if (!LooksLikeLoadingInfoTextCheap(source))
+            {
+                return false;
+            }
+
+            var normalized = StripRichTextTagsCheap(source).Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
+            var separator = source.IndexOf("\r\n", StringComparison.Ordinal) >= 0 ? "\r\n" : "\n";
+            var firstLineEnd = normalized.IndexOf('\n');
+            if (firstLineEnd <= 0 || firstLineEnd >= normalized.Length - 1)
+            {
+                return false;
+            }
+
+            var firstLine = normalized[..firstLineEnd].Trim();
+            var remainder = normalized[(firstLineEnd + 1)..];
+            var secondLineEnd = remainder.IndexOf('\n');
+            var secondLine = secondLineEnd < 0 ? remainder.Trim() : remainder[..secondLineEnd].Trim();
+            var tail = secondLineEnd < 0 ? string.Empty : remainder[(secondLineEnd + 1)..];
+
+            if (!TryTranslateLoadingInfoHeader(firstLine, out var translatedFirstLine) ||
+                !TryTranslateLoadingInfoState(secondLine, out var translatedSecondLine))
+            {
+                return false;
+            }
+
+            translated = translatedFirstLine + separator + translatedSecondLine;
+            if (tail.Length > 0)
+            {
+                translated += separator + tail.Replace("\n", separator, StringComparison.Ordinal);
+            }
+
+            return true;
+        }
+
+        private static bool TryTranslateLoadingInfoHeader(string line, out string translated)
+        {
+            translated = line;
+            const string randomSeedPrefix = "Random seed:";
+            if (line.StartsWith(randomSeedPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var seed = line[randomSeedPrefix.Length..].Trim();
+                if (!LooksLikeSignedInteger(seed))
+                {
+                    return false;
+                }
+
+                translated = "\u968f\u673a\u79cd\u5b50\uff1a" + seed;
+                return true;
+            }
+
+            if (line.Equals("Waiting for crew...", StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "\u7b49\u5f85\u8239\u5458\u52a0\u8f7d\u4e2d";
+                return true;
+            }
+
+            if (line.Equals("Waiting for Client...", StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "\u7b49\u5f85\u5ba2\u6237\u7aef\u52a0\u8f7d\u4e2d";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryTranslateLoadingInfoState(string line, out string translated)
+        {
+            translated = line;
+            if (line.Equals("All players loaded!", StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "\u6240\u6709\u73a9\u5bb6\u5df2\u52a0\u8f7d";
+                return true;
+            }
+
+            const string playersLoadedPrefix = "Players loaded:";
+            if (!line.StartsWith(playersLoadedPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var count = RemoveAsciiWhitespace(line[playersLoadedPrefix.Length..]);
+            var slash = count.IndexOf('/');
+            if (slash <= 0 ||
+                slash >= count.Length - 1 ||
+                !AllDigits(count[..slash]) ||
+                !AllDigits(count[(slash + 1)..]))
+            {
+                return false;
+            }
+
+            translated = "\u73a9\u5bb6\u52a0\u8f7d\uff1a" + count;
+            return true;
+        }
+
         private static bool TranslateVotesFast(string source, out string translated)
         {
             translated = source;
@@ -404,6 +505,65 @@ internal static partial class TranslationService
             }
 
             return false;
+        }
+
+        private static bool TranslateCombatNotificationFast(string source, out string translated)
+        {
+            translated = source;
+            if (!LooksLikeCombatNotificationTextCheap(source))
+            {
+                return false;
+            }
+
+            var trimmed = StripRichTextTagsCheap(source).Trim();
+            const string localKilledPrefix = "Killed ";
+            if (trimmed.StartsWith(localKilledPrefix, StringComparison.Ordinal))
+            {
+                var target = trimmed[localKilledPrefix.Length..].Trim();
+                if (target.Length == 0)
+                {
+                    return false;
+                }
+
+                translated = "\u51fb\u6740 " + BuildTerminalLocalizedItemName(target);
+                return true;
+            }
+
+            const string remoteKilledToken = " Killed ";
+            var killedIndex = trimmed.IndexOf(remoteKilledToken, StringComparison.Ordinal);
+            if (killedIndex > 0)
+            {
+                var actor = trimmed[..killedIndex].Trim();
+                var target = trimmed[(killedIndex + remoteKilledToken.Length)..].Trim();
+                if (actor.Length == 0 || target.Length == 0)
+                {
+                    return false;
+                }
+
+                translated = actor + " \u51fb\u6740 " + BuildTerminalLocalizedItemName(target);
+                return true;
+            }
+
+            if (!trimmed.EndsWith(" HP", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var dash = trimmed.LastIndexOf('-');
+            if (dash <= 0 || dash >= trimmed.Length - " HP".Length - 1)
+            {
+                return false;
+            }
+
+            var targetName = trimmed[..dash].Trim();
+            var amount = trimmed.Substring(dash + 1, trimmed.Length - dash - 1 - " HP".Length).Trim();
+            if (targetName.Length == 0 || amount.Length == 0 || !AllDigits(amount))
+            {
+                return false;
+            }
+
+            translated = BuildTerminalLocalizedItemName(targetName) + " -" + amount + " \u751f\u547d\u503c";
+            return true;
         }
 
         private static bool TryTranslateMultilineStatus(string trimmed, out string translated)

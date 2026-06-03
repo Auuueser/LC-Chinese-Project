@@ -23,21 +23,38 @@ internal static class TargetedUiTranslator
     private static readonly Dictionary<int, List<int>> DropdownOptionTextCache = new();
     private static readonly Dictionary<int, ChatOutputState> ChatOutputStates = new();
     private static readonly Dictionary<int, CursorTipState> CursorTipStates = new();
-    private const int ProcessedTextCacheLimit = 8192;
+    private static readonly Dictionary<int, PlanetRiskTextPair> PlanetRiskTextPairCache = new();
+    private static readonly List<TMP_Dropdown> TmpDropdownScanBuffer = new();
+    private static readonly List<Dropdown> DropdownScanBuffer = new();
+    private static readonly List<TMP_Text> TmpTextScanBuffer = new();
+    private static readonly List<Text> UiTextScanBuffer = new();
+    private static readonly List<TextMesh> TextMeshScanBuffer = new();
+    private static readonly List<InteractTrigger> InteractTriggerScanBuffer = new();
+    private static readonly List<TMP_Text> PlanetRiskTmpTextScanBuffer = new();
     private const int ChatLineCacheLimit = 256;
-    private const int MenuTranslationWorkBudgetPerFrame = 12;
+    private const float PlanetInfoSummaryMiddleThreshold = 0.68f;
+    private const float PlanetInfoSummaryAutoSizeMinScale = 0.84f;
+    private const string PlanetRiskTitleObjectName = "HazardLevel";
+    private const string PlanetRiskTitleLocalizedText = "\u98ce\u9669\u7ea7\u522b\uff1a";
+    private const string PlanetRiskValueObjectName = "HazardLevelLetter";
+    private const int PlanetRiskMergeLogLimit = 6;
     private static bool _sceneUnloadSubscribed;
+    private static int _planetRiskMergeLogRemaining = PlanetRiskMergeLogLimit;
+    [System.ThreadStatic]
+    private static int _planetRiskTextMutationDepth;
 
     private readonly struct ProcessedTextState
     {
-        public ProcessedTextState(int parentId, int textHash)
+        public ProcessedTextState(int parentId, int textHash, int styleHash)
         {
             ParentId = parentId;
             TextHash = textHash;
+            StyleHash = styleHash;
         }
 
         public int ParentId { get; }
         public int TextHash { get; }
+        public int StyleHash { get; }
     }
 
     private sealed class ChatOutputState
@@ -54,6 +71,16 @@ internal static class TargetedUiTranslator
         public int ParentId;
         public string? LastOriginalText;
         public string? LastTranslatedText;
+    }
+
+    private sealed class PlanetRiskTextPair
+    {
+        public TMP_Text? HudRiskText;
+        public TMP_Text? Title;
+        public TMP_Text? Value;
+        public int HudRiskTextId;
+        public int TitleParentId;
+        public int ValueParentId;
     }
 
     private sealed class TranslationCounts
@@ -96,6 +123,26 @@ internal static class TargetedUiTranslator
         DropdownOptionTextCache.Clear();
         ChatOutputStates.Clear();
         CursorTipStates.Clear();
+        PlanetRiskTextPairCache.Clear();
+        ClearScanBuffers();
+    }
+
+    private static void FillScanBuffer<T>(GameObject root, bool includeInactive, List<T> buffer)
+        where T : Component
+    {
+        buffer.Clear();
+        root.GetComponentsInChildren(includeInactive, buffer);
+    }
+
+    private static void ClearScanBuffers()
+    {
+        TmpDropdownScanBuffer.Clear();
+        DropdownScanBuffer.Clear();
+        TmpTextScanBuffer.Clear();
+        UiTextScanBuffer.Clear();
+        TextMeshScanBuffer.Clear();
+        InteractTriggerScanBuffer.Clear();
+        PlanetRiskTmpTextScanBuffer.Clear();
     }
 
     private static void OnSceneUnloaded(Scene scene)
@@ -400,9 +447,687 @@ internal static class TargetedUiTranslator
         TranslateTmpTargeted(hud.planetInfoHeaderText, DynamicTextDomain.PlanetInfo, seen, ref translated, ref totalSeen);
         TranslateTmpTargeted(hud.planetInfoSummaryText, DynamicTextDomain.PlanetInfo, seen, ref translated, ref totalSeen);
         TranslateTmpTargeted(hud.planetRiskLevelText, DynamicTextDomain.PlanetInfo, seen, ref translated, ref totalSeen);
+        ApplyPlanetInfoPresentation(hud);
 
         Plugin.LogTargetedTranslation(reason, translated, totalSeen);
         return (translated, totalSeen);
+    }
+
+    private static void ApplyPlanetInfoPresentation(HUDManager hud)
+    {
+        ApplyPlanetInfoSummaryPresentation(hud.planetInfoSummaryText);
+        ApplyPlanetRiskPresentation(hud.planetRiskLevelText, FindPlanetRiskTitle(hud));
+    }
+
+    private static void ApplyPlanetInfoSummaryPresentation(TMP_Text? text)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        text.richText = true;
+        text.enableWordWrapping = true;
+        text.overflowMode = TextOverflowModes.Overflow;
+
+        var maxFontSize = text.fontSize;
+        if (maxFontSize > 0f)
+        {
+            text.enableAutoSizing = true;
+            text.fontSizeMax = maxFontSize;
+            text.fontSizeMin = Mathf.Min(text.fontSizeMin > 0f ? text.fontSizeMin : maxFontSize, maxFontSize * PlanetInfoSummaryAutoSizeMinScale);
+        }
+
+        var rect = text.rectTransform == null ? default : text.rectTransform.rect;
+        if (rect.width <= 1f || rect.height <= 1f)
+        {
+            text.alignment = TextAlignmentOptions.TopLeft;
+            return;
+        }
+
+        var preferredHeight = text.GetPreferredValues(text.text, rect.width, 0f).y;
+        text.alignment = preferredHeight > 0f && preferredHeight <= rect.height * PlanetInfoSummaryMiddleThreshold
+            ? TextAlignmentOptions.MidlineLeft
+            : TextAlignmentOptions.TopLeft;
+    }
+
+    private static void ApplyPlanetRiskPresentation(TMP_Text? text, TMP_Text? title)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        text.richText = true;
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.alignment = TextAlignmentOptions.MidlineLeft;
+
+        ApplyPlanetRiskValuePresentation(text, title, text.text, assignRiskText: true);
+    }
+
+    public static bool TryPrepareHudPlanetRiskValue(HUDManager? hud, TMP_Text? riskText, string? sourceValue, string reason, out string preparedValue)
+    {
+        preparedValue = string.Empty;
+        if (hud == null || riskText == null || string.IsNullOrWhiteSpace(sourceValue))
+        {
+            return false;
+        }
+
+        return ApplyPlanetRiskValuePresentation(riskText, null, sourceValue, false, reason, out preparedValue);
+    }
+
+    public static bool FinalizeHudPlanetRiskValue(HUDManager? hud, TMP_Text? riskText, string reason)
+    {
+        if (hud == null || riskText == null || string.IsNullOrWhiteSpace(riskText.text))
+        {
+            return false;
+        }
+
+        var title = FindPlanetRiskTitle(hud);
+        return ApplyPlanetRiskValuePresentation(riskText, title, riskText.text, assignRiskText: true, reason, out _);
+    }
+
+    public static bool TryMergeHudPlanetRiskValue(HUDManager? hud, TMP_Text? riskText, string? sourceValue, string reason, out string preparedValue)
+    {
+        return TryHandleHudPlanetRiskText(hud, riskText, sourceValue, reason, out preparedValue);
+    }
+
+    public static bool TryHandleHudPlanetRiskText(HUDManager? hud, TMP_Text? text, string? sourceValue, string reason, out string preparedValue)
+    {
+        preparedValue = string.Empty;
+        if (_planetRiskTextMutationDepth > 0 ||
+            hud == null ||
+            text == null ||
+            string.IsNullOrWhiteSpace(sourceValue) ||
+            !IsHudPlanetRiskTextCandidate(hud, text))
+        {
+            return false;
+        }
+
+        ResolvePlanetRiskTextPair(hud, text, out var title, out var valueText);
+        var isValueText = ReferenceEquals(text, valueText) || IsPlanetRiskValueObject(text);
+        var isTitleText = ReferenceEquals(text, title) || IsPlanetRiskTitleObject(text) || IsPlanetRiskTitle(sourceValue);
+        var sourceRiskValue = NormalizePlanetRiskValue(sourceValue);
+        if (isTitleText && !isValueText && string.IsNullOrWhiteSpace(sourceRiskValue))
+        {
+            preparedValue = PlanetRiskTitleLocalizedText;
+            var titleText = title ?? text;
+            ApplyPlanetRiskTitlePresentation(titleText);
+            FontFallbackService.ApplyFallback(titleText, preparedValue);
+            if (!ReferenceEquals(text, titleText))
+            {
+                SetPlanetRiskTitleOnlyText(titleText);
+            }
+
+            CachePlanetRiskTextPair(hud, titleText, valueText);
+            return true;
+        }
+
+        var valueSource = isValueText ? sourceValue : valueText?.text;
+        if (string.IsNullOrWhiteSpace(valueSource))
+        {
+            if (isTitleText && valueText != null)
+            {
+                preparedValue = PlanetRiskTitleLocalizedText;
+                return true;
+            }
+
+            valueSource = sourceValue;
+        }
+
+        var value = isValueText ? sourceRiskValue : NormalizePlanetRiskValue(valueSource);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        if (title != null)
+        {
+            ApplyPlanetRiskTitlePresentation(title);
+            var combinedText = PlanetRiskTitleLocalizedText + value;
+            if (ReferenceEquals(text, title))
+            {
+                preparedValue = combinedText;
+                FontFallbackService.ApplyFallback(title, combinedText);
+            }
+            else
+            {
+                preparedValue = isValueText ? string.Empty : combinedText;
+                SetPlanetRiskTitleText(title, value);
+            }
+
+            if (valueText != null &&
+                !ReferenceEquals(text, valueText) &&
+                !string.IsNullOrEmpty(valueText.text))
+            {
+                SetPlanetRiskValueText(valueText, string.Empty);
+            }
+
+            LogPlanetRiskMerge(reason, isValueText ? text : valueText ?? text, title, value);
+            return true;
+        }
+
+        preparedValue = value;
+        FontFallbackService.ApplyFallback(text, preparedValue);
+        return true;
+    }
+
+    public static bool IsHudPlanetRiskTextCandidate(HUDManager? hud, TMP_Text? text)
+    {
+        if (hud == null || text == null)
+        {
+            return false;
+        }
+
+        return ReferenceEquals(text, hud.planetRiskLevelText) || HasPlanetRiskObjectName(text);
+    }
+
+    private static bool ApplyPlanetRiskValuePresentation(TMP_Text riskText, TMP_Text? title, string? sourceValue, bool assignRiskText)
+    {
+        return ApplyPlanetRiskValuePresentation(riskText, title, sourceValue, assignRiskText, "planet-risk.presentation", out _);
+    }
+
+    private static bool ApplyPlanetRiskValuePresentation(TMP_Text riskText, TMP_Text? title, string? sourceValue, bool assignRiskText, string reason, out string preparedValue)
+    {
+        var value = NormalizePlanetRiskValue(sourceValue);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            preparedValue = string.Empty;
+            return false;
+        }
+
+        riskText.richText = true;
+        riskText.enableWordWrapping = false;
+        riskText.overflowMode = TextOverflowModes.Overflow;
+        riskText.alignment = TextAlignmentOptions.MidlineLeft;
+
+        if (!assignRiskText || title == null)
+        {
+            preparedValue = value;
+            FontFallbackService.ApplyFallback(riskText, preparedValue);
+            if (assignRiskText && !string.Equals(riskText.text, preparedValue, StringComparison.Ordinal))
+            {
+                riskText.text = preparedValue;
+            }
+
+            return true;
+        }
+
+        preparedValue = string.Empty;
+        ApplyPlanetRiskTitlePresentation(title);
+        SetPlanetRiskTitleText(title, value);
+        if (assignRiskText && !string.IsNullOrEmpty(riskText.text))
+        {
+            riskText.text = string.Empty;
+        }
+
+        LogPlanetRiskMerge(reason, riskText, title, value);
+        return true;
+    }
+
+    private static void ResolvePlanetRiskTextPair(HUDManager hud, TMP_Text text, out TMP_Text? title, out TMP_Text? value)
+    {
+        if (TryGetCachedPlanetRiskTextPair(hud, out title, out value) &&
+            (ReferenceEquals(text, title) ||
+             ReferenceEquals(text, value) ||
+             (title != null && IsPlanetRiskTitleObject(text)) ||
+             (value != null && IsPlanetRiskValueObject(text))))
+        {
+            return;
+        }
+
+        title = FindPlanetRiskTitleUncached(hud);
+        value = FindPlanetRiskValue(hud, text, title);
+        if (value == null && title != null)
+        {
+            value = FindPlanetRiskValueSibling(title);
+        }
+
+        if (title == null && value != null)
+        {
+            title = FindPlanetRiskTitleSibling(value) ?? FindPlanetRiskTitleUncached(hud);
+        }
+
+        CachePlanetRiskTextPair(hud, title, value);
+    }
+
+    private static bool TryGetCachedPlanetRiskTextPair(HUDManager hud, out TMP_Text? title, out TMP_Text? value)
+    {
+        title = null;
+        value = null;
+        var hudId = hud.GetInstanceID();
+        if (!PlanetRiskTextPairCache.TryGetValue(hudId, out var cached))
+        {
+            return false;
+        }
+
+        var riskText = hud.planetRiskLevelText;
+        if (!ReferenceEquals(cached.HudRiskText, riskText) ||
+            cached.HudRiskTextId != GetComponentInstanceId(riskText))
+        {
+            PlanetRiskTextPairCache.Remove(hudId);
+            return false;
+        }
+
+        title = IsCachedPlanetRiskTextValid(cached.Title, cached.TitleParentId) ? cached.Title : null;
+        value = IsCachedPlanetRiskTextValid(cached.Value, cached.ValueParentId) ? cached.Value : null;
+        if (title != null || value != null)
+        {
+            return true;
+        }
+
+        PlanetRiskTextPairCache.Remove(hudId);
+        return false;
+    }
+
+    private static void CachePlanetRiskTextPair(HUDManager hud, TMP_Text? title, TMP_Text? value)
+    {
+        if (title == null && value == null)
+        {
+            return;
+        }
+
+        var riskText = hud.planetRiskLevelText;
+        PlanetRiskTextPairCache[hud.GetInstanceID()] = new PlanetRiskTextPair
+        {
+            HudRiskText = riskText,
+            HudRiskTextId = GetComponentInstanceId(riskText),
+            Title = title,
+            Value = value,
+            TitleParentId = GetParentInstanceId(title),
+            ValueParentId = GetParentInstanceId(value)
+        };
+    }
+
+    private static bool IsCachedPlanetRiskTextValid(TMP_Text? text, int parentId)
+    {
+        return text != null && GetParentInstanceId(text) == parentId;
+    }
+
+    private static int GetComponentInstanceId(Component? component)
+    {
+        return component == null ? 0 : component.GetInstanceID();
+    }
+
+    private static TMP_Text? FindPlanetRiskTitle(HUDManager hud)
+    {
+        if (TryGetCachedPlanetRiskTextPair(hud, out var title, out _) && title != null)
+        {
+            return title;
+        }
+
+        title = FindPlanetRiskTitleUncached(hud);
+        if (title != null)
+        {
+            CachePlanetRiskTextPair(hud, title, FindPlanetRiskValueSibling(title));
+        }
+
+        return title;
+    }
+
+    private static TMP_Text? FindPlanetRiskTitleUncached(HUDManager hud)
+    {
+        TMP_Text? best = null;
+        var bestScore = float.MaxValue;
+        var riskText = hud.planetRiskLevelText;
+        if (IsPlanetRiskTitleObject(riskText) || IsPlanetRiskTitle(riskText?.text))
+        {
+            return riskText;
+        }
+
+        var sibling = FindPlanetRiskTitleSibling(riskText);
+        if (sibling != null)
+        {
+            return sibling;
+        }
+
+        try
+        {
+            FillScanBuffer(hud.gameObject, includeInactive: true, PlanetRiskTmpTextScanBuffer);
+            foreach (var text in PlanetRiskTmpTextScanBuffer)
+            {
+                if (ReferenceEquals(text, riskText))
+                {
+                    continue;
+                }
+
+                if (IsPlanetRiskTitle(text.text))
+                {
+                    if (riskText == null)
+                    {
+                        return text;
+                    }
+
+                    var score = ScorePlanetRiskTitleCandidate(text, riskText);
+                    if (score < bestScore)
+                    {
+                        bestScore = score;
+                        best = text;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            PlanetRiskTmpTextScanBuffer.Clear();
+        }
+
+        return best;
+    }
+
+    private static TMP_Text? FindPlanetRiskValue(HUDManager hud, TMP_Text text, TMP_Text? title)
+    {
+        if (IsPlanetRiskValueObject(text))
+        {
+            return text;
+        }
+
+        var value = FindPlanetRiskValueSibling(text) ?? FindPlanetRiskValueSibling(title);
+        if (value != null)
+        {
+            return value;
+        }
+
+        var riskText = hud.planetRiskLevelText;
+        if (riskText != null && !ReferenceEquals(riskText, title) && !IsPlanetRiskTitleObject(riskText))
+        {
+            return riskText;
+        }
+
+        return null;
+    }
+
+    private static TMP_Text? FindPlanetRiskTitleSibling(TMP_Text? riskText)
+    {
+        var parent = riskText?.transform.parent;
+        if (parent == null)
+        {
+            return null;
+        }
+
+        var title = parent.Find(PlanetRiskTitleObjectName)?.GetComponent<TMP_Text>();
+        if (title != null && !ReferenceEquals(title, riskText))
+        {
+            return title;
+        }
+
+        try
+        {
+            FillScanBuffer(parent.gameObject, includeInactive: true, PlanetRiskTmpTextScanBuffer);
+            foreach (var text in PlanetRiskTmpTextScanBuffer)
+            {
+                if (text == null || ReferenceEquals(text, riskText))
+                {
+                    continue;
+                }
+
+                if (string.Equals(text.name, PlanetRiskTitleObjectName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return text;
+                }
+            }
+        }
+        finally
+        {
+            PlanetRiskTmpTextScanBuffer.Clear();
+        }
+
+        return null;
+    }
+
+    private static TMP_Text? FindPlanetRiskValueSibling(TMP_Text? text)
+    {
+        var parent = text?.transform.parent;
+        if (parent == null)
+        {
+            return null;
+        }
+
+        var value = parent.Find(PlanetRiskValueObjectName)?.GetComponent<TMP_Text>();
+        if (value != null && !ReferenceEquals(value, text))
+        {
+            return value;
+        }
+
+        try
+        {
+            FillScanBuffer(parent.gameObject, includeInactive: true, PlanetRiskTmpTextScanBuffer);
+            foreach (var childText in PlanetRiskTmpTextScanBuffer)
+            {
+                if (childText == null || ReferenceEquals(childText, text))
+                {
+                    continue;
+                }
+
+                if (IsPlanetRiskValueObject(childText))
+                {
+                    return childText;
+                }
+            }
+        }
+        finally
+        {
+            PlanetRiskTmpTextScanBuffer.Clear();
+        }
+
+        return null;
+    }
+
+    private static float ScorePlanetRiskTitleCandidate(TMP_Text title, TMP_Text riskText)
+    {
+        var titlePosition = title.transform.position;
+        var riskPosition = riskText.transform.position;
+        var score = Mathf.Abs(titlePosition.y - riskPosition.y) * 1000f + Mathf.Abs(titlePosition.x - riskPosition.x);
+        if (title.transform.parent == riskText.transform.parent)
+        {
+            score -= 250f;
+        }
+
+        if (title.gameObject.activeInHierarchy)
+        {
+            score -= 100f;
+        }
+
+        return score;
+    }
+
+    private static bool IsPlanetRiskTitle(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var trimmed = StripSimpleRichTextTags(text).Trim();
+        return string.Equals(trimmed, "HAZARD LEVEL:", StringComparison.OrdinalIgnoreCase) ||
+               trimmed.StartsWith("HAZARD LEVEL:", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(trimmed, "Risk level:", StringComparison.OrdinalIgnoreCase) ||
+               trimmed.StartsWith("Risk level:", StringComparison.OrdinalIgnoreCase) ||
+               trimmed.StartsWith(PlanetRiskTitleLocalizedText, StringComparison.Ordinal) ||
+               trimmed.StartsWith("\u98ce\u9669\u7ea7\u522b:", StringComparison.Ordinal) ||
+               string.Equals(trimmed, "\u98ce\u9669\u7ea7\u522b\uff1a", StringComparison.Ordinal) ||
+               string.Equals(trimmed, "\u98ce\u9669\u7ea7\u522b:", StringComparison.Ordinal) ||
+               string.Equals(trimmed, "\u5371\u9669\u7b49\u7ea7\uff1a", StringComparison.Ordinal) ||
+               string.Equals(trimmed, "\u5371\u9669\u7b49\u7ea7:", StringComparison.Ordinal);
+    }
+
+    private static bool HasPlanetRiskObjectName(TMP_Text? text)
+    {
+        return IsPlanetRiskTitleObject(text) || IsPlanetRiskValueObject(text);
+    }
+
+    private static bool IsPlanetRiskTitleObject(TMP_Text? text)
+    {
+        return text != null && string.Equals(text.name, PlanetRiskTitleObjectName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPlanetRiskValueObject(TMP_Text? text)
+    {
+        return text != null && string.Equals(text.name, PlanetRiskValueObjectName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void ApplyPlanetRiskTitlePresentation(TMP_Text title)
+    {
+        title.richText = true;
+        title.enableWordWrapping = false;
+        title.overflowMode = TextOverflowModes.Overflow;
+        title.alignment = TextAlignmentOptions.MidlineLeft;
+    }
+
+    private static void SetPlanetRiskTitleText(TMP_Text title, string value)
+    {
+        var combinedText = PlanetRiskTitleLocalizedText + value;
+        if (!string.Equals(title.text, combinedText, StringComparison.Ordinal))
+        {
+            _planetRiskTextMutationDepth++;
+            try
+            {
+                title.text = combinedText;
+            }
+            finally
+            {
+                _planetRiskTextMutationDepth--;
+            }
+        }
+
+        FontFallbackService.ApplyFallback(title, combinedText);
+    }
+
+    private static void SetPlanetRiskTitleOnlyText(TMP_Text title)
+    {
+        if (!string.Equals(title.text, PlanetRiskTitleLocalizedText, StringComparison.Ordinal))
+        {
+            _planetRiskTextMutationDepth++;
+            try
+            {
+                title.text = PlanetRiskTitleLocalizedText;
+            }
+            finally
+            {
+                _planetRiskTextMutationDepth--;
+            }
+        }
+
+        FontFallbackService.ApplyFallback(title, PlanetRiskTitleLocalizedText);
+    }
+
+    private static void SetPlanetRiskValueText(TMP_Text valueText, string value)
+    {
+        _planetRiskTextMutationDepth++;
+        try
+        {
+            valueText.text = value;
+        }
+        finally
+        {
+            _planetRiskTextMutationDepth--;
+        }
+    }
+
+    private static void LogPlanetRiskMerge(string reason, TMP_Text riskText, TMP_Text title, string value)
+    {
+        if (!Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            return;
+        }
+
+        if (_planetRiskMergeLogRemaining <= 0)
+        {
+            return;
+        }
+
+        _planetRiskMergeLogRemaining--;
+        Plugin.Log.LogInfo(
+            $"PlanetRiskMerge[{reason}] value={value} titlePath={BuildTransformPath(title.transform)} titleText={title.text} valuePath={BuildTransformPath(riskText.transform)} valueObject={riskText.name} expectedValueObject={PlanetRiskValueObjectName}");
+    }
+
+    private static string BuildTransformPath(Transform? transform)
+    {
+        if (transform == null)
+        {
+            return "<null>";
+        }
+
+        var parts = new Stack<string>();
+        var current = transform;
+        while (current != null)
+        {
+            parts.Push(current.name);
+            current = current.parent;
+        }
+
+        return string.Join("/", parts);
+    }
+
+    private static string NormalizePlanetRiskValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = ExtractPlanetRiskValue(StripSimpleRichTextTags(value).Trim());
+        if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.PlanetInfo, trimmed, out var translated))
+        {
+            return ExtractPlanetRiskValue(translated.Trim());
+        }
+
+        return trimmed;
+    }
+
+    private static string ExtractPlanetRiskValue(string value)
+    {
+        foreach (var label in new[]
+                 {
+                     PlanetRiskTitleLocalizedText,
+                     "\u98ce\u9669\u7ea7\u522b:",
+                     "\u5371\u9669\u7b49\u7ea7\uff1a",
+                     "\u5371\u9669\u7b49\u7ea7:",
+                     "HAZARD LEVEL:",
+                     "Risk level:"
+                 })
+        {
+            if (value.StartsWith(label, StringComparison.OrdinalIgnoreCase))
+            {
+                return value[label.Length..].Trim();
+            }
+        }
+
+        return value;
+    }
+
+    private static string StripSimpleRichTextTags(string value)
+    {
+        if (value.IndexOf('<') < 0)
+        {
+            return value;
+        }
+
+        var result = new System.Text.StringBuilder(value.Length);
+        var inTag = false;
+        foreach (var ch in value)
+        {
+            if (ch == '<')
+            {
+                inTag = true;
+                continue;
+            }
+
+            if (inTag)
+            {
+                if (ch == '>')
+                {
+                    inTag = false;
+                }
+
+                continue;
+            }
+
+            result.Append(ch);
+        }
+
+        return result.ToString();
     }
 
     public static (int translated, int seen) TranslateHudChatPrompts(HUDManager hud, string reason)
@@ -741,7 +1466,12 @@ internal static class TargetedUiTranslator
 
         if (string.Equals(source, state.LastTranslatedText, StringComparison.Ordinal))
         {
-            ApplyTmpStyleRepairs(text, source, "TargetedUiTranslator.TMP.HudControlTip");
+            if (!WasTranslationProcessed(text, source))
+            {
+                ApplyTmpStyleRepairs(text, source, "TargetedUiTranslator.TMP.HudControlTip");
+                MarkTranslationProcessed(text, source);
+            }
+
             Plugin.LogTargetedTranslation(reason, 0, 1);
             return (0, 1);
         }
@@ -751,9 +1481,13 @@ internal static class TargetedUiTranslator
             !string.Equals(source, state.LastTranslatedText, StringComparison.Ordinal))
         {
             text.text = state.LastTranslatedText;
-            ApplyTmpStyleRepairs(text, state.LastTranslatedText, "TargetedUiTranslator.TMP.HudControlTip");
+            if (!WasTranslationProcessed(text, state.LastTranslatedText))
+            {
+                ApplyTmpStyleRepairs(text, state.LastTranslatedText, "TargetedUiTranslator.TMP.HudControlTip");
+                MarkTranslationProcessed(text, state.LastTranslatedText);
+            }
+
             Plugin.ReportTranslationHit();
-            MarkTranslationProcessed(text, state.LastTranslatedText);
             Plugin.LogTargetedTranslation(reason, 1, 1);
             return (1, 1);
         }
@@ -791,16 +1525,24 @@ internal static class TargetedUiTranslator
         var totalSeen = 0;
         Add(TranslateGameObject(vehicle.gameObject, seenObjects));
 
-        foreach (var trigger in vehicle.GetComponentsInChildren<InteractTrigger>(true))
+        try
         {
-            if (trigger == null)
+            FillScanBuffer(vehicle.gameObject, includeInactive: true, InteractTriggerScanBuffer);
+            foreach (var trigger in InteractTriggerScanBuffer)
             {
-                continue;
-            }
+                if (trigger == null)
+                {
+                    continue;
+                }
 
-            TranslateInteractTriggerField(trigger.hoverTip, out trigger.hoverTip, ref translated, ref totalSeen);
-            TranslateInteractTriggerField(trigger.disabledHoverTip, out trigger.disabledHoverTip, ref translated, ref totalSeen);
-            TranslateInteractTriggerField(trigger.holdTip, out trigger.holdTip, ref translated, ref totalSeen);
+                TranslateInteractTriggerField(trigger.hoverTip, out trigger.hoverTip, ref translated, ref totalSeen);
+                TranslateInteractTriggerField(trigger.disabledHoverTip, out trigger.disabledHoverTip, ref translated, ref totalSeen);
+                TranslateInteractTriggerField(trigger.holdTip, out trigger.holdTip, ref translated, ref totalSeen);
+            }
+        }
+        finally
+        {
+            InteractTriggerScanBuffer.Clear();
         }
 
         Plugin.LogTargetedTranslation(reason, translated, totalSeen);
@@ -911,9 +1653,21 @@ internal static class TargetedUiTranslator
 
             foreach (var root in scene.GetRootGameObjects())
             {
-                TranslateAutosaveText(root.GetComponentsInChildren<TMP_Text>(true), seen, ref translated, ref totalSeen);
-                TranslateAutosaveText(root.GetComponentsInChildren<Text>(true), seen, ref translated, ref totalSeen);
-                TranslateAutosaveText(root.GetComponentsInChildren<TextMesh>(true), seen, ref translated, ref totalSeen);
+                try
+                {
+                    FillScanBuffer(root, includeInactive: true, TmpTextScanBuffer);
+                    TranslateAutosaveText(TmpTextScanBuffer, seen, ref translated, ref totalSeen);
+
+                    FillScanBuffer(root, includeInactive: true, UiTextScanBuffer);
+                    TranslateAutosaveText(UiTextScanBuffer, seen, ref translated, ref totalSeen);
+
+                    FillScanBuffer(root, includeInactive: true, TextMeshScanBuffer);
+                    TranslateAutosaveText(TextMeshScanBuffer, seen, ref translated, ref totalSeen);
+                }
+                finally
+                {
+                    ClearScanBuffers();
+                }
             }
         }
 
@@ -1074,29 +1828,41 @@ internal static class TargetedUiTranslator
         var translated = 0;
         var totalSeen = 0;
 
-        foreach (var dropdown in root.GetComponentsInChildren<TMP_Dropdown>(includeInactive))
+        try
         {
-            TranslateTmpDropdown(dropdown, ref translated);
-        }
+            FillScanBuffer(root, includeInactive, TmpDropdownScanBuffer);
+            foreach (var dropdown in TmpDropdownScanBuffer)
+            {
+                TranslateTmpDropdown(dropdown, ref translated);
+            }
 
-        foreach (var dropdown in root.GetComponentsInChildren<Dropdown>(includeInactive))
-        {
-            TranslateDropdown(dropdown, ref translated);
-        }
+            FillScanBuffer(root, includeInactive, DropdownScanBuffer);
+            foreach (var dropdown in DropdownScanBuffer)
+            {
+                TranslateDropdown(dropdown, ref translated);
+            }
 
-        foreach (var text in root.GetComponentsInChildren<TMP_Text>(includeInactive))
-        {
-            TranslateTmp(text, seenObjects, ref translated, ref totalSeen);
-        }
+            FillScanBuffer(root, includeInactive, TmpTextScanBuffer);
+            foreach (var text in TmpTextScanBuffer)
+            {
+                TranslateTmp(text, seenObjects, ref translated, ref totalSeen);
+            }
 
-        foreach (var text in root.GetComponentsInChildren<Text>(includeInactive))
-        {
-            TranslateUiText(text, seenObjects, ref translated, ref totalSeen);
-        }
+            FillScanBuffer(root, includeInactive, UiTextScanBuffer);
+            foreach (var text in UiTextScanBuffer)
+            {
+                TranslateUiText(text, seenObjects, ref translated, ref totalSeen);
+            }
 
-        foreach (var text in root.GetComponentsInChildren<TextMesh>(includeInactive))
+            FillScanBuffer(root, includeInactive, TextMeshScanBuffer);
+            foreach (var text in TextMeshScanBuffer)
+            {
+                TranslateTextMesh(text, seenObjects, ref translated, ref totalSeen);
+            }
+        }
+        finally
         {
-            TranslateTextMesh(text, seenObjects, ref translated, ref totalSeen);
+            ClearScanBuffers();
         }
 
         return (translated, totalSeen);
@@ -1200,7 +1966,9 @@ internal static class TargetedUiTranslator
         bool includeInactive,
         TranslationCounts counts)
     {
-        foreach (var dropdown in root.GetComponentsInChildren<TMP_Dropdown>(includeInactive))
+        var tmpDropdowns = new List<TMP_Dropdown>();
+        root.GetComponentsInChildren(includeInactive, tmpDropdowns);
+        foreach (var dropdown in tmpDropdowns)
         {
             TranslateTmpDropdown(dropdown, ref counts.Translated);
             if (AdvanceMenuBudget(counts))
@@ -1209,7 +1977,9 @@ internal static class TargetedUiTranslator
             }
         }
 
-        foreach (var dropdown in root.GetComponentsInChildren<Dropdown>(includeInactive))
+        var dropdowns = new List<Dropdown>();
+        root.GetComponentsInChildren(includeInactive, dropdowns);
+        foreach (var dropdown in dropdowns)
         {
             TranslateDropdown(dropdown, ref counts.Translated);
             if (AdvanceMenuBudget(counts))
@@ -1218,7 +1988,9 @@ internal static class TargetedUiTranslator
             }
         }
 
-        foreach (var text in root.GetComponentsInChildren<TMP_Text>(includeInactive))
+        var tmpTexts = new List<TMP_Text>();
+        root.GetComponentsInChildren(includeInactive, tmpTexts);
+        foreach (var text in tmpTexts)
         {
             TranslateTmp(text, seenObjects, ref counts.Translated, ref counts.Seen);
             if (AdvanceMenuBudget(counts))
@@ -1227,7 +1999,9 @@ internal static class TargetedUiTranslator
             }
         }
 
-        foreach (var text in root.GetComponentsInChildren<Text>(includeInactive))
+        var uiTexts = new List<Text>();
+        root.GetComponentsInChildren(includeInactive, uiTexts);
+        foreach (var text in uiTexts)
         {
             TranslateUiText(text, seenObjects, ref counts.Translated, ref counts.Seen);
             if (AdvanceMenuBudget(counts))
@@ -1236,7 +2010,9 @@ internal static class TargetedUiTranslator
             }
         }
 
-        foreach (var text in root.GetComponentsInChildren<TextMesh>(includeInactive))
+        var textMeshes = new List<TextMesh>();
+        root.GetComponentsInChildren(includeInactive, textMeshes);
+        foreach (var text in textMeshes)
         {
             TranslateTextMesh(text, seenObjects, ref counts.Translated, ref counts.Seen);
             if (AdvanceMenuBudget(counts))
@@ -1249,7 +2025,7 @@ internal static class TargetedUiTranslator
     private static bool AdvanceMenuBudget(TranslationCounts counts)
     {
         counts.WorkThisFrame++;
-        if (counts.WorkThisFrame < MenuTranslationWorkBudgetPerFrame)
+        if (counts.WorkThisFrame < RuntimePerformanceSettings.MenuTranslationWorkBudgetPerFrame)
         {
             return false;
         }
@@ -1265,29 +2041,41 @@ internal static class TargetedUiTranslator
             return;
         }
 
-        foreach (var dropdown in root.GetComponentsInChildren<TMP_Dropdown>(includeInactive))
+        try
         {
-            TranslateTmpDropdownOptionsFastExact(dropdown);
-        }
+            FillScanBuffer(root, includeInactive, TmpDropdownScanBuffer);
+            foreach (var dropdown in TmpDropdownScanBuffer)
+            {
+                TranslateTmpDropdownOptionsFastExact(dropdown);
+            }
 
-        foreach (var dropdown in root.GetComponentsInChildren<Dropdown>(includeInactive))
-        {
-            TranslateDropdownOptionsFastExact(dropdown);
-        }
+            FillScanBuffer(root, includeInactive, DropdownScanBuffer);
+            foreach (var dropdown in DropdownScanBuffer)
+            {
+                TranslateDropdownOptionsFastExact(dropdown);
+            }
 
-        foreach (var text in root.GetComponentsInChildren<TMP_Text>(includeInactive))
-        {
-            TranslateTmpOpenFrameFast(text);
-        }
+            FillScanBuffer(root, includeInactive, TmpTextScanBuffer);
+            foreach (var text in TmpTextScanBuffer)
+            {
+                TranslateTmpOpenFrameFast(text);
+            }
 
-        foreach (var text in root.GetComponentsInChildren<Text>(includeInactive))
-        {
-            TranslateUiTextOpenFrameFast(text);
-        }
+            FillScanBuffer(root, includeInactive, UiTextScanBuffer);
+            foreach (var text in UiTextScanBuffer)
+            {
+                TranslateUiTextOpenFrameFast(text);
+            }
 
-        foreach (var text in root.GetComponentsInChildren<TextMesh>(includeInactive))
+            FillScanBuffer(root, includeInactive, TextMeshScanBuffer);
+            foreach (var text in TextMeshScanBuffer)
+            {
+                TranslateTextMeshOpenFrameFast(text);
+            }
+        }
+        finally
         {
-            TranslateTextMeshOpenFrameFast(text);
+            ClearScanBuffers();
         }
     }
 
@@ -1298,7 +2086,7 @@ internal static class TargetedUiTranslator
             return;
         }
 
-        if (!TranslationService.TryTranslateFastExact(text.text, out var translated) ||
+        if (!TryTranslateFastUiText(text.text, out var translated) ||
             string.Equals(text.text, translated, StringComparison.Ordinal))
         {
             return;
@@ -1313,7 +2101,7 @@ internal static class TargetedUiTranslator
     private static void TranslateUiTextOpenFrameFast(Text? text)
     {
         if (text == null ||
-            !TranslationService.TryTranslateFastExact(text.text, out var translated) ||
+            !TryTranslateFastUiText(text.text, out var translated) ||
             string.Equals(text.text, translated, StringComparison.Ordinal))
         {
             return;
@@ -1327,7 +2115,7 @@ internal static class TargetedUiTranslator
     private static void TranslateTextMeshOpenFrameFast(TextMesh? text)
     {
         if (text == null ||
-            !TranslationService.TryTranslateFastExact(text.text, out var translated) ||
+            !TryTranslateFastUiText(text.text, out var translated) ||
             string.Equals(text.text, translated, StringComparison.Ordinal))
         {
             return;
@@ -1350,7 +2138,7 @@ internal static class TargetedUiTranslator
         {
             var option = dropdown.options[i];
             if (option == null ||
-                !TranslationService.TryTranslateFastExact(option.text, out var translated) ||
+                !TryTranslateFastUiText(option.text, out var translated) ||
                 string.Equals(option.text, translated, StringComparison.Ordinal))
             {
                 continue;
@@ -1379,7 +2167,7 @@ internal static class TargetedUiTranslator
         {
             var option = dropdown.options[i];
             if (option == null ||
-                !TranslationService.TryTranslateFastExact(option.text, out var translated) ||
+                !TryTranslateFastUiText(option.text, out var translated) ||
                 string.Equals(option.text, translated, StringComparison.Ordinal))
             {
                 continue;
@@ -1440,6 +2228,7 @@ internal static class TargetedUiTranslator
         }
 
         totalSeen++;
+        var alreadyProcessed = WasTranslationProcessed(text, text.text);
         if (TranslationService.TryTranslateKnownDynamicTextTargeted(domain, text.text, out var value) &&
             !string.Equals(text.text, value, StringComparison.Ordinal))
         {
@@ -1448,6 +2237,11 @@ internal static class TargetedUiTranslator
             translated++;
             Plugin.ReportTranslationHit();
             MarkTranslationProcessed(text, value);
+            return;
+        }
+
+        if (alreadyProcessed)
+        {
             return;
         }
 
@@ -1465,6 +2259,11 @@ internal static class TargetedUiTranslator
         if (IsInputFieldTextComponent(text))
         {
             totalSeen++;
+            if (WasTranslationProcessed(text, text.text))
+            {
+                return;
+            }
+
             ApplyTmpStyleRepairs(text, text.text, "TargetedUiTranslator.TMP.Input");
             MarkTranslationProcessed(text, text.text);
             return;
@@ -1473,14 +2272,23 @@ internal static class TargetedUiTranslator
         if (IsLobbySlotDynamicText(text))
         {
             totalSeen++;
+            if (WasTranslationProcessed(text, text.text))
+            {
+                return;
+            }
+
             ApplyTmpStyleRepairs(text, text.text, "TargetedUiTranslator.TMP.Lobby");
             MarkTranslationProcessed(text, text.text);
             return;
         }
 
         totalSeen++;
-        var alreadyTranslated = WasTranslationProcessed(text, text.text);
-        if (!alreadyTranslated && TryTranslateStaticUiText(text.text, out var value))
+        if (WasTranslationProcessed(text, text.text))
+        {
+            return;
+        }
+
+        if (TryTranslateStaticUiText(text.text, out var value))
         {
             text.text = value;
             ApplyTmpStyleRepairs(text, value, "TargetedUiTranslator.TMP");
@@ -1491,11 +2299,7 @@ internal static class TargetedUiTranslator
         else
         {
             ApplyTmpStyleRepairs(text, text.text, "TargetedUiTranslator.TMP");
-            if (!alreadyTranslated)
-            {
-                RuntimeTextCollector.Record(text, text.text);
-            }
-
+            RuntimeTextCollector.Record(text, text.text);
             MarkTranslationProcessed(text, text.text);
         }
     }
@@ -1508,8 +2312,12 @@ internal static class TargetedUiTranslator
         }
 
         totalSeen++;
-        var alreadyTranslated = WasTranslationProcessed(text, text.text);
-        if (!alreadyTranslated && TryTranslateStaticUiText(text.text, out var value))
+        if (WasTranslationProcessed(text, text.text))
+        {
+            return;
+        }
+
+        if (TryTranslateStaticUiText(text.text, out var value))
         {
             text.text = value;
             ApplyUiStyleRepairs(text, "TargetedUiTranslator.UI.Text", value);
@@ -1520,11 +2328,7 @@ internal static class TargetedUiTranslator
         else
         {
             ApplyUiStyleRepairs(text, "TargetedUiTranslator.UI.Text", text.text);
-            if (!alreadyTranslated)
-            {
-                RuntimeTextCollector.Record(text, text.text);
-            }
-
+            RuntimeTextCollector.Record(text, text.text);
             MarkTranslationProcessed(text, text.text);
         }
     }
@@ -1537,8 +2341,12 @@ internal static class TargetedUiTranslator
         }
 
         totalSeen++;
-        var alreadyTranslated = WasTranslationProcessed(text, text.text);
-        if (!alreadyTranslated && TryTranslateStaticUiText(text.text, out var value))
+        if (WasTranslationProcessed(text, text.text))
+        {
+            return;
+        }
+
+        if (TryTranslateStaticUiText(text.text, out var value))
         {
             text.text = value;
             ApplyTextMeshStyleRepairs(text, "TargetedUiTranslator.TextMesh", value);
@@ -1555,7 +2363,7 @@ internal static class TargetedUiTranslator
 
     private static bool TryTranslateStaticUiText(string? source, out string translated)
     {
-        if (TranslationService.TryTranslateFastExact(source, out translated))
+        if (TryTranslateFastUiText(source, out translated))
         {
             return true;
         }
@@ -1568,52 +2376,104 @@ internal static class TargetedUiTranslator
         return AutomaticTranslationService.TryTranslateOrQueue(source, out translated);
     }
 
+    private static bool TryTranslateFastUiText(string? source, out string translated)
+    {
+        if (TranslationService.TryTranslateKnownDynamicTextFast(source, out translated))
+        {
+            return true;
+        }
+
+        return TranslationService.TryTranslateFastExact(source, out translated);
+    }
+
     private static bool WasTranslationProcessed(Component component, string? text)
     {
+        if (!RuntimePerformanceSettings.EnableTargetedUiStyleRepairFastGate)
+        {
+            return false;
+        }
+
         var id = component.GetInstanceID();
-        var state = new ProcessedTextState(GetParentInstanceId(component), GetTextHash(text));
+        var state = new ProcessedTextState(GetParentInstanceId(component), GetTextHash(text), GetStyleHash(component));
         return TranslationProcessedCache.TryGetValue(id, out var cached) &&
             cached.ParentId == state.ParentId &&
-            cached.TextHash == state.TextHash;
+            cached.TextHash == state.TextHash &&
+            cached.StyleHash == state.StyleHash;
     }
 
     private static void MarkTranslationProcessed(Component component, string? text)
     {
-        if (TranslationProcessedCache.Count >= ProcessedTextCacheLimit)
+        var componentId = component.GetInstanceID();
+        if (TranslationProcessedCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit &&
+            !TranslationProcessedCache.ContainsKey(componentId))
         {
-            TranslationProcessedCache.Clear();
+            return;
         }
 
-        TranslationProcessedCache[component.GetInstanceID()] = new ProcessedTextState(
+        TranslationProcessedCache[componentId] = new ProcessedTextState(
             GetParentInstanceId(component),
-            GetTextHash(text));
+            GetTextHash(text),
+            GetStyleHash(component));
+    }
+
+    private static int GetStyleHash(Component component)
+    {
+        unchecked
+        {
+            if (component is TMP_Text tmp)
+            {
+                var hash = 17;
+                hash = (hash * 31) + (tmp.font == null ? 0 : tmp.font.GetInstanceID());
+                hash = (hash * 31) + tmp.color.GetHashCode();
+                hash = (hash * 31) + tmp.fontSize.GetHashCode();
+                return hash;
+            }
+
+            if (component is Text uiText)
+            {
+                var hash = 23;
+                hash = (hash * 31) + (uiText.font == null ? 0 : uiText.font.GetInstanceID());
+                hash = (hash * 31) + uiText.color.GetHashCode();
+                hash = (hash * 31) + uiText.fontSize;
+                return hash;
+            }
+
+            if (component is TextMesh textMesh)
+            {
+                var hash = 29;
+                hash = (hash * 31) + (textMesh.font == null ? 0 : textMesh.font.GetInstanceID());
+                hash = (hash * 31) + textMesh.color.GetHashCode();
+                hash = (hash * 31) + textMesh.fontSize.GetHashCode();
+                return hash;
+            }
+
+            return 0;
+        }
     }
 
     private static void ApplyTmpStyleRepairs(TMP_Text text, string? value, string stage)
     {
         FontFallbackService.ApplyFallback(text, value);
-        FontFallbackService.ApplySystemOnlineProbeFix(text, stage, value);
         AlertTextureReplacementService.TryReplaceSystemOnlineText(text, stage);
         CustomLocalizationExtensionService.ApplyStyle(text, value, allowRegexStyle: true);
     }
 
     private static void ApplyUiStyleRepairs(Text text, string stage, string? value)
     {
-        FontFallbackService.ApplySystemOnlineProbeFix(text, stage, value);
         AlertTextureReplacementService.TryReplaceSystemOnlineText(text, stage);
         CustomLocalizationExtensionService.ApplyStyle(text, value, allowRegexStyle: true);
     }
 
     private static void ApplyTextMeshStyleRepairs(TextMesh text, string stage, string? value)
     {
-        FontFallbackService.ApplySystemOnlineProbeFix(text, stage, value);
         AlertTextureReplacementService.TryReplaceSystemOnlineText(text, stage);
         CustomLocalizationExtensionService.ApplyStyle(text, value, allowRegexStyle: true);
     }
 
-    private static int GetParentInstanceId(Component component)
+    private static int GetParentInstanceId(Component? component)
     {
-        return component.transform.parent == null ? 0 : component.transform.parent.GetInstanceID();
+        var parent = component == null ? null : component.transform.parent;
+        return parent == null ? 0 : parent.GetInstanceID();
     }
 
     private static int GetTextHash(string? text)
@@ -1728,9 +2588,9 @@ internal static class TargetedUiTranslator
 
     private static void MarkDropdownOptionProcessed(Dictionary<int, List<int>> cache, int dropdownId, int optionIndex, string? text)
     {
-        if (cache.Count >= ProcessedTextCacheLimit)
+        if (cache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !cache.ContainsKey(dropdownId))
         {
-            cache.Clear();
+            return;
         }
 
         if (!cache.TryGetValue(dropdownId, out var hashes))

@@ -33,7 +33,6 @@ internal static class DirectTextLocalizationService
 
         text.text = translated;
         FontFallbackService.ApplyFallback(text, translated);
-        FontFallbackService.ApplySystemOnlineProbeFix(text, reason, translated);
         Plugin.ReportTranslationHit();
         return true;
     }

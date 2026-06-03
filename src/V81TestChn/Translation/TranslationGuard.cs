@@ -10,10 +10,11 @@ namespace V81TestChn;
 internal static class TranslationGuard
 {
     private const int MaxGlobalSetterTextLength = 1024;
-    private const int ComponentClassificationCacheLimit = 4096;
-    private static readonly HashSet<int> LoggedSkipComponents = new();
-    private static readonly Dictionary<int, CachedComponentClassification> ComponentClassificationCache = new();
+    private const int ComponentClassificationCacheLimit = 16384;
+    private static readonly HashSet<int> LoggedSkipComponents = new(512);
+    private static readonly Dictionary<int, CachedComponentClassification> ComponentClassificationCache = new(ComponentClassificationCacheLimit);
     private static ConfigEntry<bool>? _logTranslationGuardSkips;
+    private static bool _logTranslationGuardSkipsFast;
 
     private enum ComponentDecision
     {
@@ -50,12 +51,14 @@ internal static class TranslationGuard
             "LogTranslationGuardSkips",
             false,
             "记录 TranslationGuard 跳过文本的原因、对象路径和文本摘要。默认关闭，避免刷日志。");
+        _logTranslationGuardSkipsFast = _logTranslationGuardSkips.Value;
     }
 
     public static void Clear()
     {
         ClearRuntimeCaches();
         _logTranslationGuardSkips = null;
+        _logTranslationGuardSkipsFast = false;
     }
 
     public static void ClearRuntimeCaches()
@@ -125,16 +128,23 @@ internal static class TranslationGuard
             return true;
         }
 
+        if (TryGetTextOnlySkipReason(value, out reason) &&
+            !MaybeKnownDynamicTextCheap(value))
+        {
+            return true;
+        }
+
         if (TryGetComponentSkipReason(component, value, out reason))
         {
             return true;
         }
 
-        if (MaybeKnownDynamicTextCheap(value))
-        {
-            return false;
-        }
+        reason = string.Empty;
+        return false;
+    }
 
+    private static bool TryGetTextOnlySkipReason(string value, out string reason)
+    {
         var hasAsciiLetter = false;
         var asciiLetterCount = 0;
         var digitCount = 0;
@@ -191,6 +201,13 @@ internal static class TranslationGuard
             return true;
         }
 
+        if (!IsProtectedInputTextComponent(component) &&
+            ExternalEnglishCompatibilityService.CanHandleCheap(value))
+        {
+            reason = string.Empty;
+            return false;
+        }
+
         if (component.GetComponentInParent<TMP_InputField>(true) != null ||
             component.GetComponentInParent<InputField>(true) != null)
         {
@@ -236,6 +253,29 @@ internal static class TranslationGuard
         return false;
     }
 
+    private static bool IsProtectedInputTextComponent(Component component)
+    {
+        if (component is TMP_Text tmpText)
+        {
+            var tmpInput = tmpText.GetComponentInParent<TMP_InputField>(true);
+            if (tmpInput != null && ReferenceEquals(tmpInput.textComponent, tmpText))
+            {
+                return true;
+            }
+        }
+
+        if (component is Text uiText)
+        {
+            var uiInput = uiText.GetComponentInParent<InputField>(true);
+            if (uiInput != null && ReferenceEquals(uiInput.textComponent, uiText))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static bool TryGetCachedComponentDecision(Component component, out ComponentDecision decision, out string reason)
     {
         var id = component.GetInstanceID();
@@ -259,20 +299,19 @@ internal static class TranslationGuard
             return;
         }
 
-        if (ComponentClassificationCache.Count >= ComponentClassificationCacheLimit)
+        var id = component.GetInstanceID();
+        if (ComponentClassificationCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !ComponentClassificationCache.ContainsKey(id))
         {
-            ComponentClassificationCache.Clear();
+            return;
         }
 
-        ComponentClassificationCache[component.GetInstanceID()] = new CachedComponentClassification(
-            GetParentInstanceId(component),
-            decision,
-            reason);
+        ComponentClassificationCache[id] = new CachedComponentClassification(GetParentInstanceId(component), decision, reason);
     }
 
     private static int GetParentInstanceId(Component component)
     {
-        return component.transform.parent == null ? 0 : component.transform.parent.GetInstanceID();
+        var parent = component.transform == null ? null : component.transform.parent;
+        return parent == null ? 0 : parent.GetInstanceID();
     }
 
     private static bool TryGetExcludedNameToken(Transform? transform, out string matchedToken)
@@ -428,7 +467,13 @@ internal static class TranslationGuard
                IsShipMonitorText(value) ||
                IsPlanetInfoText(value) ||
                IsHostModWarningText(value) ||
+               IsCombatNotificationText(value) ||
                IsChatSystemMessageCheap(value);
+    }
+
+    private static bool IsCombatNotificationText(string? value)
+    {
+        return TranslationService.LooksLikeCombatNotificationTextCheap(value);
     }
 
     private static bool IsHostModWarningText(string? value)
@@ -480,7 +525,7 @@ internal static class TranslationGuard
 
     private static void LogSkipOnce(Component component, string? value, string reason)
     {
-        if (_logTranslationGuardSkips?.Value != true)
+        if (!_logTranslationGuardSkipsFast)
         {
             return;
         }

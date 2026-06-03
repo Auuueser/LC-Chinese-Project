@@ -26,6 +26,7 @@ internal static class FontFallbackAuditService
     private static int _remainingBudget;
     private static int _lastFrame = -1;
     private static int _loggedThisFrame;
+    private static bool _enabledFast;
     private static bool _disabledByRegexError;
     private static bool _initialized;
 
@@ -68,8 +69,9 @@ internal static class FontFallbackAuditService
             "字体诊断日志是否包含 TMP_TextInfo、材质编号和中文字符路由细节。");
 
         _remainingBudget = Math.Max(0, _budgetConfig.Value);
+        _enabledFast = _enabled.Value;
         _initialized = true;
-        if (_enabled.Value)
+        if (_enabledFast)
         {
             Plugin.Log.LogInfo($"FontFallbackAudit enabled; budget={_remainingBudget}, maxPerFrame={Math.Max(1, _maxPerFrameConfig.Value)}.");
         }
@@ -85,6 +87,7 @@ internal static class FontFallbackAuditService
         _remainingBudget = 0;
         _lastFrame = -1;
         _loggedThisFrame = 0;
+        _enabledFast = false;
         _disabledByRegexError = false;
         _initialized = false;
     }
@@ -175,7 +178,7 @@ internal static class FontFallbackAuditService
 
     private static bool IsActive()
     {
-        if (!_initialized || _enabled?.Value != true || _remainingBudget <= 0 || _disabledByRegexError)
+        if (!_initialized || !_enabledFast || _remainingBudget <= 0 || _disabledByRegexError)
         {
             return false;
         }

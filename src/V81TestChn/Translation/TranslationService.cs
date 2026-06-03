@@ -28,6 +28,7 @@ internal enum DynamicTextDomain
 internal static partial class TranslationService
 {
     private const int TerminalRollingWindowChars = 250;
+    private const int MaxTranslationResultCache = 8000;
 
     private enum KnownSlowCfgRegexKind
     {
@@ -73,9 +74,9 @@ internal static partial class TranslationService
     private static readonly List<RegexEntry> RegexEntries = new();
     private static readonly HashSet<string> RegexPatternSet = new(StringComparer.Ordinal);
     private static readonly HashSet<string> WarnedRegexTimeoutPatterns = new(StringComparer.Ordinal);
-    private static readonly Dictionary<string, string?> TranslationResultCache = new(StringComparer.Ordinal);
-    private static readonly Dictionary<string, string> CompositeTranslationResultCache = new(StringComparer.Ordinal);
-    private const int MaxTranslationResultCache = 8000;
+    private static readonly Dictionary<string, string?> TranslationResultCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
+    private static readonly Dictionary<string, string> CompositeTranslationResultCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
+    private static readonly HashSet<string> FastExactMissCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(25);
     private const string TemperatureUnitCelsius = "Celsius";
     private const string TemperatureUnitFahrenheit = "Fahrenheit";
@@ -644,6 +645,7 @@ internal static partial class TranslationService
     {
         TranslationResultCache.Clear();
         CompositeTranslationResultCache.Clear();
+        FastExactMissCache.Clear();
         _knownDynamicHitLogCount = 0;
     }
 
@@ -657,6 +659,7 @@ internal static partial class TranslationService
         WarnedRegexTimeoutPatterns.Clear();
         TranslationResultCache.Clear();
         CompositeTranslationResultCache.Clear();
+        FastExactMissCache.Clear();
 
         var loadedSources = new List<string>();
 
@@ -821,25 +824,39 @@ internal static partial class TranslationService
             return true;
         }
 
+        if (TryGetCachedTranslation(source, out translated, out var hasTranslation))
+        {
+            return hasTranslation;
+        }
+
+        if (FastExactMissCache.Contains(source))
+        {
+            return false;
+        }
+
         if (TryTranslateExact(source, out translated) ||
             TryTranslateForcedPhraseExact(source, out translated))
         {
             translated = SanitizeTranslatedText(translated);
-            return !string.Equals(translated, source, StringComparison.Ordinal);
+            if (!string.Equals(translated, source, StringComparison.Ordinal))
+            {
+                CacheTranslationResult(source, translated);
+                return true;
+            }
+
+            CacheFastExactMiss(source);
+            return false;
         }
 
         if (!CustomLocalizationExtensionService.PreferCustomTranslations &&
             CustomLocalizationExtensionService.TryTranslateFastExact(source, out translated))
         {
             translated = SanitizeTranslatedText(translated);
+            CacheTranslationResult(source, translated);
             return true;
         }
 
-        if (TryGetCachedTranslation(source, out translated, out var hasTranslation))
-        {
-            return hasTranslation;
-        }
-
+        CacheFastExactMiss(source);
         return false;
     }
 
@@ -1381,7 +1398,7 @@ internal static partial class TranslationService
         return true;
     }
 
-    private static string BuildTerminalLocalizedItemName(string item)
+    internal static string BuildTerminalLocalizedItemName(string item)
     {
         var sourceName = NormalizeTerminalArticleItem(item);
         if (TryExtractTerminalBilingualEnglish(sourceName, out var extractedEnglish))
@@ -2027,7 +2044,7 @@ internal static partial class TranslationService
                 : TranslateMapScreenDescriptionValue(value);
             return string.IsNullOrEmpty(localizedValue)
                 ? leading + chineseLabel
-                : leading + chineseLabel + " " + localizedValue;
+                : leading + chineseLabel + (chineseLabel.EndsWith("：", StringComparison.Ordinal) ? string.Empty : " ") + localizedValue;
         }
 
         if (trimmed.StartsWith("Orbiting:", StringComparison.Ordinal))
@@ -2062,22 +2079,22 @@ internal static partial class TranslationService
 
         if (trimmed.StartsWith("Celestial Body:", StringComparison.Ordinal))
         {
-            return Rewrite("Celestial Body:", "天体:", translateValue: false);
+            return Rewrite("Celestial Body:", "天体：", translateValue: false);
         }
 
         if (trimmed.StartsWith("CELESTIAL BODY:", StringComparison.Ordinal))
         {
-            return Rewrite("CELESTIAL BODY:", "天体:", translateValue: false);
+            return Rewrite("CELESTIAL BODY:", "天体：", translateValue: false);
         }
 
         if (trimmed.StartsWith("天体:", StringComparison.Ordinal))
         {
-            return Rewrite("天体:", "天体:", translateValue: false);
+            return Rewrite("天体:", "天体：", translateValue: false);
         }
 
         if (trimmed.StartsWith("天体：", StringComparison.Ordinal))
         {
-            return Rewrite("天体：", "天体:", translateValue: false);
+            return Rewrite("天体：", "天体：", translateValue: false);
         }
 
         if (trimmed.StartsWith("Weather:", StringComparison.Ordinal))
@@ -2237,18 +2254,18 @@ internal static partial class TranslationService
             return string.Empty;
         }
 
-        if (TryTranslateExact(value, out var translated))
+        var translated = TranslateKnownPlanetInfoValue(value);
+        if (!string.Equals(translated, value, StringComparison.Ordinal))
+        {
+            return SanitizeTranslatedText(translated);
+        }
+
+        if (TryTranslateExact(value, out translated))
         {
             return SanitizeTranslatedText(translated);
         }
 
         if (TryTranslateRegex(value, out translated))
-        {
-            return SanitizeTranslatedText(translated);
-        }
-
-        translated = TranslateKnownPlanetInfoValue(value);
-        if (!string.Equals(translated, value, StringComparison.Ordinal))
         {
             return SanitizeTranslatedText(translated);
         }
@@ -4583,17 +4600,55 @@ internal static partial class TranslationService
 
     private static void CacheTranslationResult(string source, string? translated)
     {
-        if (source.Length > 256 || TranslationResultCache.ContainsKey(source))
+        if (source.Length > 256 ||
+            TranslationResultCache.ContainsKey(source) ||
+            (translated == null && LooksLikeVolatileNegativeCacheSource(source)))
         {
             return;
         }
 
         if (TranslationResultCache.Count >= MaxTranslationResultCache)
         {
-            TranslationResultCache.Clear();
+            return;
         }
 
         TranslationResultCache[source] = translated;
+    }
+
+    private static void CacheFastExactMiss(string source)
+    {
+        if (source.Length > 256 ||
+            LooksLikeVolatileNegativeCacheSource(source) ||
+            FastExactMissCache.Contains(source))
+        {
+            return;
+        }
+
+        if (FastExactMissCache.Count >= MaxTranslationResultCache)
+        {
+            return;
+        }
+
+        FastExactMissCache.Add(source);
+    }
+
+    private static bool LooksLikeVolatileNegativeCacheSource(string source)
+    {
+        if (source.Length > 128)
+        {
+            return true;
+        }
+
+        foreach (var ch in source)
+        {
+            if (char.IsDigit(ch) ||
+                ch is '\r' or '\n' or ':' or '[' or ']' or '(' or ')' or '<' or '>' or '$' or '%' or '#' or '/' or '\\')
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool TryGetCachedCompositeTranslation(string source, out string translated)
@@ -4617,7 +4672,7 @@ internal static partial class TranslationService
 
         if (CompositeTranslationResultCache.Count >= MaxTranslationResultCache)
         {
-            CompositeTranslationResultCache.Clear();
+            return;
         }
 
         CompositeTranslationResultCache[source] = translated;

@@ -11,14 +11,17 @@ namespace V81TestChn;
 
 internal static class FontFallbackService
 {
-    private static readonly Dictionary<int, Color> BaselineColorByInstance = new();
-    private static readonly HashSet<int> FinalRenderSubscribedIds = new();
-    private static readonly Dictionary<int, TMP_Text> FinalRenderSubscribedTexts = new();
-    private static readonly HashSet<int> SpecialCaseTextIds = new();
-    private static readonly HashSet<int> FinalRenderRepairLoggedIds = new();
-    private static readonly HashSet<int> RenderAuditLoggedIds = new();
-    private static readonly HashSet<int> AppliedFallbackFontIds = new();
-    private static readonly HashSet<int> NormalizedFallbackMaterialIds = new();
+    private const int FallbackApplicationCacheLimit = 16384;
+    private const int FallbackSmallCacheInitialCapacity = 512;
+    private static readonly Dictionary<int, Color> BaselineColorByInstance = new(FallbackSmallCacheInitialCapacity);
+    private static readonly Dictionary<int, CachedFallbackApplication> FallbackApplicationCache = new(FallbackApplicationCacheLimit);
+    private static readonly HashSet<int> FinalRenderSubscribedIds = new(FallbackSmallCacheInitialCapacity);
+    private static readonly Dictionary<int, TMP_Text> FinalRenderSubscribedTexts = new(FallbackSmallCacheInitialCapacity);
+    private static readonly HashSet<int> SpecialCaseTextIds = new(FallbackSmallCacheInitialCapacity);
+    private static readonly HashSet<int> FinalRenderRepairLoggedIds = new(FallbackSmallCacheInitialCapacity);
+    private static readonly HashSet<int> RenderAuditLoggedIds = new(FallbackSmallCacheInitialCapacity);
+    private static readonly HashSet<int> AppliedFallbackFontIds = new(FallbackSmallCacheInitialCapacity);
+    private static readonly HashSet<int> NormalizedFallbackMaterialIds = new(FallbackSmallCacheInitialCapacity);
     private static int _renderAuditBudget = 80;
     private static int _finalRenderRepairLogBudget = 80;
     private static int _specialCaseLogBudget = 60;
@@ -33,6 +36,20 @@ internal static class FontFallbackService
     private static string? _pluginDir;
     private static bool _globalFallbackApplied;
     public static bool HasFallbackFont => _fallbackFont != null;
+
+    private readonly struct CachedFallbackApplication
+    {
+        public CachedFallbackApplication(string source, int fontId, bool cjkFallbackApplied)
+        {
+            Source = source;
+            FontId = fontId;
+            CjkFallbackApplied = cjkFallbackApplied;
+        }
+
+        public string Source { get; }
+        public int FontId { get; }
+        public bool CjkFallbackApplied { get; }
+    }
 
     public static void Shutdown()
     {
@@ -49,6 +66,7 @@ internal static class FontFallbackService
         FinalRenderSubscribedTexts.Clear();
         FinalRenderSubscribedIds.Clear();
         BaselineColorByInstance.Clear();
+        FallbackApplicationCache.Clear();
         SpecialCaseTextIds.Clear();
         FinalRenderRepairLoggedIds.Clear();
         RenderAuditLoggedIds.Clear();
@@ -247,9 +265,53 @@ internal static class FontFallbackService
         {
             return;
         }
-        
+
+        var displayedText = string.IsNullOrWhiteSpace(candidateText) ? text.text : candidateText;
+        if (TrySkipCachedFallbackApplication(text, displayedText))
+        {
+            return;
+        }
+
+        if (!ContainsCjk(displayedText))
+        {
+            CacheFallbackApplication(text, displayedText, cjkFallbackApplied: false);
+            return;
+        }
+
+        TextPatches.RegisterTmpColorHookCandidate(text);
         CaptureHealthyBaseline(text);
         ApplyFallbackToFont(text.font);
+        CacheFallbackApplication(text, displayedText, cjkFallbackApplied: true);
+    }
+
+    private static bool TrySkipCachedFallbackApplication(TMP_Text text, string? displayedText)
+    {
+        if (string.IsNullOrEmpty(displayedText) ||
+            !FallbackApplicationCache.TryGetValue(text.GetInstanceID(), out var cached) ||
+            cached.FontId != text.font.GetInstanceID())
+        {
+            return false;
+        }
+
+        return cached.CjkFallbackApplied ||
+               string.Equals(cached.Source, displayedText, StringComparison.Ordinal);
+    }
+
+    private static void CacheFallbackApplication(TMP_Text text, string? displayedText, bool cjkFallbackApplied)
+    {
+        if (string.IsNullOrEmpty(displayedText))
+        {
+            return;
+        }
+
+        var id = text.GetInstanceID();
+        if (FallbackApplicationCache.Count >= RuntimePerformanceSettings.FontFallbackCacheLimit &&
+            !FallbackApplicationCache.ContainsKey(id))
+        {
+            return;
+        }
+
+        FallbackApplicationCache[id] = new CachedFallbackApplication(displayedText, text.font.GetInstanceID(), cjkFallbackApplied);
     }
 
     public static void RegisterTextInstance(TMP_Text? text, string stage)

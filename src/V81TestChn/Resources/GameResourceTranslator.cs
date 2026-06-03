@@ -50,7 +50,7 @@ internal static class GameResourceTranslator
             OriginalResourceStateService.CaptureSelectableLevel(level);
             translated += Translate(ref level.PlanetName);
             translated += Translate(ref level.LevelDescription);
-            translated += Translate(ref level.riskLevel);
+            translated += TranslatePlanetRiskLevel(ref level.riskLevel);
             translated += Translate(ref level.levelIconString);
         }
 
@@ -71,6 +71,23 @@ internal static class GameResourceTranslator
     private static int Translate(ref string value)
     {
         if (TranslationService.TryTranslate(value, out var translated))
+        {
+            value = translated;
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static int TranslatePlanetRiskLevel(ref string value)
+    {
+        if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.PlanetInfo, value, out var translated))
+        {
+            value = translated;
+            return 1;
+        }
+
+        if (TranslationService.TryTranslate(value, out translated))
         {
             value = translated;
             return 1;

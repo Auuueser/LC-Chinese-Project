@@ -25,7 +25,6 @@ internal static class MapScreenLocalizationService
         text.text = translated;
         ApplyTypography(text);
         FontFallbackService.ApplyFallback(text, translated);
-        FontFallbackService.ApplySystemOnlineProbeFix(text, reason, translated);
         Plugin.ReportTranslationHit();
         return true;
     }
@@ -49,8 +48,6 @@ internal static class MapScreenLocalizationService
         {
             RuntimeTextCollector.Record(text, value);
         }
-
-        FontFallbackService.ApplySystemOnlineProbeFix(text, reason, value);
     }
 
     public static void ApplyTypography(TMP_Text? text)

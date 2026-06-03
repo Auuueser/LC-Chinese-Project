@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
@@ -9,11 +11,17 @@ using UnityEngine;
 namespace V81TestChn;
 
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+[BepInDependency("ainavt.lc.lethalconfig", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("Zaggy1024.OpenBodyCams", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("LCBetterSaves", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("com.example.Advancedfeatures", BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.0.0";
+    public const string PluginVersion = "3.1.0";
+    private const string ConfigFileName = "LC Chinese Project.cfg";
+    private const string LegacyConfigFileName = PluginGuid + ".cfg";
 
     internal static ManualLogSource Log = null!;
 
@@ -22,26 +30,39 @@ public sealed class Plugin : BaseUnityPlugin
     private static bool _isShuttingDown;
     private static bool _cleanupInProgress;
     private static bool _runtimeShutDown;
+    private static ConfigEntry<bool>? _logRuntimeLocalizationEvents;
+    private static bool _logRuntimeLocalizationEventsFast;
+    private ConfigFile? _runtimeConfig;
     private bool _cleanupCompleted;
+    private Coroutine? _automaticTranslationPumpCoroutine;
 
     internal static bool IsRuntimeShuttingDown => _cleanupInProgress || _runtimeShutDown;
+    internal static bool RuntimeLocalizationLogsEnabled => _logRuntimeLocalizationEventsFast;
 
     private void Awake()
     {
         Log = Logger;
         _runtimeShutDown = false;
         _cleanupInProgress = false;
+        var runtimeConfig = CreateRuntimeConfig();
+        _logRuntimeLocalizationEvents = runtimeConfig.Bind(
+            ConfigSections.DiagnosticsGeneral,
+            "LogRuntimeLocalizationEvents",
+            false,
+            "Enable verbose runtime localization event logs. Default off to avoid IO spikes during gameplay.");
+        _logRuntimeLocalizationEventsFast = _logRuntimeLocalizationEvents.Value;
         DontDestroyOnLoad(gameObject);
         Application.quitting += OnUnityQuitting;
 
         var pluginDir = Path.GetDirectoryName(typeof(Plugin).Assembly.Location) ?? Paths.PluginPath;
-        TranslationGuard.Initialize(Config);
-        TextPatches.Initialize(Config);
-        TryInitialize("CustomLocalizationExtensionService", () => { CustomLocalizationExtensionService.Initialize(pluginDir, Config); });
+        RuntimePerformanceSettings.Initialize(runtimeConfig);
+        TranslationGuard.Initialize(runtimeConfig);
+        TextPatches.Initialize(runtimeConfig);
+        TryInitialize("CustomLocalizationExtensionService", () => { CustomLocalizationExtensionService.Initialize(pluginDir, runtimeConfig); });
         TryInitialize("RuntimeIconsCompatibilityService", () => { RuntimeIconsCompatibilityService.Initialize(); });
         try
         {
-            TranslationService.Initialize(Config);
+            TranslationService.Initialize(runtimeConfig);
             TranslationService.Load(pluginDir);
         }
         catch (Exception ex)
@@ -49,7 +70,13 @@ public sealed class Plugin : BaseUnityPlugin
             Logger.LogError($"TranslationService.Load failed: {ex.GetType().Name}: {ex.Message}");
         }
 
-        TryInitialize("AutomaticTranslationService", () => { AutomaticTranslationService.Initialize(pluginDir, Config); });
+        TryInitialize("AutomaticTranslationService", () => { AutomaticTranslationService.Initialize(pluginDir, runtimeConfig); });
+        if (AutomaticTranslationService.NeedsMainThreadPump)
+        {
+            _automaticTranslationPumpCoroutine = StartCoroutine(PumpAutomaticTranslation());
+        }
+
+        TryInitialize("RuntimeTextCollector", () => { RuntimeTextCollector.Initialize(pluginDir, runtimeConfig); });
 
         var existingPatchCount = CountOwnHarmonyPatches();
         var manualPatchCount = 0;
@@ -68,12 +95,11 @@ public sealed class Plugin : BaseUnityPlugin
         }
 
         TryInitialize("FontFallbackService", () => { FontFallbackService.TryLoadFontAsset(pluginDir); });
-        TryInitialize("FontFallbackAuditService", () => { FontFallbackAuditService.Initialize(Config); });
+        TryInitialize("FontFallbackAuditService", () => { FontFallbackAuditService.Initialize(runtimeConfig); });
         TryInitialize("AlertTextureReplacementService", () => { AlertTextureReplacementService.Initialize(pluginDir); });
-        TryInitialize("RadiationWarningAuditService", () => { RadiationWarningAuditService.Initialize(Config); });
-        TryInitialize("RadiationWarningPlaybackService", () => { RadiationWarningPlaybackService.Initialize(pluginDir, Config); });
+        TryInitialize("RadiationWarningAuditService", () => { RadiationWarningAuditService.Initialize(runtimeConfig); });
+        TryInitialize("RadiationWarningPlaybackService", () => { RadiationWarningPlaybackService.Initialize(pluginDir, runtimeConfig); });
         TryInitialize("EndGameLocalizationService", () => { EndGameLocalizationService.Initialize(pluginDir); });
-        TryInitialize("RuntimeTextCollector", () => { RuntimeTextCollector.Initialize(pluginDir, Config); });
         TryInitialize("TargetedUiTranslator", () => { TargetedUiTranslator.Initialize(); });
 
         // Verbose runtime marker; keep code available for future diagnostics without adding startup log noise.
@@ -81,11 +107,40 @@ public sealed class Plugin : BaseUnityPlugin
         Logger.LogInfo($"{PluginName} loaded. Entries: {TranslationService.EntryCount}; manualPatchCount={manualPatchCount}; harmonyPatchedMethods={CountOwnHarmonyPatches()}");
     }
 
-    private void Update()
+    private ConfigFile CreateRuntimeConfig()
     {
-        if (AutomaticTranslationService.NeedsMainThreadPump)
+        var configPath = Path.Combine(Paths.ConfigPath, ConfigFileName);
+        var legacyConfigPath = Path.Combine(Paths.ConfigPath, LegacyConfigFileName);
+        TryCopyLegacyConfig(legacyConfigPath, configPath);
+        _runtimeConfig = new ConfigFile(configPath, true);
+        return _runtimeConfig;
+    }
+
+    private static void TryCopyLegacyConfig(string legacyConfigPath, string configPath)
+    {
+        try
+        {
+            if (File.Exists(configPath) || !File.Exists(legacyConfigPath))
+            {
+                return;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(configPath) ?? Paths.ConfigPath);
+            File.Copy(legacyConfigPath, configPath, overwrite: false);
+            Log.LogInfo($"Migrated config file to '{ConfigFileName}'.");
+        }
+        catch (Exception ex)
+        {
+            Log.LogWarning($"Failed to migrate config file to '{ConfigFileName}': {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    private IEnumerator PumpAutomaticTranslation()
+    {
+        while (!IsRuntimeShuttingDown && AutomaticTranslationService.NeedsMainThreadPump)
         {
             AutomaticTranslationService.PumpMainThread();
+            yield return null;
         }
     }
 
@@ -126,6 +181,12 @@ public sealed class Plugin : BaseUnityPlugin
         Application.quitting -= OnUnityQuitting;
         _cleanupInProgress = true;
         _runtimeShutDown = true;
+        if (_automaticTranslationPumpCoroutine != null)
+        {
+            StopCoroutine(_automaticTranslationPumpCoroutine);
+            _automaticTranslationPumpCoroutine = null;
+        }
+
         TryCleanup("Harmony.UnpatchSelf", _harmony.UnpatchSelf);
         TryCleanup("OriginalResourceStateService.RestoreAll", () => { OriginalResourceStateService.RestoreAll(); });
         TryCleanup("RuntimeIconsCompatibilityService.Shutdown", () => { RuntimeIconsCompatibilityService.Shutdown(); });

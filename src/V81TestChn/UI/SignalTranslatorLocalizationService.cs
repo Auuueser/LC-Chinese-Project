@@ -50,9 +50,15 @@ internal static class SignalTranslatorLocalizationService
 
     public static bool ShouldRetryLocalization()
     {
+        if (_signalTranslatorLocalizationUntil <= 0f)
+        {
+            return false;
+        }
+
         var now = Time.unscaledTime;
         if (now > _signalTranslatorLocalizationUntil)
         {
+            _signalTranslatorLocalizationUntil = 0f;
             return false;
         }
 

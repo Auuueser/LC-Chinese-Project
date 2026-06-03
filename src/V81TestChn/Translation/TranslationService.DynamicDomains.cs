@@ -55,6 +55,12 @@ internal static partial class TranslationService
             return FinishKnownDynamicTranslation(source, ref translated, "ControlTip.Full.Fast");
         }
 
+        if (ExternalEnglishCompatibilityService.CanHandleCheap(source) &&
+            ExternalEnglishCompatibilityService.TryTranslateFast(source, out translated))
+        {
+            return FinishKnownDynamicTranslation(source, ref translated, "ExternalEnglishCompatibility.Fast");
+        }
+
         if (TryTranslateStandaloneControlTextFast(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "ControlTip.Fast");
@@ -140,8 +146,8 @@ internal static partial class TranslationService
                 break;
             case DynamicTextDomain.PlanetInfo:
                 matched = source.IndexOf('\n') >= 0
-                    ? TryTranslateMapScreenDescription(source, out translated) ||
-                      PlanetInfoDynamicTranslator.Translate(source, out translated)
+                    ? PlanetInfoDynamicTranslator.TranslateFast(source, out translated) ||
+                      TryTranslateMapScreenDescription(source, out translated)
                     : PlanetInfoDynamicTranslator.Translate(source, out translated) ||
                       TryTranslateMapScreenDescription(source, out translated);
                 break;
@@ -183,15 +189,80 @@ internal static partial class TranslationService
         return WeightUnitTranslator.CanHandleCheap(source) ||
                LooksLikeVoteTextCheap(source) ||
                LooksLikeDaysLeftTextCheap(source) ||
+               LooksLikeLoadingInfoTextCheap(source) ||
                LooksLikeRandomSeedTextCheap(source) ||
                LooksLikeEndgameStatTextCheap(source) ||
                LooksLikeControlTipTextCheap(source) ||
                LooksLikeShipLeaveEarlyWarningTextCheap(source) ||
+               ExternalEnglishCompatibilityService.CanHandleCheap(source) ||
                LooksLikeClockTextCheap(source) ||
                LooksLikeShipMonitorTextCheap(source) ||
                LooksLikePlanetInfoTextCheap(source) ||
                LooksLikeChatSystemMessageCheap(source) ||
+               LooksLikeCombatNotificationTextCheap(source) ||
                LooksLikeHostModWarningTextCheap(source);
+    }
+
+    public static bool LooksLikeCombatNotificationTextCheap(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source) || source.Length > 160)
+        {
+            return false;
+        }
+
+        if (source.IndexOf("Killed", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            var text = StripRichTextTagsCheap(source).Trim();
+            if (text.StartsWith("Killed ", StringComparison.Ordinal))
+            {
+                return LooksLikeCombatNameStart(text["Killed ".Length..].TrimStart());
+            }
+
+            var killedIndex = text.IndexOf(" Killed ", StringComparison.Ordinal);
+            if (killedIndex <= 0 || killedIndex + " Killed ".Length >= text.Length)
+            {
+                return false;
+            }
+
+            var actor = text[..killedIndex].Trim();
+            var target = text[(killedIndex + " Killed ".Length)..].TrimStart();
+            return actor.Length > 0 &&
+                   actor.IndexOf(':') < 0 &&
+                   LooksLikeCombatNameStart(target);
+        }
+
+        if (source.IndexOf("HP", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return false;
+        }
+
+        var hpText = StripRichTextTagsCheap(source).Trim();
+        if (!hpText.EndsWith(" HP", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var dash = hpText.LastIndexOf('-');
+        if (dash <= 0 || dash >= hpText.Length - " HP".Length - 1)
+        {
+            return false;
+        }
+
+        var amount = hpText.Substring(dash + 1, hpText.Length - dash - 1 - " HP".Length).Trim();
+        return LooksLikeCombatNameStart(hpText[..dash].TrimStart()) &&
+               amount.Length > 0 &&
+               AllDigits(amount);
+    }
+
+    private static bool LooksLikeCombatNameStart(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var ch = value[0];
+        return ch is >= 'A' and <= 'Z' or >= '0' and <= '9' or >= '\u3400' and <= '\u9FFF' or >= '\uF900' and <= '\uFAFF';
     }
 
     public static bool LooksLikeHostModWarningTextCheap(string? source)
@@ -255,6 +326,21 @@ internal static partial class TranslationService
         return text.StartsWith("Random seed:", StringComparison.OrdinalIgnoreCase);
     }
 
+    public static bool LooksLikeLoadingInfoTextCheap(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source) ||
+            source.IndexOf('\n') < 0 ||
+            source.IndexOf("loaded", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return false;
+        }
+
+        var text = StripRichTextTagsCheap(source).TrimStart();
+        return text.StartsWith("Random seed:", StringComparison.OrdinalIgnoreCase) ||
+               text.StartsWith("Waiting for crew...", StringComparison.OrdinalIgnoreCase) ||
+               text.StartsWith("Waiting for Client...", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static bool LooksLikeShipLeaveEarlyWarningTextCheap(string? source)
     {
         if (string.IsNullOrWhiteSpace(source))
@@ -311,6 +397,8 @@ internal static partial class TranslationService
                text.StartsWith("POPULATION:", StringComparison.OrdinalIgnoreCase) ||
                text.StartsWith("CONDITIONS:", StringComparison.OrdinalIgnoreCase) ||
                text.StartsWith("FAUNA:", StringComparison.OrdinalIgnoreCase) ||
+               text.StartsWith("HAZARD LEVEL:", StringComparison.OrdinalIgnoreCase) ||
+               text.StartsWith("RISK LEVEL:", StringComparison.OrdinalIgnoreCase) ||
                text.StartsWith("\u5929\u4f53:", StringComparison.Ordinal) ||
                text.StartsWith("\u5929\u4f53\uff1a", StringComparison.Ordinal) ||
                text.StartsWith("\u4eba\u53e3:", StringComparison.Ordinal) ||
@@ -319,6 +407,10 @@ internal static partial class TranslationService
                text.StartsWith("\u73af\u5883\uff1a", StringComparison.Ordinal) ||
                text.StartsWith("\u751f\u6001:", StringComparison.Ordinal) ||
                text.StartsWith("\u751f\u6001\uff1a", StringComparison.Ordinal) ||
+               text.StartsWith("\u5371\u9669\u7b49\u7ea7:", StringComparison.Ordinal) ||
+               text.StartsWith("\u5371\u9669\u7b49\u7ea7\uff1a", StringComparison.Ordinal) ||
+               text.StartsWith("\u98ce\u9669\u7ea7\u522b:", StringComparison.Ordinal) ||
+               text.StartsWith("\u98ce\u9669\u7ea7\u522b\uff1a", StringComparison.Ordinal) ||
                text.Contains("Where the Company resides", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("Where the Company resices", StringComparison.OrdinalIgnoreCase);
     }
@@ -344,9 +436,155 @@ internal static partial class TranslationService
         }
 
         var text = StripRichTextTagsCheap(source).Trim();
-        return text.IndexOf('[') >= 0 &&
-               text.IndexOf(']') > text.IndexOf('[') &&
-               text.IndexOf(':') >= 0;
+        if (text.Length > 128 || text.IndexOf('\n') >= 0 || text.IndexOf('\r') >= 0)
+        {
+            return false;
+        }
+
+        if (LooksLikeBracketedNumericStatusForDynamicTranslator(text))
+        {
+            return true;
+        }
+
+        var colon = text.IndexOf(':');
+        if (colon <= 0)
+        {
+            colon = text.IndexOf('\uff1a');
+        }
+
+        if (colon <= 0)
+        {
+            return false;
+        }
+
+        var openBracket = text.IndexOf('[', colon + 1);
+        if (openBracket < 0)
+        {
+            return false;
+        }
+
+        var closeBracket = text.IndexOf(']', openBracket + 1);
+        if (closeBracket <= openBracket + 1)
+        {
+            return false;
+        }
+
+        if (text.IndexOf(':', openBracket, closeBracket - openBracket) >= 0 ||
+            text.IndexOf('\uff1a', openBracket, closeBracket - openBracket) >= 0)
+        {
+            return false;
+        }
+
+        var action = text.Substring(0, colon).Trim();
+        var key = text.Substring(openBracket + 1, closeBracket - openBracket - 1).Trim();
+        var suffix = text.Substring(closeBracket + 1).Trim();
+        return LooksLikeControlActionLabelCheap(action) &&
+               LooksLikeInputBindingTokenCheap(key) &&
+               (suffix.Length == 0 || suffix.Equals("(Hold)", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool LooksLikeBracketedNumericStatusForDynamicTranslator(string text)
+    {
+        if (text.Length < 7 || text.Length > 64 || text[0] != '[' || text[^1] != ']')
+        {
+            return false;
+        }
+
+        var colon = text.IndexOf(':');
+        if (colon <= 1 || colon >= text.Length - 2)
+        {
+            colon = text.IndexOf('\uff1a');
+        }
+
+        if (colon <= 1 || colon >= text.Length - 2)
+        {
+            return false;
+        }
+
+        var label = text.Substring(1, colon - 1).Trim();
+        var payload = text.Substring(colon + 1, text.Length - colon - 2).Trim();
+        if (!LooksLikeControlActionLabelCheap(label))
+        {
+            return false;
+        }
+
+        var hasDigit = false;
+        foreach (var ch in payload)
+        {
+            if (char.IsDigit(ch))
+            {
+                hasDigit = true;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(ch) || ch == '.' || ch == '-' || ch == '/' || ch == '%')
+            {
+                continue;
+            }
+
+            if (ch is >= 'A' and <= 'Z' or >= 'a' and <= 'z')
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return hasDigit;
+    }
+
+    private static bool LooksLikeControlActionLabelCheap(string action)
+    {
+        if (string.IsNullOrWhiteSpace(action) || action.Length > 64)
+        {
+            return false;
+        }
+
+        var hasLetter = false;
+        foreach (var ch in action)
+        {
+            if (ch is >= 'A' and <= 'Z' or >= 'a' and <= 'z')
+            {
+                hasLetter = true;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(ch) || char.IsDigit(ch) || ch is '-' or '/' or '(' or ')')
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return hasLetter;
+    }
+
+    private static bool LooksLikeInputBindingTokenCheap(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key) || key.Length > 32)
+        {
+            return false;
+        }
+
+        var hasLetterOrDigit = false;
+        foreach (var ch in key)
+        {
+            if (ch is >= 'A' and <= 'Z' or >= 'a' and <= 'z' || char.IsDigit(ch))
+            {
+                hasLetterOrDigit = true;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(ch) || ch is '-' or '/' or '+')
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return hasLetterOrDigit;
     }
 
     public static bool LooksLikeChatSystemMessageCheap(string? source)

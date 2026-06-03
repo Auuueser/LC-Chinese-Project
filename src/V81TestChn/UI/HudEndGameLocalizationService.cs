@@ -220,7 +220,6 @@ internal static class HudEndGameLocalizationService
             RuntimeTextCollector.Record(text, value);
         }
 
-        FontFallbackService.ApplySystemOnlineProbeFix(text, reason, value);
         return true;
     }
 

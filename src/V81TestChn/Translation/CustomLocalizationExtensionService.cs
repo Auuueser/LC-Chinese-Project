@@ -14,7 +14,7 @@ namespace V81TestChn;
 
 internal static class CustomLocalizationExtensionService
 {
-    private const int StyleCacheLimit = 2048;
+    private const int StyleCacheLimit = 16384;
     private const int DefaultMaxExactRules = 4096;
     private const int DefaultMaxIgnoreCaseRules = 4096;
     private const int DefaultMaxRegexRules = 64;
@@ -26,7 +26,7 @@ internal static class CustomLocalizationExtensionService
     private static readonly Dictionary<string, string> ExactIgnoreCaseEntries = new(StringComparer.OrdinalIgnoreCase);
     private static readonly List<RegexEntry> RegexEntries = new();
     private static readonly List<StyleRule> StyleRules = new();
-    private static readonly Dictionary<int, CachedStyleLookup> StyleCache = new();
+    private static readonly Dictionary<int, CachedStyleLookup> StyleCache = new(StyleCacheLimit);
     private static ConfigEntry<bool>? _enabled;
     private static ConfigEntry<bool>? _preferCustomTranslations;
     private static ConfigEntry<bool>? _enableRegex;
@@ -39,13 +39,16 @@ internal static class CustomLocalizationExtensionService
     private static bool _warnedRegexDisabled;
     private static bool _warnedExactLimit;
     private static bool _warnedIgnoreCaseLimit;
+    private static bool _enabledFast;
+    private static bool _preferCustomTranslationsFast;
+    private static bool _enableRegexFast;
     private static bool _hasStyleRules;
     private static bool _hasGlobalStyleRules;
 
-    public static bool PreferCustomTranslations => _enabled?.Value == true && _preferCustomTranslations?.Value == true;
-    public static bool EnableRegex => _enabled?.Value == true && _enableRegex?.Value == true;
-    public static bool HasStyleRules => _enabled?.Value == true && _hasStyleRules;
-    public static bool HasGlobalStyleRules => _enabled?.Value == true && _hasGlobalStyleRules;
+    public static bool PreferCustomTranslations => _preferCustomTranslationsFast;
+    public static bool EnableRegex => _enableRegexFast;
+    public static bool HasStyleRules => _enabledFast && _hasStyleRules;
+    public static bool HasGlobalStyleRules => _enabledFast && _hasGlobalStyleRules;
 
     public static void Initialize(string pluginDir, ConfigFile config)
     {
@@ -95,6 +98,10 @@ internal static class CustomLocalizationExtensionService
             DefaultMaxConfigFileBytes,
             "单个自定义本地化 cfg 文件允许的最大字节数。");
 
+        _enabledFast = _enabled.Value;
+        _preferCustomTranslationsFast = _enabledFast && _preferCustomTranslations.Value;
+        _enableRegexFast = _enabledFast && _enableRegex.Value;
+
         Load(pluginDir);
     }
 
@@ -110,6 +117,9 @@ internal static class CustomLocalizationExtensionService
         _maxStyleRules = null;
         _maxLoadedFiles = null;
         _maxConfigFileBytes = null;
+        _enabledFast = false;
+        _preferCustomTranslationsFast = false;
+        _enableRegexFast = false;
     }
 
     public static void Clear()
@@ -129,7 +139,7 @@ internal static class CustomLocalizationExtensionService
     public static bool TryTranslateFastExact(string? source, out string translated)
     {
         translated = source ?? string.Empty;
-        if (_enabled?.Value != true || string.IsNullOrEmpty(source))
+        if (!_enabledFast || string.IsNullOrEmpty(source))
         {
             return false;
         }
@@ -146,7 +156,7 @@ internal static class CustomLocalizationExtensionService
     public static bool TryTranslate(string? source, out string translated, bool allowRegex)
     {
         translated = source ?? string.Empty;
-        if (_enabled?.Value != true || string.IsNullOrEmpty(source))
+        if (!_enabledFast || string.IsNullOrEmpty(source))
         {
             return false;
         }
@@ -264,7 +274,7 @@ internal static class CustomLocalizationExtensionService
     private static void Load(string pluginDir)
     {
         Clear();
-        if (_enabled?.Value != true)
+        if (!_enabledFast)
         {
             return;
         }
@@ -559,7 +569,7 @@ internal static class CustomLocalizationExtensionService
     private static bool TryFindStyle(Component component, string? value, bool allowRegexStyle, out StyleRule style)
     {
         style = null!;
-        if (_enabled?.Value != true ||
+        if (!_enabledFast ||
             string.IsNullOrEmpty(value) ||
             !_hasStyleRules ||
             (!allowRegexStyle && !_hasGlobalStyleRules))
@@ -616,9 +626,9 @@ internal static class CustomLocalizationExtensionService
 
     private static void CacheStyleResult(int componentId, string value, bool allowRegexStyle, bool matched, StyleRule? style)
     {
-        if (StyleCache.Count >= StyleCacheLimit)
+        if (StyleCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !StyleCache.ContainsKey(componentId))
         {
-            StyleCache.Clear();
+            return;
         }
 
         StyleCache[componentId] = new CachedStyleLookup(value, allowRegexStyle, matched, style);

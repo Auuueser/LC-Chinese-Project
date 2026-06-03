@@ -33,7 +33,7 @@ internal static class AutomaticTranslationService
     private static int _inFlightRequests;
     private static DateTime _nextCacheSaveUtc;
 
-    public static bool IsEnabled => _enabled?.Value == true;
+    public static bool IsEnabled => _enabledFast;
     public static bool NeedsMainThreadPump => _enabledFast && _initialized;
 
     public static void Initialize(string pluginDir, ConfigFile config)
