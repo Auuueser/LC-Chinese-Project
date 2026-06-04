@@ -27,7 +27,8 @@ internal static partial class TranslationService
 
             return domain switch
             {
-                DynamicTextDomain.HudScanner => TranslateScanValue(source, out translated) ||
+                DynamicTextDomain.HudScanner => TranslateScannerSubText(source, out translated) ||
+                                                TranslateScanValue(source, out translated) ||
                                                 TranslateScannerLabel(source, out translated) ||
                                                 TranslateFast(source, out translated),
                 DynamicTextDomain.HudRewards => TranslateRewardLine(source, out translated) ||
@@ -156,6 +157,19 @@ internal static partial class TranslationService
             }
 
             translated = localized;
+            return true;
+        }
+
+        private static bool TranslateScannerSubText(string source, out string translated)
+        {
+            translated = source;
+            var stripped = StripRichTextTagsCheap(source).Trim();
+            if (!stripped.Equals("You've got work to do.", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            translated = "\u4f60\u8fd8\u6709\u5de5\u4f5c\u8981\u505a\u3002";
             return true;
         }
 

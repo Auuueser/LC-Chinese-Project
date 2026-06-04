@@ -2,6 +2,14 @@
 
 ## 中文
 
+### 3.1.2 - 汉化补全更新
+
+相较 3.1.1，补全部分原版 HUD 与终端动态文本的汉化覆盖，减少交互提示、右键扫描和订单反馈中的英文残留。
+
+- 补全灯光开关、梯子、飞船移动状态和建造模式等 HUD 交互提示。
+- 补全 Company Cruiser 扫描提示和终端订单反馈中的动态文本。
+- 保持轻量化处理方式，不扩大高频全局扫描范围。
+
 ### 3.1.1 - 东亚字符显示与大厅列表稳定性更新
 
 相较 3.1.0，重点改进混合语言大厅、玩家名称、聊天消息和第三方运行时文本中的日韩文字与补充符号显示，同时继续降低高频 TMP 文本路径的重复处理成本。
@@ -69,6 +77,14 @@
 - 使用当前运行时构建刷新 Thunderstore 包体和 GitHub 发布元数据。
 
 ## English
+
+### 3.1.2 - Localization coverage update
+
+Compared with 3.1.1, this update completes additional vanilla HUD and terminal dynamic text coverage, reducing leftover English in interaction prompts, right-click scans, and order feedback.
+
+- Added coverage for light switches, ladders, ship-in-motion status, and build-mode HUD prompts.
+- Added coverage for Company Cruiser scan text and terminal order feedback.
+- Kept the handling lightweight without widening high-frequency global scans.
 
 ### 3.1.1 - East Asian glyph display and lobby list stability update
 

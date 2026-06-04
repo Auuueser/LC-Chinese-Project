@@ -61,6 +61,16 @@ internal static partial class TranslationService
                 return true;
             }
 
+            if (TryTranslateBracketedControlStatus(trimmed, out translated))
+            {
+                return true;
+            }
+
+            if (TryTranslateControlTipSegments(trimmed, out translated))
+            {
+                return true;
+            }
+
             var dropMatch = SafeRegexMatch(
                 trimmed,
                 @"^Drop\s+(?<item>.+?)\s*[:\uff1a]\s*(?<key>\[[^\]]+\])$",
@@ -101,6 +111,61 @@ internal static partial class TranslationService
             var key = actionMatch.Groups["key"].Value.Trim();
             var suffix = NormalizeSuffix(actionMatch.Groups["suffix"].Value, actionImpliesHold);
             translated = $"{localizedAction}\uff1a{key}{suffix}";
+            return true;
+        }
+
+        private static bool TryTranslateControlTipSegments(string trimmed, out string translated)
+        {
+            translated = trimmed;
+            if (trimmed.IndexOf('|') < 0)
+            {
+                return false;
+            }
+
+            var parts = trimmed.Split('|');
+            var changed = false;
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var segment = parts[i].Trim();
+                if (segment.Length == 0 || segment.IndexOf('|') >= 0)
+                {
+                    continue;
+                }
+
+                if (!Translate(segment, out var translatedSegment) ||
+                    string.Equals(segment, translatedSegment, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                parts[i] = translatedSegment;
+                changed = true;
+            }
+
+            if (!changed)
+            {
+                return false;
+            }
+
+            translated = string.Join("   |   ", parts);
+            return true;
+        }
+
+        private static bool TryTranslateBracketedControlStatus(string trimmed, out string translated)
+        {
+            translated = trimmed;
+            if (trimmed.Length < 3 || trimmed[0] != '[' || trimmed[^1] != ']')
+            {
+                return false;
+            }
+
+            var body = trimmed[1..^1].Trim();
+            if (!ControlTipActionEntries.TryGetValue(body, out var localized))
+            {
+                return false;
+            }
+
+            translated = $"[{localized}]";
             return true;
         }
 

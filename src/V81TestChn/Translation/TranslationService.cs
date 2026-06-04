@@ -289,9 +289,11 @@ internal static partial class TranslationService
         ["Check bag"] = "\u68c0\u67e5\u80cc\u5305",
         ["Chop"] = "\u5288\u780d",
         ["Close door"] = "\u5173\u95e8",
+        ["Confirm"] = "\u786e\u8ba4",
         ["Drive"] = "\u9a7e\u9a76",
         ["Empty Bag"] = "\u6e05\u7a7a\u80cc\u5305",
         ["Climb"] = "\u6500\u722c",
+        ["CCW"] = "\u9006\u65f6\u9488",
         ["Disable speaker"] = "\u5173\u95ed\u626c\u58f0\u5668",
         ["Enter"] = "\u8fdb\u5165",
         ["Feed"] = "\u5582\u98df",
@@ -302,6 +304,7 @@ internal static partial class TranslationService
         ["Flip switch"] = "\u62e8\u52a8\u5f00\u5173",
         ["Flashlight"] = "\u624b\u7535\u7b52",
         ["Flush"] = "\u51b2\u6c34",
+        ["Free Rotate"] = "\u81ea\u7531\u65cb\u8f6c",
         ["Free from head"] = "\u4ece\u5934\u90e8\u6323\u8131",
         ["Get log"] = "\u83b7\u53d6\u65e5\u5fd7",
         ["Hit pumpkin"] = "\u6572\u51fb\u5357\u74dc",
@@ -340,9 +343,11 @@ internal static partial class TranslationService
         ["Shake can"] = "\u6447\u6643\u55b7\u7f50",
         ["Spray"] = "\u55b7\u6d12",
         ["Stab"] = "\u523a\u51fb",
+        ["Store"] = "\u6536\u7eb3",
         ["Store item"] = "\u6536\u7eb3\u7269\u54c1",
         ["Store tool"] = "\u6536\u7eb3\u5de5\u5177",
         ["Switch camera"] = "\u5207\u6362\u6444\u50cf\u673a",
+        ["Switch light"] = "\u5207\u6362\u706f\u5149",
         ["Switch lights"] = "\u5207\u6362\u706f\u5149",
         ["Switch TV"] = "\u5207\u6362\u7535\u89c6",
         ["Switch water"] = "\u6253\u5f00\u6c34\u9f99\u5934",
@@ -380,6 +385,7 @@ internal static partial class TranslationService
         ["Use horn"] = "\u4f7f\u7528\u5587\u53ed",
         ["Use jetpack"] = "\u4f7f\u7528\u55b7\u6c14\u80cc\u5305",
         ["Use key"] = "\u4f7f\u7528\u94a5\u5319",
+        ["Use ladder"] = "\u4f7f\u7528\u68af\u5b50",
         ["Use remote"] = "\u4f7f\u7528\u9065\u63a7\u5668",
         ["Wear mask"] = "\u6234\u4e0a\u9762\u5177",
         ["Zoom"] = "\u7f29\u653e",
@@ -3423,6 +3429,25 @@ internal static partial class TranslationService
         }
 
         var updated = source;
+
+        updated = SafeRegexReplace(
+            updated,
+            @"^(?<prefix>\s*)\u8ba2\u5355\u5df2\u63d0\u4ea4\s*[:\uff1a]\s*(?<count>\d+)\s+(?<item>.+?)\s*[\u3002.]?\s*(?:\u65b0\u7684\u4f59\u989d\u4e3a|\u4f60\u7684\u65b0\u4f59\u989d\u4e3a|\u60a8\u7684\u65b0\u4f59\u989d\u4e3a)\s*(?<credits>[$\u25a0]?\s*[+-]?\d+(?:\.\d+)?)\s*[\u3002.]?(?<rest>[\s\S]*?)$",
+            m =>
+            {
+                var count = m.Groups["count"].Value.Trim();
+                var item = BuildChineseFirstBilingual(ToSingularTerminalItem(m.Groups["item"].Value.Trim()));
+                var credits = SafeRegexReplace(m.Groups["credits"].Value, @"\s+", string.Empty, RegexOptions.CultureInvariant);
+                var rest = m.Groups["rest"].Value.Trim();
+                var result = $"{m.Groups["prefix"].Value}\u5df2\u8ba2\u8d2d {count} \u4ef6 {item}\u3002\n\u4f60\u7684\u65b0\u4f59\u989d\u4e3a {credits}\u3002";
+                if (rest.Length == 0)
+                {
+                    return result;
+                }
+
+                return result + "\n\n" + TranslateTerminalOrderDetail(rest);
+            },
+            RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         updated = SafeRegexReplace(
             updated,
