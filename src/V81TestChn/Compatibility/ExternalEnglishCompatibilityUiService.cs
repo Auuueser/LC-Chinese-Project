@@ -161,6 +161,41 @@ internal static class ExternalEnglishCompatibilityUiService
         return ApplyTranslatedTmpText(text, source, translated, reason);
     }
 
+    public static bool TranslateTmpInputPlaceholder(TMP_InputField? input, string reason)
+    {
+        if (input?.placeholder is not TMP_Text placeholder)
+        {
+            return false;
+        }
+
+        return TranslateTmpInputPlaceholder(placeholder, reason);
+    }
+
+    private static bool TranslateTmpInputPlaceholder(TMP_Text placeholder, string reason)
+    {
+        var source = placeholder.text;
+        if (!MightNeedExternalTextTranslation(source))
+        {
+            return false;
+        }
+
+        if (TryGetCachedTranslation(placeholder, TmpTranslationCache, source, out var translated))
+        {
+            return ApplyTranslatedTmpText(placeholder, source, translated, reason);
+        }
+
+        if ((!TranslationService.TryTranslateFastExact(source, out translated) &&
+             !ExternalEnglishCompatibilityService.TryTranslateFast(source, out translated)) ||
+            string.Equals(source, translated, StringComparison.Ordinal))
+        {
+            CacheTranslation(placeholder, TmpTranslationCache, source, null);
+            return false;
+        }
+
+        CacheTranslation(placeholder, TmpTranslationCache, source, translated);
+        return ApplyTranslatedTmpText(placeholder, source, translated, reason);
+    }
+
     private static bool TranslateUiText(Text? text)
     {
         if (text == null)

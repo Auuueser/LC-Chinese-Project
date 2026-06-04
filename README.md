@@ -1,6 +1,6 @@
 # LC Chinese Project
 
-Version: `3.1.0`
+Version: `3.1.1`
 
 ## 中文说明
 
@@ -14,10 +14,12 @@ LC Chinese Project 是面向 Lethal Company V81 测试环境维护的简体中�
 - 覆盖终端订单、星球天气、扫描价值、聊天系统消息、投票、剩余天数、重量单位、服装切换提示、载具交互提示和观战状态等动态文本。
 - 优化主菜单、房间创建、加入游戏、游戏设置、控制器绑定、退出确认和大厅状态弹窗等界面的中文显示。
 - 提供中文 TextMeshPro fallback，降低缺字、透明字、黑色字、裁切和动态文本渲染异常。
+- 按需使用系统补充字体显示日文、韩文等非中文东亚字符，改善大厅名、玩家名、聊天消息和第三方运行时文本中的跨语言字符显示。
 - 包含自制本地化文本与本地化 UI 贴图资源。
 - 兼容 RuntimeIcons、RuntimeIcons_BetterRotations 和 HoneeItemIcons，保留原版英文物品 key 供图标匹配使用，仅在显示层处理中文。
 - 支持自定义本地化与可选自动翻译。自动翻译默认关闭，开启后通过异步请求和本地缓存处理非原版英文文本。
 - 面向大型整合包提供可配置的运行时缓存与菜单处理预算，在保留原版和第三方文本覆盖的同时减少重复热路径工作。
+- 改进 HUD 聊天输出的通用处理时机，降低短时间大量系统消息、玩家消息或富文本彩色消息导致同步处理冲突和闪退的风险。
 
 ### 安装
 
@@ -144,10 +146,12 @@ This project does not require existing third-party translation or font-patching 
 - Covers dynamic text such as terminal orders, planet weather, scanner values, chat system messages, votes, days left, weight units, suit-change prompts, vehicle prompts, and spectate status.
 - Improves Chinese display for the main menu, lobby creation, game joining, settings, controller binding, leave-game confirmation, and lobby status popups.
 - Provides Chinese TextMeshPro fallback to reduce missing glyphs, transparent glyphs, black glyphs, clipping, and dynamic text rendering issues.
+- Uses system supplemental fonts only when needed for Japanese, Korean, and other non-Chinese East Asian characters in lobby names, player names, chat messages, and third-party runtime text.
 - Includes self-authored localization text and selected localized UI texture resources.
 - Keeps RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons compatible by preserving vanilla English item keys for icon matching while translating display text separately.
 - Supports custom localization and optional automatic translation. Automatic translation is disabled by default and uses asynchronous requests plus a local cache for non-vanilla English text.
 - Provides configurable runtime caches and menu work budgets for large modpacks, reducing repeated hot-path work while preserving vanilla and third-party text coverage.
+- Improves generic HUD chat output timing to reduce crash risk from rapid system messages, player messages, or rich-text colored chat bursts.
 
 ### Installation
 

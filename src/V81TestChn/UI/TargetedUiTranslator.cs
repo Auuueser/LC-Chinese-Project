@@ -18,6 +18,8 @@ internal static class TargetedUiTranslator
     private static readonly HashSet<int> MenuPanelTranslated = new();
     private static readonly HashSet<int> QuickMenuTranslationRunning = new();
     private static readonly HashSet<int> MenuPanelTranslationRunning = new();
+    private static readonly HashSet<int> HudChatOutputTranslationPending = new();
+    private static readonly HashSet<int> HudChatOutputTranslationRunning = new();
     private static readonly Dictionary<int, ProcessedTextState> TranslationProcessedCache = new();
     private static readonly Dictionary<int, List<int>> TmpDropdownOptionTextCache = new();
     private static readonly Dictionary<int, List<int>> DropdownOptionTextCache = new();
@@ -118,6 +120,8 @@ internal static class TargetedUiTranslator
         MenuPanelTranslated.Clear();
         QuickMenuTranslationRunning.Clear();
         MenuPanelTranslationRunning.Clear();
+        HudChatOutputTranslationPending.Clear();
+        HudChatOutputTranslationRunning.Clear();
         TranslationProcessedCache.Clear();
         TmpDropdownOptionTextCache.Clear();
         DropdownOptionTextCache.Clear();
@@ -1176,6 +1180,87 @@ internal static class TargetedUiTranslator
         return (translated, seen);
     }
 
+    public static bool IsHudChatOutputTranslationPending(HUDManager? hud)
+    {
+        return hud != null && HudChatOutputTranslationPending.Contains(hud.GetInstanceID());
+    }
+
+    public static bool ShouldBypassPendingHudChatOutputTmpText(TMP_Text? text)
+    {
+        if (text == null || HudChatOutputTranslationPending.Count == 0)
+        {
+            return false;
+        }
+
+        var hud = HUDManager.Instance;
+        return hud != null &&
+               ReferenceEquals(text, hud.chatText) &&
+               IsHudChatOutputTranslationPending(hud);
+    }
+
+    public static void MarkHudChatOutputTranslationPending(HUDManager? hud)
+    {
+        if (hud == null || Plugin.IsRuntimeShuttingDown || !hud.isActiveAndEnabled)
+        {
+            return;
+        }
+
+        HudChatOutputTranslationPending.Add(hud.GetInstanceID());
+    }
+
+    public static void ScheduleHudChatOutput(HUDManager? hud, string reason)
+    {
+        if (hud == null || Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        var instanceId = hud.GetInstanceID();
+        HudChatOutputTranslationPending.Add(instanceId);
+        if (HudChatOutputTranslationRunning.Contains(instanceId))
+        {
+            return;
+        }
+
+        if (!hud.isActiveAndEnabled)
+        {
+            HudChatOutputTranslationPending.Remove(instanceId);
+            return;
+        }
+
+        try
+        {
+            HudChatOutputTranslationRunning.Add(instanceId);
+            hud.StartCoroutine(TranslateHudChatOutputDeferred(hud, reason, instanceId));
+        }
+        catch (Exception ex)
+        {
+            HudChatOutputTranslationPending.Remove(instanceId);
+            HudChatOutputTranslationRunning.Remove(instanceId);
+            Plugin.Log.LogWarning($"HUD chat output translation scheduling failed: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    private static IEnumerator TranslateHudChatOutputDeferred(HUDManager hud, string reason, int instanceId)
+    {
+        try
+        {
+            yield return null;
+
+            if (Plugin.IsRuntimeShuttingDown || hud == null || !hud.isActiveAndEnabled)
+            {
+                yield break;
+            }
+
+            TranslateHudChatOutput(hud, reason + ".deferred");
+        }
+        finally
+        {
+            HudChatOutputTranslationPending.Remove(instanceId);
+            HudChatOutputTranslationRunning.Remove(instanceId);
+        }
+    }
+
     private static ChatOutputState GetChatOutputState(HUDManager hud)
     {
         var id = hud.GetInstanceID();
@@ -1342,6 +1427,11 @@ internal static class TargetedUiTranslator
     {
         translated = source;
         if (string.IsNullOrWhiteSpace(source))
+        {
+            return false;
+        }
+
+        if (ContainsCjk(source) && !TranslationService.ChatDynamicTranslator.CanHandleCheap(source))
         {
             return false;
         }
@@ -2479,6 +2569,21 @@ internal static class TargetedUiTranslator
     private static int GetTextHash(string? text)
     {
         return text == null ? 0 : text.GetHashCode();
+    }
+
+    private static bool ContainsCjk(string value)
+    {
+        for (var i = 0; i < value.Length; i++)
+        {
+            var ch = value[i];
+            if ((ch >= '\u3400' && ch <= '\u9fff') ||
+                (ch >= '\uf900' && ch <= '\ufaff'))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void TranslateTmpDropdown(TMP_Dropdown? dropdown, ref int translated)

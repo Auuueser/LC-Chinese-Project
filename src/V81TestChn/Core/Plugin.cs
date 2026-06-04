@@ -19,7 +19,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.1.0";
+    public const string PluginVersion = "3.1.1";
     private const string ConfigFileName = "LC Chinese Project.cfg";
     private const string LegacyConfigFileName = PluginGuid + ".cfg";
 

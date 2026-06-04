@@ -2,6 +2,16 @@
 
 ## 中文
 
+### 3.1.1 - 东亚字符显示与大厅列表稳定性更新
+
+相较 3.1.0，重点改进混合语言大厅、玩家名称、聊天消息和第三方运行时文本中的日韩文字与补充符号显示，同时继续降低高频 TMP 文本路径的重复处理成本。
+
+- 补充基于系统字体的日文、韩文等非中文东亚字符 fallback，使大厅名、玩家名、聊天消息和第三方运行时文本中原本可能缺字或反复刷日志的字符能够更稳定地显示。
+- 改进混合中文、日文、韩文文本的分类逻辑，仅在需要时应用字体 fallback，避免将玩家自定义文本、大厅名或跨语言消息误当作可翻译内容处理。
+- 优化高频 TMP 与字体 fallback 路径，复用东亚字符分类结果，减少同一帧内的重复字符扫描和 fallback 判断。
+- 收窄大厅列表字号补偿范围，仅针对大厅名称中的非 ASCII 文本提供保守的最小字号保护，避免全局字体缩放影响普通 UI。
+- 改进 HUD 聊天输出的处理时机，降低短时间大量系统消息、玩家消息或富文本彩色消息在输入和发送阶段触发同步处理冲突并导致闪退的风险。
+
 ### 3.1.0 - 覆盖稳定性与大型整合包性能更新
 
 重点提升大型整合包环境下的运行效率、动态界面显示稳定性，以及常见第三方 UI 文本的兼容表现。
@@ -59,6 +69,16 @@
 - 使用当前运行时构建刷新 Thunderstore 包体和 GitHub 发布元数据。
 
 ## English
+
+### 3.1.1 - East Asian glyph display and lobby list stability update
+
+Compared with 3.1.0, this update improves Japanese, Korean, and supplemental-symbol display in mixed-language lobbies, player names, chat messages, and third-party runtime text while further reducing repeated work in high-frequency TMP text paths.
+
+- Added system-font-based fallback for Japanese, Korean, and other non-Chinese East Asian glyphs, improving display stability for lobby names, player names, chat messages, and third-party runtime text that could previously miss glyphs or repeatedly log fallback warnings.
+- Improved classification for mixed Chinese, Japanese, and Korean text so font fallback is applied only when needed, reducing the chance of custom player text, lobby names, or cross-language messages being treated as translatable content.
+- Optimized high-frequency TMP and font fallback paths by reusing East Asian glyph classification results, reducing repeated character scans and fallback checks within the same frame.
+- Narrowed lobby-list font-size compensation to a conservative minimum-size guard for non-ASCII lobby names, avoiding global font scaling side effects on ordinary UI.
+- Improved HUD chat output timing to reduce crash risk when rapid system messages, player messages, or rich-text colored chat messages collide with synchronous processing during input and send flows.
 
 ### 3.1.0 - Coverage stability and large modpack performance update
 

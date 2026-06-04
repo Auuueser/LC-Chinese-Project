@@ -22,6 +22,8 @@ internal static class FontFallbackService
     private static readonly HashSet<int> RenderAuditLoggedIds = new(FallbackSmallCacheInitialCapacity);
     private static readonly HashSet<int> AppliedFallbackFontIds = new(FallbackSmallCacheInitialCapacity);
     private static readonly HashSet<int> NormalizedFallbackMaterialIds = new(FallbackSmallCacheInitialCapacity);
+    private static readonly List<TMP_FontAsset> SupplementalFallbackFonts = new(4);
+    private static readonly HashSet<int> OwnedSupplementalFallbackFontIds = new(4);
     private static int _renderAuditBudget = 80;
     private static int _finalRenderRepairLogBudget = 80;
     private static int _specialCaseLogBudget = 60;
@@ -35,7 +37,7 @@ internal static class FontFallbackService
     private static bool _ownsFallbackFont;
     private static string? _pluginDir;
     private static bool _globalFallbackApplied;
-    public static bool HasFallbackFont => _fallbackFont != null;
+    public static bool HasFallbackFont => _fallbackFont != null || SupplementalFallbackFonts.Count > 0;
 
     private readonly struct CachedFallbackApplication
     {
@@ -73,12 +75,30 @@ internal static class FontFallbackService
         AppliedFallbackFontIds.Clear();
         NormalizedFallbackMaterialIds.Clear();
 
-        if (_fallbackFont != null)
+        var loadedFallbacks = GetLoadedFallbackFonts();
+        if (loadedFallbacks.Count > 0)
         {
-            TMP_Settings.fallbackFontAssets?.Remove(_fallbackFont);
+            var globalFallbacks = TMP_Settings.fallbackFontAssets;
+            if (globalFallbacks != null)
+            {
+                foreach (var fallbackFont in loadedFallbacks)
+                {
+                    globalFallbacks.Remove(fallbackFont);
+                }
+            }
+
             foreach (var fontAsset in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
             {
-                fontAsset?.fallbackFontAssetTable?.Remove(_fallbackFont);
+                var fallbackTable = fontAsset?.fallbackFontAssetTable;
+                if (fallbackTable == null)
+                {
+                    continue;
+                }
+
+                foreach (var fallbackFont in loadedFallbacks)
+                {
+                    fallbackTable.Remove(fallbackFont);
+                }
             }
         }
 
@@ -87,8 +107,18 @@ internal static class FontFallbackService
             UnityEngine.Object.Destroy(_fallbackFont);
         }
 
+        foreach (var supplementalFont in SupplementalFallbackFonts)
+        {
+            if (supplementalFont != null && OwnedSupplementalFallbackFontIds.Contains(supplementalFont.GetInstanceID()))
+            {
+                UnityEngine.Object.Destroy(supplementalFont);
+            }
+        }
+
         _fallbackFont = null;
         _ownsFallbackFont = false;
+        SupplementalFallbackFonts.Clear();
+        OwnedSupplementalFallbackFontIds.Clear();
         if (_fallbackFontBundle != null)
         {
             _fallbackFontBundle.Unload(true);
@@ -105,6 +135,7 @@ internal static class FontFallbackService
 
         if (TryLoadFontFileAsset(pluginDir))
         {
+            TryLoadSupplementalSystemFallbackFonts();
             ApplyFallbackGlobally();
             return;
         }
@@ -118,7 +149,11 @@ internal static class FontFallbackService
         if (!File.Exists(bundlePath))
         {
             Plugin.Log.LogWarning($"Chinese TMP font bundle not found: {bundlePath}");
-            TryLoadSystemFontAsset();
+            if (TryLoadSystemFontAsset())
+            {
+                TryLoadSupplementalSystemFallbackFonts();
+                ApplyFallbackGlobally();
+            }
             return;
         }
 
@@ -130,7 +165,11 @@ internal static class FontFallbackService
             if (bundle == null)
             {
                 Plugin.Log.LogWarning("Failed to load Chinese TMP font bundle.");
-                TryLoadSystemFontAsset();
+                if (TryLoadSystemFontAsset())
+                {
+                    TryLoadSupplementalSystemFallbackFonts();
+                    ApplyFallbackGlobally();
+                }
                 return;
             }
 
@@ -144,6 +183,7 @@ internal static class FontFallbackService
                     ownsBundle = true;
                     NormalizeFallbackFontMaterials();
                     Plugin.Log.LogInfo($"Loaded Chinese fallback font: {_fallbackFont.name} from {bundlePath}");
+                    TryLoadSupplementalSystemFallbackFonts();
                     ApplyFallbackGlobally();
                     return;
                 }
@@ -152,12 +192,20 @@ internal static class FontFallbackService
             bundle.Unload(false);
             bundle = null;
             Plugin.Log.LogWarning($"No TMP_FontAsset found in Chinese font bundle: {bundlePath}");
-            TryLoadSystemFontAsset();
+            if (TryLoadSystemFontAsset())
+            {
+                TryLoadSupplementalSystemFallbackFonts();
+                ApplyFallbackGlobally();
+            }
         }
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Failed to load Chinese font bundle: {ex}");
-            TryLoadSystemFontAsset();
+            if (TryLoadSystemFontAsset())
+            {
+                TryLoadSupplementalSystemFallbackFonts();
+                ApplyFallbackGlobally();
+            }
         }
         finally
         {
@@ -202,11 +250,11 @@ internal static class FontFallbackService
         return false;
     }
 
-    private static void TryLoadSystemFontAsset()
+    private static bool TryLoadSystemFontAsset()
     {
         if (_fallbackFont != null)
         {
-            return;
+            return true;
         }
 
         foreach (var fontName in new[] { "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei UI", "Microsoft YaHei" })
@@ -215,9 +263,8 @@ internal static class FontFallbackService
             {
                 if (TryCreateTmpFontAsset(Font.CreateDynamicFontFromOSFont(fontName, 18), fontName))
                 {
-                Plugin.Log.LogInfo($"Loaded Chinese fallback font from system font: {fontName}");
-                    ApplyFallbackGlobally();
-                    return;
+                    Plugin.Log.LogInfo($"Loaded Chinese fallback font from system font: {fontName}");
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -227,6 +274,7 @@ internal static class FontFallbackService
         }
 
         Plugin.Log.LogWarning("No compatible Chinese system font fallback was loaded.");
+        return false;
     }
 
     private static bool TryCreateTmpFontAsset(Font? font, string label)
@@ -259,9 +307,113 @@ internal static class FontFallbackService
         return true;
     }
 
-    public static void ApplyFallback(TMP_Text? text, string? candidateText = null)
+    private static void TryLoadSupplementalSystemFallbackFonts()
     {
-        if (_fallbackFont == null || text?.font == null)
+        if (_fallbackFont == null || SupplementalFallbackFonts.Count > 0)
+        {
+            return;
+        }
+
+        var loadedKorean = TryLoadSupplementalFontFile(@"C:\Windows\Fonts\malgun.ttf");
+        var loadedJapanese =
+            TryLoadSupplementalFontFile(@"C:\Windows\Fonts\meiryo.ttc") ||
+            TryLoadSupplementalFontFile(@"C:\Windows\Fonts\YuGothM.ttc") ||
+            TryLoadSupplementalFontFile(@"C:\Windows\Fonts\msgothic.ttc");
+
+        if (!loadedKorean)
+        {
+            TryLoadSupplementalSystemFont("Malgun Gothic");
+        }
+
+        if (!loadedJapanese)
+        {
+            _ = TryLoadSupplementalSystemFont("Meiryo") ||
+                TryLoadSupplementalSystemFont("Yu Gothic") ||
+                TryLoadSupplementalSystemFont("MS Gothic");
+        }
+    }
+
+    private static bool TryLoadSupplementalFontFile(string fontPath)
+    {
+        if (SupplementalFallbackFonts.Count >= 2 || !File.Exists(fontPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!TryCreateSupplementalTmpFontAsset(new Font(fontPath), Path.GetFileNameWithoutExtension(fontPath)))
+            {
+                return false;
+            }
+
+            Plugin.Log.LogInfo($"Loaded supplemental East Asian fallback font from font file: {fontPath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogDebug($"Supplemental font file fallback failed for {fontPath}: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static bool TryLoadSupplementalSystemFont(string fontName)
+    {
+        if (SupplementalFallbackFonts.Count >= 2)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!TryCreateSupplementalTmpFontAsset(Font.CreateDynamicFontFromOSFont(fontName, 18), fontName))
+            {
+                return false;
+            }
+
+            Plugin.Log.LogInfo($"Loaded supplemental East Asian fallback font from system font: {fontName}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogDebug($"Supplemental system font fallback failed for {fontName}: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static bool TryCreateSupplementalTmpFontAsset(Font? font, string label)
+    {
+        if (font == null)
+        {
+            return false;
+        }
+
+        var fontAsset = TMP_FontAsset.CreateFontAsset(
+            font,
+            90,
+            9,
+            GlyphRenderMode.SDFAA,
+            1024,
+            1024,
+            AtlasPopulationMode.Dynamic,
+            true);
+
+        if (fontAsset == null)
+        {
+            return false;
+        }
+
+        fontAsset.name = $"V81TestChn_SupplementalFallback_{label}";
+        fontAsset.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+        NormalizeMaterial(fontAsset.material);
+        SupplementalFallbackFonts.Add(fontAsset);
+        OwnedSupplementalFallbackFontIds.Add(fontAsset.GetInstanceID());
+        return true;
+    }
+
+    public static void ApplyFallback(TMP_Text? text, string? candidateText = null, bool candidateContainsEastAsianGlyph = false)
+    {
+        if (!HasFallbackFont || text?.font == null)
         {
             return;
         }
@@ -272,7 +424,7 @@ internal static class FontFallbackService
             return;
         }
 
-        if (!ContainsCjk(displayedText))
+        if (!candidateContainsEastAsianGlyph && !ContainsEastAsianFallbackGlyph(displayedText))
         {
             CacheFallbackApplication(text, displayedText, cjkFallbackApplied: false);
             return;
@@ -360,7 +512,7 @@ internal static class FontFallbackService
             return;
         }
 
-        if (!ContainsCjk(text.text))
+        if (!ContainsEastAsianFallbackGlyph(text.text))
         {
             return;
         }
@@ -442,7 +594,7 @@ internal static class FontFallbackService
             TryStoreHealthyBaseline(textId, text.color);
         }
 
-        var containsCjk = ContainsCjk(displayedText);
+        var containsCjk = ContainsEastAsianFallbackGlyph(displayedText);
         if (!containsCjk)
         {
             TryStoreHealthyBaseline(textId, value);
@@ -472,15 +624,26 @@ internal static class FontFallbackService
 
     public static void ApplyFallbackGlobally()
     {
-        if (_fallbackFont == null || _globalFallbackApplied)
+        if (!HasFallbackFont || _globalFallbackApplied)
         {
             return;
         }
 
         var globalFallbacks = TMP_Settings.fallbackFontAssets;
-        if (globalFallbacks != null && !globalFallbacks.Contains(_fallbackFont))
+        if (globalFallbacks != null)
         {
-            globalFallbacks.Add(_fallbackFont);
+            if (_fallbackFont != null && !globalFallbacks.Contains(_fallbackFont))
+            {
+                globalFallbacks.Add(_fallbackFont);
+            }
+
+            foreach (var supplementalFont in SupplementalFallbackFonts)
+            {
+                if (supplementalFont != null && !globalFallbacks.Contains(supplementalFont))
+                {
+                    globalFallbacks.Add(supplementalFont);
+                }
+            }
         }
 
         foreach (var fontAsset in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
@@ -489,12 +652,12 @@ internal static class FontFallbackService
         }
 
         _globalFallbackApplied = true;
-        Plugin.Log.LogInfo($"Applied Chinese fallback font globally: {_fallbackFont.name}");
+        Plugin.Log.LogInfo($"Applied East Asian fallback fonts globally: {GetLoadedFallbackFontCount()}");
     }
 
     private static void ApplyFallbackToFont(TMP_FontAsset? fontAsset)
     {
-        if (_fallbackFont == null || fontAsset == null || ReferenceEquals(fontAsset, _fallbackFont))
+        if (!HasFallbackFont || fontAsset == null || IsManagedFallbackFont(fontAsset))
         {
             return;
         }
@@ -511,9 +674,17 @@ internal static class FontFallbackService
             fontAsset.fallbackFontAssetTable = new List<TMP_FontAsset>();
         }
 
-        if (!fontAsset.fallbackFontAssetTable.Contains(_fallbackFont))
+        if (_fallbackFont != null && !fontAsset.fallbackFontAssetTable.Contains(_fallbackFont))
         {
             fontAsset.fallbackFontAssetTable.Add(_fallbackFont);
+        }
+
+        foreach (var supplementalFont in SupplementalFallbackFonts)
+        {
+            if (supplementalFont != null && !fontAsset.fallbackFontAssetTable.Contains(supplementalFont))
+            {
+                fontAsset.fallbackFontAssetTable.Add(supplementalFont);
+            }
         }
 
         AppliedFallbackFontIds.Add(fontId);
@@ -522,7 +693,7 @@ internal static class FontFallbackService
 
     private static void NormalizeFontMaterialForFallback(TMP_FontAsset fontAsset)
     {
-        if (fontAsset == null || ReferenceEquals(fontAsset, _fallbackFont))
+        if (fontAsset == null || IsManagedFallbackFont(fontAsset))
         {
             return;
         }
@@ -595,6 +766,57 @@ internal static class FontFallbackService
         NormalizeMaterial(_fallbackFont.material);
     }
 
+    private static List<TMP_FontAsset> GetLoadedFallbackFonts()
+    {
+        var fallbackFonts = new List<TMP_FontAsset>(1 + SupplementalFallbackFonts.Count);
+        if (_fallbackFont != null)
+        {
+            fallbackFonts.Add(_fallbackFont);
+        }
+
+        foreach (var supplementalFont in SupplementalFallbackFonts)
+        {
+            if (supplementalFont != null)
+            {
+                fallbackFonts.Add(supplementalFont);
+            }
+        }
+
+        return fallbackFonts;
+    }
+
+    private static int GetLoadedFallbackFontCount()
+    {
+        var count = _fallbackFont == null ? 0 : 1;
+        foreach (var supplementalFont in SupplementalFallbackFonts)
+        {
+            if (supplementalFont != null)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static bool IsManagedFallbackFont(TMP_FontAsset fontAsset)
+    {
+        if (_fallbackFont != null && ReferenceEquals(fontAsset, _fallbackFont))
+        {
+            return true;
+        }
+
+        foreach (var supplementalFont in SupplementalFallbackFonts)
+        {
+            if (supplementalFont != null && ReferenceEquals(fontAsset, supplementalFont))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static void NormalizeMaterial(Material? material)
     {
         if (material == null)
@@ -664,7 +886,7 @@ internal static class FontFallbackService
             TryStoreHealthyBaseline(textId, text.color);
         }
 
-        var containsCjk = ContainsCjk(displayedText);
+        var containsCjk = ContainsEastAsianFallbackGlyph(displayedText);
         if (!containsCjk)
         {
             TryStoreHealthyBaseline(textId, text.color);
@@ -700,7 +922,7 @@ internal static class FontFallbackService
 
     private static void RepairReadableCjkTextLight(TMP_Text text, string stage)
     {
-        if (text == null || string.IsNullOrWhiteSpace(text.text) || !ContainsCjk(text.text))
+        if (text == null || string.IsNullOrWhiteSpace(text.text) || !ContainsEastAsianFallbackGlyph(text.text))
         {
             return;
         }
@@ -807,7 +1029,7 @@ internal static class FontFallbackService
             return;
         }
 
-        if (!ContainsCjk(text.text))
+        if (!ContainsEastAsianFallbackGlyph(text.text))
         {
             return;
         }
@@ -820,7 +1042,7 @@ internal static class FontFallbackService
         for (var i = 0; i < info.characterCount; i++)
         {
             var charInfo = info.characterInfo[i];
-            if (!charInfo.isVisible || !IsCjk(charInfo.character))
+            if (!charInfo.isVisible || !IsEastAsianFallbackGlyph(charInfo.character))
             {
                 continue;
             }
@@ -977,7 +1199,7 @@ internal static class FontFallbackService
         for (var i = 0; i < info.characterCount; i++)
         {
             var ch = info.characterInfo[i];
-            if (!ch.isVisible || !IsCjk(ch.character))
+            if (!ch.isVisible || !IsEastAsianFallbackGlyph(ch.character))
             {
                 continue;
             }
@@ -1158,7 +1380,7 @@ internal static class FontFallbackService
             for (var i = 0; i < info.characterCount; i++)
             {
                 var ch = info.characterInfo[i];
-                if (!ch.isVisible || !IsCjk(ch.character))
+                if (!ch.isVisible || !IsEastAsianFallbackGlyph(ch.character))
                 {
                     continue;
                 }
@@ -1291,12 +1513,7 @@ internal static class FontFallbackService
         return string.Join("/", parts.ToArray());
     }
 
-    private static bool IsCjk(uint codePoint)
-    {
-        return codePoint >= 0x3400 && codePoint <= 0x9FFF;
-    }
-
-    private static bool ContainsCjk(string? text)
+    private static bool ContainsEastAsianFallbackGlyph(string? text)
     {
         if (string.IsNullOrEmpty(text))
         {
@@ -1305,13 +1522,27 @@ internal static class FontFallbackService
 
         foreach (var ch in text)
         {
-            if (ch >= 0x3400 && ch <= 0x9FFF)
+            if (IsEastAsianFallbackGlyph(ch))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static bool IsEastAsianFallbackGlyph(uint codePoint)
+    {
+        return codePoint is >= 0x3400 and <= 0x9FFF or
+               >= 0xF900 and <= 0xFAFF or
+               >= 0x3040 and <= 0x30FF or
+               >= 0x31F0 and <= 0x31FF or
+               >= 0xFF66 and <= 0xFF9F or
+               >= 0x1100 and <= 0x11FF or
+               >= 0x3130 and <= 0x318F or
+               >= 0xA960 and <= 0xA97F or
+               >= 0xAC00 and <= 0xD7AF or
+               >= 0xD7B0 and <= 0xD7FF;
     }
 
     private static bool ShouldPreserveOriginalParentAlpha(Component? component)
@@ -1562,7 +1793,7 @@ internal static class FontFallbackService
         for (var i = 0; i < info.characterCount; i++)
         {
             var ch = info.characterInfo[i];
-            if (!ch.isVisible || !IsCjk(ch.character))
+            if (!ch.isVisible || !IsEastAsianFallbackGlyph(ch.character))
             {
                 continue;
             }
@@ -1622,7 +1853,7 @@ internal static class FontFallbackService
         for (var i = 0; i < info.characterCount; i++)
         {
             var ch = info.characterInfo[i];
-            if (!ch.isVisible || !IsCjk(ch.character))
+            if (!ch.isVisible || !IsEastAsianFallbackGlyph(ch.character))
             {
                 continue;
             }

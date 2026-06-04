@@ -29,8 +29,10 @@ internal static partial class TextPatches
     private const int TmpHookComponentBypassWarmupCount = 4;
     private const int TmpHookComponentBypassTextLengthLimit = 160;
     private const int TmpNumericFormatTextLengthLimit = 96;
+    private const float LobbyNameFallbackGlyphMinFontScale = 0.82f;
     private static readonly Dictionary<int, CachedTextClassification> InputFieldTextCache = new(TextClassificationCacheLimit);
     private static readonly Dictionary<int, CachedTextClassification> LobbySlotTextCache = new(TextClassificationCacheLimit);
+    private static readonly Dictionary<int, CachedLobbyNameTypography> LobbyNameTypographyCache = new(TextClassificationCacheLimit);
     private static readonly Dictionary<int, CachedTmpHookNoop> TmpHookNoopCache = new(TmpHookNoopCacheLimit);
     private static readonly Dictionary<int, CachedTmpHookTranslation> TmpHookTranslationCache = new(TmpHookTranslationCacheLimit);
     private static readonly Dictionary<int, CachedTmpColorHookEligibility> TmpColorHookEligibilityCache = new(TmpColorHookEligibilityCacheLimit);
@@ -83,6 +85,24 @@ internal static partial class TextPatches
 
         public int ParentId { get; }
         public bool Value { get; }
+    }
+
+    private readonly struct CachedLobbyNameTypography
+    {
+        public CachedLobbyNameTypography(int parentId, bool enableAutoSizing, float fontSize, float fontSizeMin, float fontSizeMax)
+        {
+            ParentId = parentId;
+            EnableAutoSizing = enableAutoSizing;
+            FontSize = fontSize;
+            FontSizeMin = fontSizeMin;
+            FontSizeMax = fontSizeMax;
+        }
+
+        public int ParentId { get; }
+        public bool EnableAutoSizing { get; }
+        public float FontSize { get; }
+        public float FontSizeMin { get; }
+        public float FontSizeMax { get; }
     }
 
     private readonly struct CachedTmpHookNoop
@@ -304,6 +324,7 @@ internal static partial class TextPatches
         ClearHudRuntimeCaches();
         InputFieldTextCache.Clear();
         LobbySlotTextCache.Clear();
+        LobbyNameTypographyCache.Clear();
         TmpHookNoopCache.Clear();
         TmpHookTranslationCache.Clear();
         TmpColorHookEligibilityCache.Clear();
@@ -469,10 +490,27 @@ internal static partial class TextPatches
     }
 
     [HarmonyPatch(typeof(HUDManager), "AddChatMessage")]
+    [HarmonyPrefix]
+    private static void HudManagerAddChatMessagePrefix(HUDManager __instance)
+    {
+        TargetedUiTranslator.MarkHudChatOutputTranslationPending(__instance);
+    }
+
+    [HarmonyPatch(typeof(HUDManager), "AddChatMessage")]
     [HarmonyPostfix]
     private static void HudManagerAddChatMessagePostfix(HUDManager __instance)
     {
-        TargetedUiTranslator.TranslateHudChatOutput(__instance, "HUDManager.AddChatMessage");
+        TargetedUiTranslator.ScheduleHudChatOutput(__instance, "HUDManager.AddChatMessage");
+    }
+
+    [HarmonyPatch(typeof(HUDManager), "AddTextToChatOnServer")]
+    [HarmonyPrefix]
+    private static void HudManagerAddTextToChatOnServerPrefix(HUDManager __instance, int playerId = -1)
+    {
+        if (playerId == -1)
+        {
+            TargetedUiTranslator.MarkHudChatOutputTranslationPending(__instance);
+        }
     }
 
     [HarmonyPatch(typeof(HUDManager), "AddTextToChatOnServer")]
@@ -481,7 +519,7 @@ internal static partial class TextPatches
     {
         if (playerId == -1)
         {
-            TargetedUiTranslator.TranslateHudChatOutput(__instance, "HUDManager.AddTextToChatOnServer.system");
+            TargetedUiTranslator.ScheduleHudChatOutput(__instance, "HUDManager.AddTextToChatOnServer.system");
         }
     }
 
@@ -732,6 +770,12 @@ internal static partial class TextPatches
         ClearTmpSetTextPostfixSkip();
         if (Plugin.IsRuntimeShuttingDown)
         {
+            return;
+        }
+
+        if (TargetedUiTranslator.ShouldBypassPendingHudChatOutputTmpText(__instance))
+        {
+            MarkTmpSetTextPostfixSkip(__instance, value);
             return;
         }
 
@@ -1264,13 +1308,15 @@ internal static partial class TextPatches
         if (IsLobbySlotDynamicText(__instance))
         {
             ApplyTmpHookFallback(__instance, value);
+            TryApplyLobbyNameFallbackGlyphSizing(__instance, value);
             MarkTmpSetTextPostfixSkip(__instance, value);
             return false;
         }
 
-        if (ContainsCjk(value) && CanTreatCjkTextAsAlreadyLocalized(value))
+        var eastAsianClass = ClassifyEastAsianDisplayText(value);
+        if (eastAsianClass == EastAsianDisplayTextClass.HanOnly && CanTreatCjkTextAsAlreadyLocalized(value))
         {
-            ApplyTmpHookFallback(__instance, value);
+            ApplyTmpHookFallback(__instance, value, eastAsianClass);
             ApplyBootSplashTypography(__instance, value);
             MarkTmpSetTextPostfixSkip(__instance, value);
             return false;
@@ -1278,14 +1324,21 @@ internal static partial class TextPatches
 
         if (!TranslationGuard.ShouldTranslateGlobalText(__instance, value))
         {
-            ApplyTmpHookFallback(__instance, value);
+            ApplyTmpHookFallback(__instance, value, eastAsianClass);
             MarkTmpSetTextPostfixSkip(__instance, value);
             return false;
         }
 
-        if (ContainsCjk(value))
+        if (ShouldSkipTranslationForEastAsianDisplayText(eastAsianClass))
         {
-            ApplyTmpHookFallback(__instance, value);
+            ApplyTmpHookFallback(__instance, value, eastAsianClass);
+            MarkTmpSetTextPostfixSkip(__instance, value);
+            return false;
+        }
+
+        if (eastAsianClass != EastAsianDisplayTextClass.None)
+        {
+            ApplyTmpHookFallback(__instance, value, eastAsianClass);
         }
 
         ApplyBootSplashTypography(__instance, value);
@@ -1490,6 +1543,82 @@ internal static partial class TextPatches
         return result;
     }
 
+    private static void TryApplyLobbyNameFallbackGlyphSizing(TMP_Text? text, string? value)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        var slot = text.GetComponentInParent<LobbySlot>(true);
+        if (slot == null || !ReferenceEquals(slot.LobbyName, text))
+        {
+            return;
+        }
+
+        var id = text.GetInstanceID();
+        var parentId = GetParentInstanceId(text);
+        if (!LobbyNameTypographyCache.TryGetValue(id, out var baseline) || baseline.ParentId != parentId)
+        {
+            baseline = new CachedLobbyNameTypography(parentId, text.enableAutoSizing, text.fontSize, text.fontSizeMin, text.fontSizeMax);
+            if (LobbyNameTypographyCache.Count < RuntimePerformanceSettings.TmpHookCacheLimit || LobbyNameTypographyCache.ContainsKey(id))
+            {
+                LobbyNameTypographyCache[id] = baseline;
+            }
+        }
+
+        if (!ContainsLobbyNameFallbackGlyphCandidate(value))
+        {
+            RestoreLobbyNameTypography(text, baseline);
+            return;
+        }
+
+        if (!baseline.EnableAutoSizing && !text.enableAutoSizing)
+        {
+            return;
+        }
+
+        var maxFontSize = Mathf.Max(baseline.FontSizeMax, baseline.FontSize, text.fontSizeMax, text.fontSize);
+        if (maxFontSize <= 0f)
+        {
+            return;
+        }
+
+        text.enableAutoSizing = true;
+        text.fontSizeMax = Mathf.Max(text.fontSizeMax, maxFontSize);
+        text.fontSizeMin = Mathf.Min(text.fontSizeMax, Mathf.Max(text.fontSizeMin, baseline.FontSizeMin, maxFontSize * LobbyNameFallbackGlyphMinFontScale));
+        if (text.fontSize < text.fontSizeMin)
+        {
+            text.fontSize = text.fontSizeMin;
+        }
+    }
+
+    private static void RestoreLobbyNameTypography(TMP_Text text, CachedLobbyNameTypography baseline)
+    {
+        text.enableAutoSizing = baseline.EnableAutoSizing;
+        text.fontSizeMin = baseline.FontSizeMin;
+        text.fontSizeMax = baseline.FontSizeMax;
+        text.fontSize = baseline.FontSize;
+    }
+
+    private static bool ContainsLobbyNameFallbackGlyphCandidate(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        foreach (var ch in value)
+        {
+            if (ch > '\u007f' && !char.IsControl(ch))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static bool TryGetCachedTextClassification(
         TMP_Text text,
         Dictionary<int, CachedTextClassification> cache,
@@ -1640,9 +1769,10 @@ internal static partial class TextPatches
             return;
         }
 
-        if (ContainsCjk(rawText) && CanTreatCjkTextAsAlreadyLocalized(rawText))
+        var eastAsianClass = ClassifyEastAsianDisplayText(rawText);
+        if (eastAsianClass == EastAsianDisplayTextClass.HanOnly && CanTreatCjkTextAsAlreadyLocalized(rawText))
         {
-            ApplyTmpHookFallback(__instance, rawText);
+            ApplyTmpHookFallback(__instance, rawText, eastAsianClass);
             ApplyBootSplashTypography(__instance, rawText);
             MarkTmpSetTextPostfixSkip(__instance, rawText);
             return;
@@ -1650,21 +1780,29 @@ internal static partial class TextPatches
 
         if (IsLobbySlotDynamicText(__instance))
         {
-            ApplyTmpHookFallback(__instance, rawText);
+            ApplyTmpHookFallback(__instance, rawText, eastAsianClass);
+            TryApplyLobbyNameFallbackGlyphSizing(__instance, rawText);
             MarkTmpSetTextPostfixSkip(__instance, rawText);
             return;
         }
 
         if (!TranslationGuard.ShouldTranslateGlobalText(__instance, rawText))
         {
-            ApplyTmpHookFallback(__instance, rawText);
+            ApplyTmpHookFallback(__instance, rawText, eastAsianClass);
             MarkTmpSetTextPostfixSkip(__instance, rawText);
             return;
         }
 
-        if (ContainsCjk(rawText))
+        if (ShouldSkipTranslationForEastAsianDisplayText(eastAsianClass))
         {
-            ApplyTmpHookFallback(__instance, rawText);
+            ApplyTmpHookFallback(__instance, rawText, eastAsianClass);
+            MarkTmpSetTextPostfixSkip(__instance, rawText);
+            return;
+        }
+
+        if (eastAsianClass != EastAsianDisplayTextClass.None)
+        {
+            ApplyTmpHookFallback(__instance, rawText, eastAsianClass);
         }
 
         ApplyBootSplashTypography(__instance, rawText);
@@ -2301,12 +2439,13 @@ internal static partial class TextPatches
 
     private static void RefreshCachedTmpHookTranslationFallback(TMP_Text text, CachedTmpHookTranslation cached)
     {
-        if (cached.FontId == GetFontInstanceId(text) || !ContainsCjk(cached.Translated))
+        var eastAsianClass = ClassifyEastAsianDisplayText(cached.Translated);
+        if (cached.FontId == GetFontInstanceId(text) || eastAsianClass == EastAsianDisplayTextClass.None)
         {
             return;
         }
 
-        ApplyTmpHookFallback(text, cached.Translated);
+        ApplyTmpHookFallback(text, cached.Translated, eastAsianClass);
         CacheTmpHookTranslation(text, cached.Source, cached.Translated);
     }
 
@@ -4062,7 +4201,7 @@ internal static partial class TextPatches
 
     private static bool IsSingleInertDynamicChar(char ch)
     {
-        return !IsCjk(ch) && (char.IsLetterOrDigit(ch) || IsInertDynamicPunctuation(ch));
+        return !IsCjk(ch) && !IsNonHanEastAsianDisplayGlyph(ch) && (char.IsLetterOrDigit(ch) || IsInertDynamicPunctuation(ch));
     }
 
     private static bool IsInertDynamicPunctuation(char ch)
@@ -4095,13 +4234,77 @@ internal static partial class TextPatches
 
     private static void ApplyTmpHookFallback(TMP_Text text, string value)
     {
-        if (!ContainsCjk(value))
+        ApplyTmpHookFallback(text, value, ClassifyEastAsianDisplayText(value));
+    }
+
+    private static void ApplyTmpHookFallback(TMP_Text text, string value, EastAsianDisplayTextClass displayClass)
+    {
+        if (displayClass == EastAsianDisplayTextClass.None)
         {
             return;
         }
 
         CountTmpPerf(ref _tmpPerfFallbackCalls);
-        FontFallbackService.ApplyFallback(text, value);
+        FontFallbackService.ApplyFallback(text, value, candidateContainsEastAsianGlyph: true);
+    }
+
+    private enum EastAsianDisplayTextClass
+    {
+        None,
+        HanOnly,
+        NonHanEastAsianOnly,
+        MixedHanAndNonHanEastAsian
+    }
+
+    private static EastAsianDisplayTextClass ClassifyEastAsianDisplayText(string value)
+    {
+        var hasHan = false;
+        var hasNonHanEastAsianGlyph = false;
+        foreach (var ch in value)
+        {
+            if (IsCjk(ch))
+            {
+                hasHan = true;
+                continue;
+            }
+
+            if (IsNonHanEastAsianDisplayGlyph(ch))
+            {
+                hasNonHanEastAsianGlyph = true;
+            }
+        }
+
+        if (hasHan && hasNonHanEastAsianGlyph)
+        {
+            return EastAsianDisplayTextClass.MixedHanAndNonHanEastAsian;
+        }
+
+        if (hasHan)
+        {
+            return EastAsianDisplayTextClass.HanOnly;
+        }
+
+        return hasNonHanEastAsianGlyph
+            ? EastAsianDisplayTextClass.NonHanEastAsianOnly
+            : EastAsianDisplayTextClass.None;
+    }
+
+    private static bool ShouldSkipTranslationForEastAsianDisplayText(EastAsianDisplayTextClass displayClass)
+    {
+        return displayClass is EastAsianDisplayTextClass.NonHanEastAsianOnly or
+            EastAsianDisplayTextClass.MixedHanAndNonHanEastAsian;
+    }
+
+    private static bool IsNonHanEastAsianDisplayGlyph(char ch)
+    {
+        return ch is >= '\u3040' and <= '\u30FF' or
+               >= '\u31F0' and <= '\u31FF' or
+               >= '\uFF66' and <= '\uFF9F' or
+               >= '\u1100' and <= '\u11FF' or
+               >= '\u3130' and <= '\u318F' or
+               >= '\uA960' and <= '\uA97F' or
+               >= '\uAC00' and <= '\uD7AF' or
+               >= '\uD7B0' and <= '\uD7FF';
     }
 
     private static bool TmpHookPerfCountersEnabled => _tmpHookPerfCountersEnabledFast;

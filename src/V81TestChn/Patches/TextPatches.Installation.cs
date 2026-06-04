@@ -58,11 +58,10 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(HUDManager), "FillEndGameStats", nameof(HudManagerFillEndGameStatsPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "ApplyPenalty", nameof(HudManagerApplyPenaltyPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "ShowPlayersFiredScreen", nameof(HudManagerShowPlayersFiredScreenPostfix), ref patched);
-        PatchPostfix(
-            harmony,
-            AccessTools.Method(typeof(HUDManager), "AddChatMessage", new[] { typeof(string), typeof(string), typeof(int), typeof(bool) }),
-            nameof(HudManagerAddChatMessagePostfix),
-            ref patched);
+        var addChatMessage = AccessTools.Method(typeof(HUDManager), "AddChatMessage", new[] { typeof(string), typeof(string), typeof(int), typeof(bool) });
+        PatchPrefix(harmony, addChatMessage, nameof(HudManagerAddChatMessagePrefix), ref patched);
+        PatchPostfix(harmony, addChatMessage, nameof(HudManagerAddChatMessagePostfix), ref patched);
+        PatchPrefix(harmony, typeof(HUDManager), "AddTextToChatOnServer", nameof(HudManagerAddTextToChatOnServerPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "AddTextToChatOnServer", nameof(HudManagerAddTextToChatOnServerPostfix), ref patched);
         PatchPostfix(harmony, typeof(ChallengeLeaderboardSlot), "SetSlotValues", nameof(ChallengeLeaderboardSlotSetSlotValuesPostfix), ref patched);
         PatchPostfix(harmony, typeof(LobbySlot), "SetModdedIcon", nameof(LobbySlotSetModdedIconPostfix), ref patched);
@@ -84,6 +83,7 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(RoundManager), "GenerateNewLevelClientRpc", nameof(RoundManagerGenerateNewLevelClientRpcPostfix), ref patched);
 
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPrefix), ref patched);
+        PatchPostfix(harmony, AccessTools.Method(typeof(TMP_InputField), "OnEnable"), nameof(TmpInputFieldOnEnablePostfix), ref patched);
         if (IsGlobalTmpPostSetRepairEnabled)
         {
             PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPostfix), ref patched);

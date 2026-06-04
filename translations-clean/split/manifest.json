@@ -2,16 +2,16 @@
     "schema_version":  1,
     "role":  "translation-clean-domain-splits",
     "source_seed_path":  "translations-source/clean-source-seed.json",
-    "source_seed_sha256":  "0a3cfa42e167b7e832d8de4279c994c5d986d1d6c27e11014aa16ab5698c443b",
+    "source_seed_sha256":  "c53c2aeabf868ebea6b9395d42a2402821654d8c5bd4c2e9361116268824aa46",
     "draft_path":  "translations-source/clean-translation-draft.zh-CN.json",
-    "draft_sha256":  "27bb6a97a6067333b71208ab52e4ab5989886938141354ebd653b421affaceee",
+    "draft_sha256":  "94f89e2270240e5a16e0ba1e65e887fe6a993e1782b635f21affcf5f143d3836",
     "runtime_json_path":  "translations-clean/zh-CN.runtime.json",
-    "runtime_json_sha256":  "33a28fff89a52387d21697973cfd6a9cb247ffc3493c5a3ca62d90277a0d3934",
+    "runtime_json_sha256":  "207fb805db7154a6d0576bb45d7da144fee25e659c51cceeea285b2e4bd37e3e",
     "runtime_cfg_path":  "translations-clean/cfg/zh-CN/clean-draft-runtime.cfg",
-    "runtime_cfg_sha256":  "100c5a874195bf544d40490412f48dc6eb8773e9576b8f89822a5c905ab9a7f7",
+    "runtime_cfg_sha256":  "95c06bc9977c0ade0438ad95413903927a7e272c6c37cb7ad880ddae96f175c5",
     "runtime_packaged":  true,
     "runtime_loader":  "inert-split-artifact; monolith remains active loader input",
-    "runtime_json_entry_count":  1673,
+    "runtime_json_entry_count":  1675,
     "domains":  [
                     {
                         "domain":  "bestiary",
@@ -57,9 +57,9 @@
                     },
                     {
                         "domain":  "settings",
-                        "seed_entry_count":  248,
-                        "draft_entry_count":  177,
-                        "runtime_json_entry_count":  177
+                        "seed_entry_count":  250,
+                        "draft_entry_count":  179,
+                        "runtime_json_entry_count":  179
                     },
                     {
                         "domain":  "terminal",
@@ -73,7 +73,7 @@
                       "role":  "runtime-json-split",
                       "domain":  "bestiary",
                       "path":  "translations-clean/split/zh-CN/bestiary.runtime.json",
-                      "sha256":  "6f7f5f6588f484a5643de5550f3a409cd03b248e387a5bdba33992a189c600d4",
+                      "sha256":  "a9cc831ffa7c3da177186217cbe9305e18a44433ff3a8196f52380614a151873",
                       "entry_count":  108
                   },
                   {
@@ -87,21 +87,21 @@
                       "role":  "runtime-json-split",
                       "domain":  "gameplay",
                       "path":  "translations-clean/split/zh-CN/gameplay.runtime.json",
-                      "sha256":  "d099735c6576e56cbce4d391d9e5bf04cda8ed72bde9d9cf253a0268611542f7",
+                      "sha256":  "573af60642497cd5b20ae4ccf13ef47261ffba7165725cd290f4656bf6ed5d73",
                       "entry_count":  491
                   },
                   {
                       "role":  "runtime-cfg-split",
                       "domain":  "gameplay",
                       "path":  "translations-clean/split/cfg/zh-CN/gameplay.cfg",
-                      "sha256":  "d3a8b5ce04bce84be261e1e1888f22641a0d447d425675625d44500a9a9d7828",
+                      "sha256":  "446de4ec55c3c5ba3dac21bd4bc66e7b4a336f533edcd7f760bf3e5676a27aa6",
                       "entry_count":  335
                   },
                   {
                       "role":  "runtime-json-split",
                       "domain":  "hud",
                       "path":  "translations-clean/split/zh-CN/hud.runtime.json",
-                      "sha256":  "b1dabfee2545c8365ae8ef7d752c311bcbb239369f14c2b16f55f8d7570f8d25",
+                      "sha256":  "355b329ecf3d24c7d2fbb2c5c5f1c029f8e37d545cfc21b5e1c028bf36037295",
                       "entry_count":  89
                   },
                   {
@@ -115,7 +115,7 @@
                       "role":  "runtime-json-split",
                       "domain":  "items",
                       "path":  "translations-clean/split/zh-CN/items.runtime.json",
-                      "sha256":  "27d243884c600a327b03f9a2e11fa68d387fe5f67a0a03be0a6446ac41a99420",
+                      "sha256":  "eb58cb12ae3093cb0c7eb9eb37b007eb945496279f76f182cc6942ae7bff4031",
                       "entry_count":  122
                   },
                   {
@@ -129,7 +129,7 @@
                       "role":  "runtime-json-split",
                       "domain":  "logs",
                       "path":  "translations-clean/split/zh-CN/logs.runtime.json",
-                      "sha256":  "d42ae07f1210113341449935bd429d7b18d651d348028e82722eb3bd9a1964eb",
+                      "sha256":  "3c06f9c4962bda04f9a23b41517cdc963b23c7c32071d472f733c90f0d899a44",
                       "entry_count":  46
                   },
                   {
@@ -143,7 +143,7 @@
                       "role":  "runtime-json-split",
                       "domain":  "moons",
                       "path":  "translations-clean/split/zh-CN/moons.runtime.json",
-                      "sha256":  "3f081b91ccf8109d08beefb3b1aa8e030cd1b8169625f0132b644c951289aae8",
+                      "sha256":  "0b66366d625e04f6272a435087286f79cb050d6b93aa5b70b19ae7ffd33b1d6c",
                       "entry_count":  99
                   },
                   {
@@ -157,7 +157,7 @@
                       "role":  "runtime-json-split",
                       "domain":  "runtime-regex",
                       "path":  "translations-clean/split/zh-CN/runtime-regex.runtime.json",
-                      "sha256":  "9da2ce2a32c96ba0e7c3e6acb4e7c76bad546b9f3e87b351b0d1f764d1398d7a",
+                      "sha256":  "cdfef523d7940f324bcdf600bfa3b3dd8ed6f3af0e4c08aeccd6ba70b7e20b2e",
                       "entry_count":  244
                   },
                   {
@@ -171,21 +171,21 @@
                       "role":  "runtime-json-split",
                       "domain":  "settings",
                       "path":  "translations-clean/split/zh-CN/settings.runtime.json",
-                      "sha256":  "b174a9a918400331ccc5d1c0eb769113074c18e5d837ddf223753eb62e5b9c09",
-                      "entry_count":  177
+                      "sha256":  "dc8ea59666b66bb54eb1e89652ad1ee6fdcec33780272fce7e8f86d25b87f55b",
+                      "entry_count":  179
                   },
                   {
                       "role":  "runtime-cfg-split",
                       "domain":  "settings",
                       "path":  "translations-clean/split/cfg/zh-CN/settings.cfg",
-                      "sha256":  "e6594fff2b14aa5f60b68332242c887ff521e1f414b1371d51512b219f1371ce",
-                      "entry_count":  130
+                      "sha256":  "61cc72f069b06695de29c273e0a6d271b419af32af02de10b60dc4855385347f",
+                      "entry_count":  132
                   },
                   {
                       "role":  "runtime-json-split",
                       "domain":  "terminal",
                       "path":  "translations-clean/split/zh-CN/terminal.runtime.json",
-                      "sha256":  "aa89b984b0b0af2bbcf0f4aaa0378d59f5e3ef96e220e6da5700f6e2402b38c5",
+                      "sha256":  "ebe056041d2cc61fd1d6c46fc3910cc77b018f266bcbe29288a11b9e637f6f4f",
                       "entry_count":  297
                   },
                   {

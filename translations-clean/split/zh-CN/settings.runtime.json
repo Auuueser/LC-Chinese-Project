@@ -6,13 +6,13 @@
     "locale":  "zh-CN",
     "generated_from":  "translations-source/clean-translation-draft.zh-CN.json",
     "source_seed_path":  "translations-source/clean-source-seed.json",
-    "source_seed_sha256":  "0a3cfa42e167b7e832d8de4279c994c5d986d1d6c27e11014aa16ab5698c443b",
-    "draft_sha256":  "27bb6a97a6067333b71208ab52e4ab5989886938141354ebd653b421affaceee",
+    "source_seed_sha256":  "c53c2aeabf868ebea6b9395d42a2402821654d8c5bd4c2e9361116268824aa46",
+    "draft_sha256":  "94f89e2270240e5a16e0ba1e65e887fe6a993e1782b635f21affcf5f143d3836",
     "runtime_json_path":  "translations-clean/zh-CN.runtime.json",
-    "runtime_json_sha256":  "33a28fff89a52387d21697973cfd6a9cb247ffc3493c5a3ca62d90277a0d3934",
+    "runtime_json_sha256":  "207fb805db7154a6d0576bb45d7da144fee25e659c51cceeea285b2e4bd37e3e",
     "runtime_packaged":  true,
     "runtime_loader":  "inert-split-artifact; monolith remains active loader input",
-    "entry_count":  177,
+    "entry_count":  179,
     "entries":  [
                     {
                         "source":  "[ Back ]",
@@ -166,9 +166,9 @@
                     },
                     {
                         "source":  "\u003e Online",
-                        "target":  "\u003e 在线模式",
+                        "target":  "\u003e 线上模式",
                         "mode":  "translate",
-                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
                     },
                     {
                         "source":  "\u003e Quit",
@@ -208,9 +208,9 @@
                     },
                     {
                         "source":  "(Recommended)",
-                        "target":  "（推荐选项）",
+                        "target":  "（推荐）",
                         "mode":  "translate",
-                        "note":  "clean-runtime-overlay category=settings; status=draft-self-authored"
+                        "note":  "clean-runtime-overlay category=settings; status=user-approved-wording"
                     },
                     {
                         "source":  "Allow remote connections",
@@ -310,9 +310,9 @@
                     },
                     {
                         "source":  "  Online",
-                        "target":  "  在线模式",
+                        "target":  "  线上模式",
                         "mode":  "translate",
-                        "note":  "clean-runtime-overlay category=menu-option; status=draft-self-authored"
+                        "note":  "clean-runtime-overlay category=menu-option; status=user-approved-wording"
                     },
                     {
                         "source":  " (NEW)",
@@ -670,15 +670,15 @@
                     },
                     {
                         "source":  "LAUNCH MODE",
-                        "target":  "启动连接模式",
+                        "target":  "启动模式",
                         "mode":  "translate",
-                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                        "note":  "clean-runtime-overlay category=lobby; status=user-approved-wording"
                     },
                     {
                         "source":  "Launch mode:",
-                        "target":  "启动连接模式：",
+                        "target":  "启动模式：",
                         "mode":  "translate",
-                        "note":  "clean-runtime-overlay category=lobby; status=draft-self-authored"
+                        "note":  "clean-runtime-overlay category=lobby; status=user-approved-wording"
                     },
                     {
                         "source":  "Level selection",
@@ -1075,6 +1075,18 @@
                         "target":  "按 TAB 选择工具槽位。工具槽位只能存放单手工具。",
                         "mode":  "translate",
                         "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Enter tag or id...",
+                        "target":  "输入标签或 ID...",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby-ui; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Enter tag or ip...",
+                        "target":  "输入标签或 IP...",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=lobby-ui; status=draft-self-authored"
                     }
                 ]
 }

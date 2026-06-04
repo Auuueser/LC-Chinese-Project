@@ -584,7 +584,7 @@ internal static partial class TranslationService
         new("DOOR HYDRAULICS:", "\u8231\u95e8\u6db2\u538b\uff1a"),
         new("DOOR HYDRAULICS", "\u8231\u95e8\u6db2\u538b"),
         new("With detected mods", "\u5305\u542b\u5df2\u68c0\u6d4b\u5230\u7684\u6a21\u7ec4"),
-        new("Press \"/\" to talk.", "\u6309 \"/\" \u8bf4\u8bdd\u3002"),
+        new("Press \"/\" to talk.", "\u6309 \"/\" \u6253\u5b57\u3002"),
         new("DEBUG/TEST", "\u8c03\u8bd5/\u6d4b\u8bd5"),
         new("> LethalConfig", ">\u0020\u6a21\u7ec4\u914d\u7f6e"),
         new("Toggle test room", "\u5207\u6362\u6d4b\u8bd5\u623f\u95f4"),
@@ -1918,7 +1918,7 @@ internal static partial class TranslationService
         translated = SafeRegexReplace(
             source,
             @"Press\s+[""\u201c\u201d]\s*/\s*[""\u201c\u201d]\s+to\s+talk\.?",
-            "\u6309 \"/\" \u8bf4\u8bdd\u3002",
+            "\u6309 \"/\" \u6253\u5b57\u3002",
             RegexOptions.IgnoreCase);
         translated = SafeRegexReplace(
             translated,

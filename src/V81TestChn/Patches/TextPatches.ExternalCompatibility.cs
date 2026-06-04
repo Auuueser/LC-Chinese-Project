@@ -39,6 +39,16 @@ internal static partial class TextPatches
         ExternalEnglishCompatibilityUiService.TranslateTmpTextKnownNonInput(___textRenderer, "OpenBodyCams.OverlayManager.UpdateText");
     }
 
+    private static void TmpInputFieldOnEnablePostfix(TMP_InputField __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        ExternalEnglishCompatibilityUiService.TranslateTmpInputPlaceholder(__instance, "TMP_InputField.OnEnable");
+    }
+
     private static void BetterSavesInitializeBetterSavesPostfix()
     {
         var filesPanel = GameObject.Find("Canvas/MenuContainer/LobbyHostSettings/FilesPanel");

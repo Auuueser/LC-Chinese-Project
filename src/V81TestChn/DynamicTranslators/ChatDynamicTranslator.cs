@@ -6,6 +6,16 @@ internal static partial class TranslationService
 {
     internal static class ChatDynamicTranslator
     {
+        private static readonly (string Suffix, string Replacement)[] SystemSuffixTranslations =
+        {
+            (" joined the ship.", " \u52a0\u5165\u4e86\u98de\u8239\u3002"),
+            (" started the ship.", " \u542f\u52a8\u4e86\u98de\u8239\u3002"),
+            (" disconnected.", " \u65ad\u5f00\u4e86\u8fde\u63a5\u3002"),
+            (" was left behind.", " \u88ab\u629b\u4e0b\u4e86\u3002"),
+            (" was kicked.", " \u88ab\u8e22\u51fa\u4e86\u3002"),
+            (" died.", " \u6b7b\u4ea1\u4e86\u3002")
+        };
+
         public static bool CanHandleCheap(string? source)
         {
             if (string.IsNullOrWhiteSpace(source))
@@ -13,13 +23,15 @@ internal static partial class TranslationService
                 return false;
             }
 
-            var text = StripRichTextTagsCheap(source).Trim();
-            return text.EndsWith(" joined the ship.", StringComparison.OrdinalIgnoreCase) ||
-                   text.EndsWith(" started the ship.", StringComparison.OrdinalIgnoreCase) ||
-                   text.EndsWith(" disconnected.", StringComparison.OrdinalIgnoreCase) ||
-                   text.EndsWith(" was left behind.", StringComparison.OrdinalIgnoreCase) ||
-                   text.EndsWith(" was kicked.", StringComparison.OrdinalIgnoreCase) ||
-                   text.EndsWith(" died.", StringComparison.OrdinalIgnoreCase);
+            foreach (var (suffix, _) in SystemSuffixTranslations)
+            {
+                if (RenderedTextEndsWith(source, suffix))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static bool Translate(string? source, out string translated)
@@ -38,15 +50,7 @@ internal static partial class TranslationService
                 return true;
             }
 
-            foreach (var (suffix, replacement) in new[]
-                     {
-                         (" joined the ship.", " \u52a0\u5165\u4e86\u98de\u8239\u3002"),
-                         (" started the ship.", " \u542f\u52a8\u4e86\u98de\u8239\u3002"),
-                         (" disconnected.", " \u65ad\u5f00\u4e86\u8fde\u63a5\u3002"),
-                         (" was left behind.", " \u88ab\u629b\u4e0b\u4e86\u3002"),
-                         (" was kicked.", " \u88ab\u8e22\u51fa\u4e86\u3002"),
-                         (" died.", " \u6b7b\u4ea1\u4e86\u3002")
-                     })
+            foreach (var (suffix, replacement) in SystemSuffixTranslations)
             {
                 if (!trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) || trimmed.Length <= suffix.Length)
                 {
@@ -83,6 +87,83 @@ internal static partial class TranslationService
             closeTag = source.Substring(source.Length - close.Length, close.Length);
             body = source.Substring(openEnd + 1, source.Length - openEnd - 1 - close.Length);
             return true;
+        }
+
+        private static bool RenderedTextEndsWith(string source, string suffix)
+        {
+            var sourceIndex = source.Length - 1;
+            SkipTrailingRenderedWhitespace(source, ref sourceIndex);
+
+            for (var suffixIndex = suffix.Length - 1; suffixIndex >= 0; suffixIndex--)
+            {
+                if (!TryReadPreviousRenderedChar(source, ref sourceIndex, out var ch) ||
+                    !AsciiEqualsIgnoreCase(ch, suffix[suffixIndex]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static void SkipTrailingRenderedWhitespace(string source, ref int sourceIndex)
+        {
+            while (TryReadPreviousRenderedChar(source, ref sourceIndex, out var ch))
+            {
+                if (!char.IsWhiteSpace(ch))
+                {
+                    sourceIndex++;
+                    return;
+                }
+            }
+        }
+
+        private static bool TryReadPreviousRenderedChar(string source, ref int sourceIndex, out char ch)
+        {
+            while (sourceIndex >= 0)
+            {
+                ch = source[sourceIndex--];
+                if (ch != '>')
+                {
+                    return true;
+                }
+
+                var tagStart = sourceIndex;
+                while (tagStart >= 0 && source[tagStart] != '<')
+                {
+                    tagStart--;
+                }
+
+                if (tagStart < 0)
+                {
+                    return true;
+                }
+
+                sourceIndex = tagStart - 1;
+            }
+
+            ch = default;
+            return false;
+        }
+
+        private static bool AsciiEqualsIgnoreCase(char left, char right)
+        {
+            if (left == right)
+            {
+                return true;
+            }
+
+            if (left is >= 'A' and <= 'Z')
+            {
+                left = (char)(left + ('a' - 'A'));
+            }
+
+            if (right is >= 'A' and <= 'Z')
+            {
+                right = (char)(right + ('a' - 'A'));
+            }
+
+            return left == right;
         }
     }
 }

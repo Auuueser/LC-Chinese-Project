@@ -23,6 +23,8 @@ internal static class ExternalEnglishCompatibilityService
         ["Spectate Previous Player"] = "\u5207\u6362\u4e0a\u4e00\u540d\u73a9\u5bb6",
         ["Open Admin UI"] = "\u6253\u5f00\u7ba1\u7406\u754c\u9762",
         ["Copy Lobby ID"] = "\u590d\u5236\u623f\u95f4 ID",
+        ["Enter tag or id..."] = "\u8f93\u5165\u6807\u7b7e\u6216 ID...",
+        ["Enter tag or ip..."] = "\u8f93\u5165\u6807\u7b7e\u6216 IP...",
         ["Search Mods"] = "\u641c\u7d22\u6a21\u7ec4",
         ["Search Configs"] = "\u641c\u7d22\u914d\u7f6e",
         ["Close"] = "\u5173\u95ed",
