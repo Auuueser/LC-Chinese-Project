@@ -72,6 +72,19 @@ internal static partial class TextPatches
         MenuSceneLocalizationService.ApplyAutosaveText("StartOfRound.AutoSaveShipData.autosave");
     }
 
+    private static void StartOfRoundSetShipReadyToLandPrefix(StartOfRound __instance)
+    {
+        RoundTransitionTextThrottle.EnterSetShipReadyToLand(__instance);
+    }
+
+    private static void StartOfRoundSetShipReadyToLandPostfix()
+    {
+        RoundTransitionTextThrottle.ExitSetShipReadyToLand();
+        TargetedUiTranslator.FlushHudChatOutputDeferredByRoundTransition(
+            HUDManager.Instance,
+            "StartOfRound.SetShipReadyToLand.transition-flush");
+    }
+
     private static void GameNetworkManagerSaveGamePrefix()
     {
         MenuSceneLocalizationService.ApplyAutosaveText("GameNetworkManager.SaveGame.autosave");

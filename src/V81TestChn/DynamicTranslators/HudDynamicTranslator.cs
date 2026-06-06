@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace V81TestChn;
@@ -7,6 +8,30 @@ internal static partial class TranslationService
 {
     internal static class HudDynamicTranslator
     {
+        private static readonly Dictionary<string, string> DeathCauseEntries = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Unknown"] = "\u672a\u77e5",
+            ["Bludgeoning"] = "\u949d\u51fb",
+            ["Gravity"] = "\u5760\u843d\u51b2\u51fb",
+            ["Blast"] = "\u7206\u70b8",
+            ["Strangulation"] = "\u52d2\u9888",
+            ["Suffocation"] = "\u7a92\u606f",
+            ["Mauling"] = "\u6495\u54ac",
+            ["Gunshot"] = "\u67aa\u51fb",
+            ["Gunshots"] = "\u67aa\u51fb",
+            ["Crushing"] = "\u538b\u788e",
+            ["Drowning"] = "\u6eba\u6c34",
+            ["Abandoned"] = "\u88ab\u9057\u5f03",
+            ["Electrocution"] = "\u89e6\u7535",
+            ["Kicking"] = "\u8e22\u51fb",
+            ["Burning"] = "\u70e7\u4f24",
+            ["Stabbing"] = "\u523a\u4f24",
+            ["Fan"] = "\u98ce\u6247\u5207\u5272",
+            ["Inertia"] = "\u60ef\u6027\u51b2\u51fb",
+            ["Snipping"] = "\u526a\u5207",
+            ["Scratching"] = "\u6293\u4f24"
+        };
+
         public static bool CanHandleCheap(string? source) =>
             LooksLikeLoadingInfoTextCheap(source) ||
             LooksLikeRandomSeedTextCheap(source) ||
@@ -164,6 +189,17 @@ internal static partial class TranslationService
         {
             translated = source;
             var stripped = StripRichTextTagsCheap(source).Trim();
+            var deathCauseMatch = SafeRegexMatch(
+                stripped,
+                @"^Cause\s+of\s+death\s*[:\uff1a]\s*(?<cause>.+?)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (deathCauseMatch.Success)
+            {
+                var cause = TranslateDeathCauseName(deathCauseMatch.Groups["cause"].Value.Trim());
+                translated = $"\u6b7b\u56e0\uff1a{cause}";
+                return true;
+            }
+
             if (!stripped.Equals("You've got work to do.", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
@@ -171,6 +207,17 @@ internal static partial class TranslationService
 
             translated = "\u4f60\u8fd8\u6709\u5de5\u4f5c\u8981\u505a\u3002";
             return true;
+        }
+
+        private static string TranslateDeathCauseName(string cause)
+        {
+            if (DeathCauseEntries.TryGetValue(cause, out var translated))
+            {
+                return translated;
+            }
+
+            var localized = BuildTerminalLocalizedItemName(cause);
+            return string.IsNullOrWhiteSpace(localized) ? cause : localized;
         }
 
         public static bool TranslateRewardLine(string source, out string translated)

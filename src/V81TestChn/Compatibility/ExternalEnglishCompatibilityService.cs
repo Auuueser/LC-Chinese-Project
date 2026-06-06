@@ -51,7 +51,80 @@ internal static class ExternalEnglishCompatibilityService
         ["DECEASED"] = "\u6b7b\u4ea1",
         ["Collected"] = "\u5df2\u6536\u96c6",
         ["Grade"] = "\u8bc4\u7ea7",
+        ["Rating"] = "\u8bc4\u7ea7",
         ["Lost 100% scrap"] = "\u635f\u5931 100% \u5e9f\u6599",
+        ["No items were found"] = "\u672a\u627e\u5230\u53ef\u552e\u7269\u54c1",
+        ["Error selling items"] = "\u552e\u5356\u7269\u54c1\u65f6\u51fa\u9519",
+        ["You can't afford to sell that amount"] = "\u53ef\u552e\u7269\u54c1\u4e0d\u8db3\uff0c\u65e0\u6cd5\u5356\u51fa\u8be5\u91d1\u989d",
+        ["Successfully emptied temporary blacklist"] = "\u5df2\u6e05\u7a7a\u4e34\u65f6\u9ed1\u540d\u5355",
+        ["Successfully emptied temporary priority set"] = "\u5df2\u6e05\u7a7a\u4e34\u65f6\u4f18\u5148\u5217\u8868",
+        ["Item Blacklist"] = "\u7269\u54c1\u9ed1\u540d\u5355",
+        ["Priority Items"] = "\u4f18\u5148\u552e\u5356\u7269\u54c1",
+        ["Flag Prefix"] = "\u6807\u5fd7\u524d\u7f00",
+        ["Items to never sell by internal name (comma-separated)"] = "\u6c38\u4e0d\u51fa\u552e\u7684\u7269\u54c1\u5185\u90e8\u540d\u79f0\uff08\u9017\u53f7\u5206\u9694\uff09",
+        ["Items which are prioritized when selling"] = "\u51fa\u552e\u65f6\u4f18\u5148\u9009\u62e9\u7684\u7269\u54c1",
+        ["QUICKSELL"] = "\u5feb\u901f\u51fa\u552e",
+        ["SELL RESULTS"] = "\u51fa\u552e\u7ed3\u679c",
+        ["Command"] = "\u547d\u4ee4",
+        ["Invalid command"] = "\u547d\u4ee4\u65e0\u6548",
+        ["HELP PAGE"] = "\u5e2e\u52a9\u9875\u9762",
+        ["ALL HELP PAGE"] = "\u5168\u90e8\u51fa\u552e\u5e2e\u52a9\u9875\u9762",
+        ["AMOUNT HELP PAGE"] = "\u91d1\u989d\u5e2e\u52a9\u9875\u9762",
+        ["BLACKLIST HELP PAGE"] = "\u9ed1\u540d\u5355\u5e2e\u52a9\u9875\u9762",
+        ["ITEM HELP PAGE"] = "\u7269\u54c1\u5e2e\u52a9\u9875\u9762",
+        ["PRIORITY HELP PAGE"] = "\u4f18\u5148\u5217\u8868\u5e2e\u52a9\u9875\u9762",
+        ["QUOTA HELP PAGE"] = "\u914d\u989d\u5e2e\u52a9\u9875\u9762",
+        ["FLAG HELP PAGE"] = "\u6807\u5fd7\u5e2e\u52a9\u9875\u9762",
+        ["OVERTIME HELP PAGE"] = "\u52a0\u73ed\u5956\u52b1\u5e2e\u52a9\u9875\u9762",
+        ["PAGES HELP PAGE"] = "\u9875\u9762\u5e2e\u52a9",
+        ["-A HELP PAGE"] = "-A \u6807\u5fd7\u5e2e\u52a9",
+        ["-E HELP PAGE"] = "-E \u6807\u5fd7\u5e2e\u52a9",
+        ["-N HELP PAGE"] = "-N \u6807\u5fd7\u5e2e\u52a9",
+        ["-O HELP PAGE"] = "-O \u6807\u5fd7\u5e2e\u52a9",
+        ["-P HELP PAGE"] = "-P \u6807\u5fd7\u5e2e\u52a9",
+        ["Combining flags"] = "\u7ec4\u5408\u6807\u5fd7",
+        ["\"help\" to open this page or a specific help page"] = "\"help\"\uff1a\u6253\u5f00\u6b64\u9875\u6216\u6307\u5b9a\u5e2e\u52a9\u9875",
+        ["\"quota\" to sell exactly for quota"] = "\"quota\"\uff1a\u6309\u914d\u989d\u7cbe\u786e\u51fa\u552e",
+        ["\"all\" to sell all unfiltered scrap available"] = "\"all\"\uff1a\u51fa\u552e\u6240\u6709\u672a\u8fc7\u6ee4\u7684\u53ef\u7528\u5e9f\u6599",
+        ["\"item\" to sell all items like the one you are holding or the one you specified"] = "\"item\"\uff1a\u51fa\u552e\u6240\u6301\u6709\u6216\u6307\u5b9a\u7684\u540c\u7c7b\u7269\u54c1",
+        ["\"-a\" to ignore blacklist (used with quota, all, <amount>)"] = "\"-a\"\uff1a\u5ffd\u7565\u9ed1\u540d\u5355\uff08\u7528\u4e8e quota\u3001all\u3001<amount>\uff09",
+        ["\"-o\" to sell accounting for overtime (used with <amount>)"] = "\"-o\"\uff1a\u8ba1\u5165\u52a0\u73ed\u5956\u52b1\u540e\u51fa\u552e\uff08\u7528\u4e8e <amount>\uff09",
+        ["The symbol which is used as prefix in flags (aka \"-\" in \"-e\")"] = "\u547d\u4ee4\u6807\u5fd7\u4f7f\u7528\u7684\u524d\u7f00\u7b26\u53f7\uff08\u4f8b\u5982 -e \u4e2d\u7684 -\uff09",
+        ["Command variations"] = "\u547d\u4ee4\u7528\u6cd5",
+        ["The sell command was initiated"] = "\u552e\u5356\u547d\u4ee4\u5df2\u5f00\u59cb",
+        ["The sell command completed it's job, terminating"] = "\u552e\u5356\u547d\u4ee4\u5df2\u5b8c\u6210\uff0c\u6b63\u5728\u7ed3\u675f",
+        ["The overtime command was initiated"] = "\u52a0\u73ed\u5956\u52b1\u547d\u4ee4\u5df2\u5f00\u59cb",
+        ["Use \"/sell help flags\" to see info on important flags"] = "\u8f93\u5165 \"/sell help flags\" \u67e5\u770b\u91cd\u8981\u6807\u5fd7\u8bf4\u660e",
+        ["Use \"/sell help <flag>\" to see info on specific flag"] = "\u8f93\u5165 \"/sell help <flag>\" \u67e5\u770b\u6307\u5b9a\u6807\u5fd7\u8bf4\u660e",
+        ["Use \"/sell help <variation>\" to see info on specific command"] = "\u8f93\u5165 \"/sell help <variation>\" \u67e5\u770b\u6307\u5b9a\u547d\u4ee4\u8bf4\u660e",
+        ["Use \"/sell help pages\" to see info on all pages"] = "\u8f93\u5165 \"/sell help pages\" \u67e5\u770b\u6240\u6709\u5e2e\u52a9\u9875\u9762",
+        ["Use \"/sell help overtime\" to see info on the \"/ot\" (overtime command)"] = "\u8f93\u5165 \"/sell help overtime\" \u67e5\u770b \"/ot\"\uff08\u52a0\u73ed\u5956\u52b1\u547d\u4ee4\uff09\u8bf4\u660e",
+        ["The value must be positive"] = "\u6570\u503c\u5fc5\u987b\u4e3a\u6b63",
+        ["Cannot find terminal!"] = "\u672a\u627e\u5230\u7ec8\u7aef\uff01",
+        ["Cannot find terminal?!"] = "\u672a\u627e\u5230\u7ec8\u7aef\uff01",
+        ["Quota is already fulfilled"] = "\u5229\u6da6\u6307\u6807\u5df2\u5b8c\u6210",
+        ["No item is held and no item was specified"] = "\u672a\u6301\u6709\u7269\u54c1\uff0c\u4e5f\u672a\u6307\u5b9a\u7269\u54c1",
+        ["No items on the desk"] = "\u67dc\u53f0\u4e0a\u6ca1\u6709\u7269\u54c1",
+        ["Door already open"] = "\u95e8\u5df2\u7ecf\u6253\u5f00",
+        ["Wrong item name"] = "\u7269\u54c1\u540d\u79f0\u9519\u8bef",
+        ["No page with this name exists"] = "\u4e0d\u5b58\u5728\u8fd9\u4e2a\u5e2e\u52a9\u9875\u9762",
+        ["Failed to evalute expression"] = "\u8868\u8fbe\u5f0f\u8ba1\u7b97\u5931\u8d25",
+        ["No items to sort"] = "\u6ca1\u6709\u53ef\u6574\u7406\u7684\u7269\u54c1",
+        ["No items on the ship"] = "\u98de\u8239\u4e0a\u6ca1\u6709\u7269\u54c1",
+        ["Sorting all items..."] = "\u6b63\u5728\u6574\u7406\u6240\u6709\u7269\u54c1...",
+        ["Finished sorting items"] = "\u7269\u54c1\u6574\u7406\u5b8c\u6210",
+        ["Invalid arguments"] = "\u53c2\u6570\u65e0\u6548",
+        ["Invalid item name"] = "\u7269\u54c1\u540d\u79f0\u65e0\u6548",
+        ["Error running command"] = "\u8fd0\u884c\u547d\u4ee4\u65f6\u51fa\u9519",
+        ["Error getting position"] = "\u83b7\u53d6\u4f4d\u7f6e\u65f6\u51fa\u9519",
+        ["Automatic sorting failed"] = "\u81ea\u52a8\u6574\u7406\u5931\u8d25",
+        ["Error while autosorting items"] = "\u81ea\u52a8\u6574\u7406\u7269\u54c1\u65f6\u51fa\u9519",
+        ["Automatic sorting failed due to an internal error, check the log for details"] = "\u81ea\u52a8\u6574\u7406\u56e0\u5185\u90e8\u9519\u8bef\u5931\u8d25\uff0c\u8bf7\u67e5\u770b\u65e5\u5fd7",
+        ["Couldn't find ship"] = "\u672a\u627e\u5230\u98de\u8239",
+        ["Raycast unsuccessful"] = "\u5c04\u7ebf\u68c0\u6d4b\u672a\u6210\u529f",
+        ["The ship must be in orbit"] = "\u98de\u8239\u5fc5\u987b\u5904\u4e8e\u8f68\u9053\u4e2d",
+        ["You can't pick anything up while sorting items."] = "\u6574\u7406\u7269\u54c1\u65f6\u65e0\u6cd5\u62fe\u53d6\u4efb\u4f55\u7269\u54c1\u3002",
+        ["Toggles automatic item sorting when leaving a planet"] = "\u5207\u6362\u79bb\u5f00\u661f\u7403\u65f6\u662f\u5426\u81ea\u52a8\u6574\u7406\u7269\u54c1",
         ["* The most paranoid employee."] = "* \u6700\u591a\u7591\u7684\u5458\u5de5",
         ["The most paranoid employee."] = "\u6700\u591a\u7591\u7684\u5458\u5de5",
         ["* Sustained the most injuries."] = "* \u53d7\u4f24\u6700\u591a",
@@ -70,6 +143,20 @@ internal static class ExternalEnglishCompatibilityService
     {
         ["Scroll Mouse"] = "\u6eda\u52a8\u9f20\u6807",
         ["keybind #"] = "\u6309\u952e\u7ed1\u5b9a #"
+    };
+
+    private static readonly string[] SellingNamedMarkers =
+    {
+        " item(s) named \"",
+        " items named \"",
+        " item named \""
+    };
+
+    private static readonly string[] SellingCountMarkers =
+    {
+        " item(s) with a total value of ",
+        " items with a total value of ",
+        " item with a total value of "
     };
 
     private static readonly Dictionary<string, bool> CanHandleCache = new(RuntimeCacheLimit, StringComparer.Ordinal);
@@ -273,7 +360,8 @@ internal static class ExternalEnglishCompatibilityService
 
         var content = StripMenuSelectionPrefix(text);
         if (ExactEntries.ContainsKey(content) ||
-            LooksLikeBracketedKnownExternalUiToken(content))
+            LooksLikeBracketedKnownExternalUiToken(content) ||
+            LooksLikeDecoratedKnownExternalUiToken(content))
         {
             return true;
         }
@@ -296,7 +384,8 @@ internal static class ExternalEnglishCompatibilityService
                text.IndexOf("INVITE ONLY", StringComparison.OrdinalIgnoreCase) >= 0 ||
                text.IndexOf("discount", StringComparison.OrdinalIgnoreCase) >= 0 ||
                text.IndexOf(" off!", StringComparison.OrdinalIgnoreCase) >= 0 ||
-               text.IndexOf(" up!", StringComparison.OrdinalIgnoreCase) >= 0;
+               text.IndexOf(" up!", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               LooksLikeChatCommandCompatibilityText(content);
     }
 
     private static bool MightTranslateStatusLikeSingleLineCheap(string source)
@@ -309,7 +398,9 @@ internal static class ExternalEnglishCompatibilityService
 
         var content = StripMenuSelectionPrefix(text).Trim();
         return LooksLikeKnownExternalUiLabel(content) ||
-               LooksLikeBracketedKnownExternalUiToken(content);
+               LooksLikeBracketedKnownExternalUiToken(content) ||
+               LooksLikeDecoratedKnownExternalUiToken(content) ||
+               LooksLikeChatCommandCompatibilityText(content);
     }
 
     public static bool TryTranslateFast(string? source, out string translated)
@@ -578,12 +669,14 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         if (TryTranslateBracketedCommand(text, out translated) ||
+            TryTranslateDecoratedExactUiText(text, out translated) ||
             TryTranslateControlTip(text, out translated) ||
             TryTranslateLabelValue(text, out translated) ||
             TryTranslateDiscountLine(text, out translated) ||
             TryTranslateSaveFileLabel(text, out translated) ||
             TryTranslateAdvancedFeaturesPlayerLabel(text, out translated) ||
             TryTranslateDeleteFilePrompt(text, out translated) ||
+            TryTranslateChatCommandCompatibilityText(text, out translated) ||
             TryTranslateExactUiText(text, out translated))
         {
             translated = menuPrefix + richPrefix + translated + richSuffix;
@@ -621,6 +714,406 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         translated = "\u8981\u5220\u9664 " + fileNumber + " \u53f7\u5b58\u6863\u5417";
+        return true;
+    }
+
+    private static bool TryTranslateChatCommandCompatibilityText(string text, out string translated)
+    {
+        translated = text;
+        var value = text.Trim();
+        return TryTranslateCommandItemLabel(value, "Item to sell:", "\u8981\u552e\u5356\u7684\u7269\u54c1", out translated) ||
+               TryTranslateCommandItemLabel(value, "Items with priority:", "\u4f18\u5148\u552e\u5356\u7269\u54c1", out translated) ||
+               TryTranslateNoItemsCalled(value, out translated) ||
+               TryTranslateThereIsScrapOnShip(value, out translated) ||
+               TryTranslateItemsCouldNotBeSorted(value, out translated) ||
+               TryTranslateItemsOfTypePosition(value, out translated) ||
+               TryTranslateMovingAllItemsOfType(value, out translated) ||
+               TryTranslateSellingItemsSummary(value, out translated) ||
+               TryTranslateSoldRequestedSummary(value, out translated) ||
+               TryTranslateCommandValueLabel(value, "Overtime:", "\u52a0\u73ed\u5956\u52b1", out translated) ||
+               TryTranslateCommandValueLabel(value, "Money after takeoff:", "\u8d77\u98de\u540e\u8d44\u91d1", out translated) ||
+               TryTranslateMoneyInTerminal(value, out translated);
+    }
+
+    private static bool LooksLikeChatCommandCompatibilityText(string text)
+    {
+        var value = text.Trim();
+        return value.StartsWith("Item to sell:", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("Items with priority:", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("No items called \"", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("There is ", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("Items of type ", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("Moving all items of type ", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("Selling ", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("Overtime:", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("Money after takeoff:", StringComparison.OrdinalIgnoreCase) ||
+               value.StartsWith("Money in terminal", StringComparison.OrdinalIgnoreCase) ||
+               value.IndexOf(" sold / ", StringComparison.OrdinalIgnoreCase) > 0 ||
+               value.EndsWith(" items couldn't be sorted", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryTranslateCommandItemLabel(string text, string prefix, string localizedLabel, out string translated)
+    {
+        translated = text;
+        if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var item = text[prefix.Length..].Trim();
+        if (item.Length == 0)
+        {
+            return false;
+        }
+
+        translated = localizedLabel + "\uff1a" + LocalizeCommandItemName(item);
+        return true;
+    }
+
+    private static bool TryTranslateNoItemsCalled(string text, out string translated)
+    {
+        translated = text;
+        const string Prefix = "No items called \"";
+        if (!text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var endQuote = text.IndexOf('"', Prefix.Length);
+        if (endQuote <= Prefix.Length)
+        {
+            return false;
+        }
+
+        var item = text.Substring(Prefix.Length, endQuote - Prefix.Length).Trim();
+        var trailing = text[(endQuote + 1)..].Trim();
+        if (item.Length == 0 ||
+            (trailing.Length > 0 && !string.Equals(trailing, "were detected", StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        translated = "\u672a\u627e\u5230\u540d\u4e3a \"" + LocalizeCommandItemName(item) + "\" \u7684\u7269\u54c1";
+        return true;
+    }
+
+    private static bool TryTranslateThereIsScrapOnShip(string text, out string translated)
+    {
+        translated = text;
+        const string Prefix = "There is ";
+        const string Suffix = " scrap on ship";
+        if (!text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) ||
+            !text.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var count = text.Substring(Prefix.Length, text.Length - Prefix.Length - Suffix.Length).Trim();
+        if (!LooksLikeSimpleNumber(count))
+        {
+            return false;
+        }
+
+        translated = "\u98de\u8239\u4e0a\u6709 " + count + " \u4ef6\u5e9f\u6599";
+        return true;
+    }
+
+    private static bool TryTranslateItemsCouldNotBeSorted(string text, out string translated)
+    {
+        translated = text;
+        const string Suffix = " items couldn't be sorted";
+        if (!text.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var count = text[..^Suffix.Length].Trim();
+        if (!LooksLikeSimpleNumber(count))
+        {
+            return false;
+        }
+
+        translated = count + " \u4ef6\u7269\u54c1\u65e0\u6cd5\u6574\u7406";
+        return true;
+    }
+
+    private static bool TryTranslateItemsOfTypePosition(string text, out string translated)
+    {
+        translated = text;
+        const string Prefix = "Items of type ";
+        const string Marker = " will be put on position ";
+        const string ThisGameSuffix = " for this game";
+        if (!text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var marker = text.IndexOf(Marker, StringComparison.OrdinalIgnoreCase);
+        if (marker <= Prefix.Length)
+        {
+            return false;
+        }
+
+        var item = text.Substring(Prefix.Length, marker - Prefix.Length).Trim();
+        var position = text[(marker + Marker.Length)..].Trim();
+        var thisGame = false;
+        if (position.EndsWith(ThisGameSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            thisGame = true;
+            position = position[..^ThisGameSuffix.Length].TrimEnd();
+        }
+
+        if (item.Length == 0 || position.Length == 0)
+        {
+            return false;
+        }
+
+        var localizedItem = LocalizeCommandItemName(item);
+        translated = thisGame
+            ? "\u672c\u5c40\u5185\uff0c\u7c7b\u578b\u4e3a " + localizedItem + " \u7684\u7269\u54c1\u5c06\u653e\u5230 " + position + " \u4f4d\u7f6e"
+            : "\u7c7b\u578b\u4e3a " + localizedItem + " \u7684\u7269\u54c1\u5c06\u653e\u5230 " + position + " \u4f4d\u7f6e";
+        return true;
+    }
+
+    private static bool TryTranslateMovingAllItemsOfType(string text, out string translated)
+    {
+        translated = text;
+        const string Prefix = "Moving all items of type ";
+        const string Marker = " to position ";
+        if (!text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var marker = text.IndexOf(Marker, StringComparison.OrdinalIgnoreCase);
+        if (marker <= Prefix.Length)
+        {
+            return false;
+        }
+
+        var item = text.Substring(Prefix.Length, marker - Prefix.Length).Trim();
+        var position = text[(marker + Marker.Length)..].Trim();
+        if (item.Length == 0 || position.Length == 0)
+        {
+            return false;
+        }
+
+        translated = "\u6b63\u5728\u5c06\u6240\u6709 " + LocalizeCommandItemName(item) + " \u7c7b\u7269\u54c1\u79fb\u52a8\u5230 " + position + " \u4f4d\u7f6e";
+        return true;
+    }
+
+    private static bool TryTranslateSellingItemsSummary(string text, out string translated)
+    {
+        translated = text;
+        const string Prefix = "Selling ";
+        const string NamedValueMarker = "\" with a total value of ";
+        if (!text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var namedMarker = FindFirstMarker(
+            text,
+            Prefix.Length,
+            SellingNamedMarkers,
+            out var namedMarkerText);
+        if (namedMarker > Prefix.Length)
+        {
+            var count = text.Substring(Prefix.Length, namedMarker - Prefix.Length).Trim();
+            var itemStart = namedMarker + namedMarkerText.Length;
+            var valueMarker = text.IndexOf(NamedValueMarker, itemStart, StringComparison.OrdinalIgnoreCase);
+            if (!LooksLikeSimpleNumber(count) || valueMarker <= itemStart)
+            {
+                return false;
+            }
+
+            var item = text.Substring(itemStart, valueMarker - itemStart).Trim();
+            var value = text[(valueMarker + NamedValueMarker.Length)..].Trim();
+            if (item.Length == 0 || value.Length == 0)
+            {
+                return false;
+            }
+
+            translated = "\u6b63\u5728\u51fa\u552e " + count + " \u4ef6\u540d\u4e3a \"" + LocalizeCommandItemName(item) + "\" \u7684\u7269\u54c1\uff0c\u603b\u4ef7\u503c " + LocalizeCommandResultValueTail(value);
+            return true;
+        }
+
+        var marker = FindFirstMarker(
+            text,
+            Prefix.Length,
+            SellingCountMarkers,
+            out var countMarkerText);
+        if (marker <= Prefix.Length)
+        {
+            return false;
+        }
+
+        var soldCount = text.Substring(Prefix.Length, marker - Prefix.Length).Trim();
+        var totalValue = text[(marker + countMarkerText.Length)..].Trim();
+        if (!LooksLikeSimpleNumber(soldCount) || totalValue.Length == 0)
+        {
+            return false;
+        }
+
+        translated = "\u6b63\u5728\u51fa\u552e " + soldCount + " \u4ef6\u7269\u54c1\uff0c\u603b\u4ef7\u503c " + LocalizeCommandResultValueTail(totalValue);
+        return true;
+    }
+
+    private static int FindFirstMarker(string text, int startIndex, string[] markers, out string markerText)
+    {
+        var bestIndex = -1;
+        markerText = string.Empty;
+        foreach (var marker in markers)
+        {
+            var index = text.IndexOf(marker, startIndex, StringComparison.OrdinalIgnoreCase);
+            if (index < 0 || (bestIndex >= 0 && index >= bestIndex))
+            {
+                continue;
+            }
+
+            bestIndex = index;
+            markerText = marker;
+        }
+
+        return bestIndex;
+    }
+
+    private static string LocalizeCommandResultValueTail(string value)
+    {
+        var result = value
+            .Replace(" overtime", " \u52a0\u73ed\u5956\u52b1", StringComparison.OrdinalIgnoreCase)
+            .Replace(", sold every unblacklisted item", "\uff0c\u5df2\u51fa\u552e\u6240\u6709\u672a\u5217\u5165\u9ed1\u540d\u5355\u7684\u7269\u54c1", StringComparison.OrdinalIgnoreCase);
+        return TryTranslateSoldRequestedResultTail(result, out var localized)
+            ? localized
+            : result;
+    }
+
+    private static bool TryTranslateSoldRequestedSummary(string text, out string translated)
+    {
+        return TryTranslateSoldRequestedSummaryCore(text, out translated);
+    }
+
+    private static bool TryTranslateSoldRequestedResultTail(string text, out string translated)
+    {
+        translated = text;
+        if (TryTranslateSoldRequestedSummaryCore(text, out translated))
+        {
+            return true;
+        }
+
+        var colon = text.LastIndexOf(':');
+        if (colon <= 0 || colon >= text.Length - 1)
+        {
+            return false;
+        }
+
+        var prefix = text[..colon].TrimEnd();
+        var tail = text[(colon + 1)..].TrimStart();
+        if (prefix.Length == 0 || !TryTranslateSoldRequestedSummaryCore(tail, out var localizedTail))
+        {
+            return false;
+        }
+
+        translated = prefix + "\uff1a" + localizedTail;
+        return true;
+    }
+
+    private static bool TryTranslateSoldRequestedSummaryCore(string text, out string translated)
+    {
+        translated = text;
+        const string Marker = " sold / ";
+        const string Suffix = " requested";
+        text = text.Trim();
+        var marker = text.IndexOf(Marker, StringComparison.OrdinalIgnoreCase);
+        if (marker <= 0 || !text.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var sold = text[..marker].Trim();
+        var requested = text.Substring(marker + Marker.Length, text.Length - marker - Marker.Length - Suffix.Length).Trim();
+        if (!LooksLikeSimpleNumber(sold) || !LooksLikeSimpleNumber(requested))
+        {
+            return false;
+        }
+
+        translated = "\u5df2\u51fa\u552e " + sold + " / \u76ee\u6807 " + requested;
+        return true;
+    }
+
+    private static bool TryTranslateCommandValueLabel(string text, string prefix, string localizedLabel, out string translated)
+    {
+        translated = text;
+        if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var value = text[prefix.Length..].Trim();
+        if (value.Length == 0)
+        {
+            return false;
+        }
+
+        translated = localizedLabel + "\uff1a" + value;
+        return true;
+    }
+
+    private static bool TryTranslateMoneyInTerminal(string text, out string translated)
+    {
+        translated = text;
+        const string Prefix = "Money in terminal";
+        if (!text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var colon = FindTopLevelColon(text);
+        if (colon <= 0 || colon >= text.Length - 1)
+        {
+            return false;
+        }
+
+        var label = text[..colon];
+        var value = text[(colon + 1)..].Trim();
+        if (value.Length == 0)
+        {
+            return false;
+        }
+
+        translated = label.IndexOf("desk", StringComparison.OrdinalIgnoreCase) >= 0
+            ? "\u7ec8\u7aef\u8d44\u91d1\uff08\u542b\u67dc\u53f0\uff09\uff1a" + value
+            : "\u7ec8\u7aef\u8d44\u91d1\uff1a" + value;
+        return true;
+    }
+
+    private static string LocalizeCommandItemName(string item)
+    {
+        var trimmed = item.Trim();
+        if (trimmed.Length == 0)
+        {
+            return trimmed;
+        }
+
+        var localized = TranslationService.BuildTerminalLocalizedItemName(trimmed);
+        return string.IsNullOrWhiteSpace(localized) ? trimmed : localized;
+    }
+
+    private static bool LooksLikeSimpleNumber(string value)
+    {
+        if (value.Length == 0)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < value.Length; i++)
+        {
+            if (!char.IsDigit(value[i]))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -743,6 +1236,24 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         translated = "[ " + localized + " ]";
+        return true;
+    }
+
+    private static bool TryTranslateDecoratedExactUiText(string text, out string translated)
+    {
+        translated = text;
+        if (!TryGetDecoratedKnownExternalUiTokenSpan(text, out var start, out var length))
+        {
+            return false;
+        }
+
+        var token = text.Substring(start, length).Trim();
+        if (!ExactEntries.TryGetValue(token, out var localized))
+        {
+            return false;
+        }
+
+        translated = text[..start] + localized + text[(start + length)..];
         return true;
     }
 
@@ -939,6 +1450,51 @@ internal static class ExternalEnglishCompatibilityService
         var inner = text.Substring(1, text.Length - 2).Trim();
         return ExactEntries.ContainsKey(inner);
     }
+
+    private static bool LooksLikeDecoratedKnownExternalUiToken(string text)
+    {
+        if (!TryGetDecoratedKnownExternalUiTokenSpan(text, out var start, out var length))
+        {
+            return false;
+        }
+
+        var token = text.Substring(start, length).Trim();
+        return ExactEntries.ContainsKey(token);
+    }
+
+    private static bool TryGetDecoratedKnownExternalUiTokenSpan(string text, out int start, out int length)
+    {
+        start = 0;
+        length = 0;
+        if (text.Length < 5)
+        {
+            return false;
+        }
+
+        var left = 0;
+        var right = text.Length - 1;
+        while (left <= right && IsDecoratedTitleFrameChar(text[left]))
+        {
+            left++;
+        }
+
+        while (right >= left && IsDecoratedTitleFrameChar(text[right]))
+        {
+            right--;
+        }
+
+        if (left == 0 || right == text.Length - 1 || right < left)
+        {
+            return false;
+        }
+
+        start = left;
+        length = right - left + 1;
+        return true;
+    }
+
+    private static bool IsDecoratedTitleFrameChar(char ch) =>
+        char.IsWhiteSpace(ch) || ch is '=' or '-' or '_';
 
     private static bool LooksLikeSaveFileLabel(string text)
     {

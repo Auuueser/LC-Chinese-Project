@@ -42,51 +42,55 @@ internal static partial class TranslationService
                 return false;
             }
 
-            var trimmed = source.Trim();
-            if (TryUnwrapColorTag(trimmed, out var openTag, out var body, out var closeTag) &&
-                Translate(body, out var bodyTranslation))
-            {
-                translated = openTag + bodyTranslation + closeTag;
-                return true;
-            }
-
             foreach (var (suffix, replacement) in SystemSuffixTranslations)
             {
-                if (!trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) || trimmed.Length <= suffix.Length)
+                if (!TryFindRenderedSuffixSpan(source, suffix, out var suffixStart, out var suffixEnd) ||
+                    !HasRenderedTextBefore(source, suffixStart))
                 {
                     continue;
                 }
 
-                translated = trimmed[..^suffix.Length] + replacement;
+                translated = source[..suffixStart] + replacement + source[suffixEnd..];
                 return true;
             }
 
             return false;
         }
 
-        private static bool TryUnwrapColorTag(string source, out string openTag, out string body, out string closeTag)
+        private static bool TryFindRenderedSuffixSpan(string source, string suffix, out int suffixStart, out int suffixEnd)
         {
-            openTag = string.Empty;
-            body = source;
-            closeTag = string.Empty;
+            suffixStart = 0;
+            suffixEnd = 0;
 
-            const string close = "</color>";
-            if (!source.StartsWith("<color=", StringComparison.OrdinalIgnoreCase) ||
-                !source.EndsWith(close, StringComparison.OrdinalIgnoreCase))
+            var sourceIndex = source.Length - 1;
+            SkipTrailingRenderedWhitespace(source, ref sourceIndex);
+            suffixEnd = sourceIndex + 1;
+
+            for (var suffixIndex = suffix.Length - 1; suffixIndex >= 0; suffixIndex--)
             {
-                return false;
+                if (!TryReadPreviousRenderedChar(source, ref sourceIndex, out var ch) ||
+                    !AsciiEqualsIgnoreCase(ch, suffix[suffixIndex]))
+                {
+                    return false;
+                }
             }
 
-            var openEnd = source.IndexOf('>');
-            if (openEnd <= 0)
-            {
-                return false;
-            }
-
-            openTag = source[..(openEnd + 1)];
-            closeTag = source.Substring(source.Length - close.Length, close.Length);
-            body = source.Substring(openEnd + 1, source.Length - openEnd - 1 - close.Length);
+            suffixStart = sourceIndex + 1;
             return true;
+        }
+
+        private static bool HasRenderedTextBefore(string source, int endExclusive)
+        {
+            var sourceIndex = endExclusive - 1;
+            while (TryReadPreviousRenderedChar(source, ref sourceIndex, out var ch))
+            {
+                if (!char.IsWhiteSpace(ch))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool RenderedTextEndsWith(string source, string suffix)

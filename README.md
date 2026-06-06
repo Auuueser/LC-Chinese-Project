@@ -1,6 +1,11 @@
 # LC Chinese Project
 
-Version: `3.1.2`
+Version: `3.1.3`
+
+本次变更点：
+
+* 补全更多游戏内与第三方运行时文本的汉化覆盖。
+* 优化文本处理兼容性，提升批量操作和消息刷新时的稳定性。
 
 ## 中文说明
 
@@ -13,7 +18,7 @@ LC Chinese Project 是面向 Lethal Company V81 测试环境维护的简体中�
 - 覆盖游戏内 UI、HUD、终端、商店、扫描提示、飞船显示屏、星球信息、结算界面、大厅提示和部分场景文本。
 - 处理终端订单、星球天气、扫描价值、聊天系统消息、投票、剩余天数、重量单位、服装切换提示、载具交互提示和观战状态等动态文本。
 - 改善主菜单、房间创建、加入游戏、游戏设置、控制器绑定、退出确认和大厅状态弹窗等界面的中文显示。
-- 补全 HUD 交互提示、建造模式提示、扫描 HUD 副文本和终端订单反馈中的常见英文残留。
+- 补全 HUD 提示、扫描信息、终端反馈、交互提示及部分第三方命令输出中的常见英文残留。
 - 提供中文 TextMeshPro fallback，降低缺字、透明字、黑色字、裁切和动态文本渲染异常。
 - 按需使用系统补充字体显示日文、韩文等非中文东亚字符，改善大厅名、玩家名、聊天消息和第三方运行时文本中的跨语言字符显示。
 - 兼容 RuntimeIcons、RuntimeIcons_BetterRotations 和 HoneeItemIcons，保留原版英文物品 key 供图标匹配使用，仅在显示层输出中文。
@@ -134,7 +139,8 @@ EnableTargetedUiStyleRepairFastGate = true
 
 - 图标类模组如果依赖原版英文物品名，本模组会尽量保留图标匹配 key，只在显示层翻译中文。
 - 终端输入、聊天输入、玩家名、大厅动态名和图标匹配文本会优先进入保护逻辑，减少误翻译。
-- 常见第三方运行时英文文本会通过通用文本路径处理，不依赖插件 GUID、类型名或第三方资源复制。
+- 常见运行时生成文本会通过通用文本路径处理，减少对特定插件、类型名或资源路径的依赖。
+- 聊天命令和批量操作场景会进入受保护的文本路径，降低大量消息刷新或物品操作时的冲突风险。
 - 大型整合包中如果菜单或 HUD 文本频繁刷新，建议优先保留默认性能预算。
 
 ### 排查
@@ -150,6 +156,11 @@ EnableTargetedUiStyleRepairFastGate = true
 
 ## English
 
+Changes in `3.1.3`:
+
+* Adds more localization coverage for in-game text and third-party runtime text.
+* Improves text-processing compatibility and stability during bulk operations and message refreshes.
+
 LC Chinese Project is a Simplified Chinese localization mod maintained for the Lethal Company V81 test environment. It provides runtime text localization, Chinese TextMeshPro fallback, selected localized UI textures, dynamic text post-processing, and generic compatibility handling for common UI and icon-related mods.
 
 This project does not require existing third-party translation or font-patching runtimes. Text, font, texture, and compatibility logic are handled by this plugin. Third-party compatibility is handled through runtime text paths; the package does not copy third-party mod resources or require an additional translation framework.
@@ -159,7 +170,7 @@ This project does not require existing third-party translation or font-patching 
 - Localizes in-game UI, HUD, terminal pages, store pages, scan prompts, ship monitor text, planet information, endgame screens, lobby warnings, and selected scene text.
 - Handles dynamic text such as terminal orders, planet weather, scanner values, chat system messages, votes, days left, weight units, suit-change prompts, vehicle prompts, and spectate status.
 - Improves Chinese display for the main menu, lobby creation, game joining, settings, controller binding, leave-game confirmation, and lobby status popups.
-- Completes common missing coverage in HUD interaction prompts, build-mode prompts, scanner subtext, and terminal order feedback.
+- Completes common missing coverage in HUD prompts, scanner information, terminal feedback, interaction prompts, and selected third-party command output.
 - Provides Chinese TextMeshPro fallback to reduce missing glyphs, transparent glyphs, black glyphs, clipping, and dynamic text rendering issues.
 - Uses system supplemental fonts only when needed for Japanese, Korean, and other non-Chinese East Asian characters in lobby names, player names, chat messages, and third-party runtime text.
 - Keeps RuntimeIcons, RuntimeIcons_BetterRotations, and HoneeItemIcons compatible by preserving vanilla English item keys for icon matching while translating display text separately.
@@ -280,7 +291,8 @@ Cache entries are bounded and range-checked, and config changes refresh at runti
 
 - If an icon mod depends on vanilla English item names, this mod preserves icon-matching keys where possible and translates display text separately.
 - Terminal input, chat input, player names, lobby dynamic names, and icon-matching text are protected first to reduce mistranslation.
-- Common third-party runtime English text is handled through generic text paths, without plugin GUID checks, type-name checks, or third-party resource copying.
+- Common runtime-generated text is handled through generic text paths, reducing reliance on specific plugins, type names, or resource paths.
+- Chat-command and bulk-operation scenarios use protected text paths, reducing conflict risk during heavy message refreshes or item operations.
 - If a large modpack refreshes menu or HUD text frequently, keep the default performance budget first.
 
 ### Troubleshooting

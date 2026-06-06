@@ -2,6 +2,14 @@
 
 ## 中文
 
+### 3.1.3 - 文本覆盖与兼容性更新
+
+相较 3.1.2，本版本补全更多游戏内与第三方运行时文本的汉化覆盖，并优化文本处理稳定性。
+
+* 补全 HUD、扫描、终端、交互提示及常见命令输出中的英文残留。
+* 优化聊天命令和批量操作相关的文本处理逻辑，降低大量消息刷新时的冲突风险。
+* 保持通用文本处理方式，提升运行时文本的兼容性。
+
 ### 3.1.2 - 汉化补全更新
 
 相较 3.1.1，补全部分原版 HUD 与终端动态文本的汉化覆盖，减少交互提示、右键扫描和订单反馈中的英文残留。
@@ -77,6 +85,14 @@
 - 使用当前运行时构建刷新 Thunderstore 包体和 GitHub 发布元数据。
 
 ## English
+
+### 3.1.3 - Text Coverage and Compatibility Update
+
+Compared with 3.1.2, this release adds more localization coverage for in-game and third-party runtime text, and improves text-processing stability.
+
+* Completes leftover English in HUD, scanner text, terminal feedback, interaction prompts, and common command output.
+* Improves text handling for chat commands and bulk operations, reducing conflict risk during heavy message refreshes.
+* Keeps generic text handling to improve runtime text compatibility.
 
 ### 3.1.2 - Localization coverage update
 

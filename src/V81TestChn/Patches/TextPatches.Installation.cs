@@ -34,6 +34,8 @@ internal static partial class TextPatches
         PatchPrefix(harmony, typeof(StartOfRound), "Start", nameof(StartOfRoundStartPrefix), ref patched);
         PatchPostfix(harmony, typeof(StartOfRound), "Start", nameof(StartOfRoundStartPostfix), ref patched);
         PatchPrefix(harmony, typeof(StartOfRound), "AutoSaveShipData", nameof(StartOfRoundAutoSaveShipDataPrefix), ref patched);
+        PatchPrefix(harmony, typeof(StartOfRound), "SetShipReadyToLand", nameof(StartOfRoundSetShipReadyToLandPrefix), ref patched, Priority.First);
+        PatchPostfix(harmony, typeof(StartOfRound), "SetShipReadyToLand", nameof(StartOfRoundSetShipReadyToLandPostfix), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(StartOfRound), "ChangeLevel", nameof(StartOfRoundChangeLevelPostfix), ref patched);
         PatchPrefix(harmony, typeof(StartOfRound), "ChangePlanet", nameof(StartOfRoundChangePlanetPrefix), ref patched);
         PatchPostfix(harmony, typeof(StartOfRound), "ChangePlanet", nameof(StartOfRoundChangePlanetPostfix), ref patched);
@@ -55,7 +57,9 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(HUDManager), "ReadDialogue", nameof(HudManagerReadDialoguePostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "UpdateBoxesSpectateUI", nameof(HudManagerUpdateBoxesSpectateUiPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "SetSpectatingTextToPlayer", nameof(HudManagerSetSpectatingTextToPlayerPostfix), ref patched);
+        PatchPrefix(harmony, typeof(HUDManager), "FillEndGameStats", nameof(HudManagerFillEndGameStatsPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "FillEndGameStats", nameof(HudManagerFillEndGameStatsPostfix), ref patched);
+        PatchPrefix(harmony, typeof(HUDManager), "SetPlayerLevel", nameof(HudManagerSetPlayerLevelPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "ApplyPenalty", nameof(HudManagerApplyPenaltyPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "ShowPlayersFiredScreen", nameof(HudManagerShowPlayersFiredScreenPostfix), ref patched);
         var addChatMessage = AccessTools.Method(typeof(HUDManager), "AddChatMessage", new[] { typeof(string), typeof(string), typeof(int), typeof(bool) });
@@ -81,6 +85,7 @@ internal static partial class TextPatches
         PatchPostfix(harmony, AccessTools.Method(typeof(PlayerControllerB), "SetHoverTipAndCurrentInteractTrigger"), nameof(PlayerControllerBSetHoverTipAndCurrentInteractTriggerPostfix), ref patched);
         PatchPostfix(harmony, typeof(VehicleController), "Start", nameof(VehicleControllerStartPostfix), ref patched);
         PatchPostfix(harmony, typeof(RoundManager), "GenerateNewLevelClientRpc", nameof(RoundManagerGenerateNewLevelClientRpcPostfix), ref patched);
+        PatchPostfix(harmony, typeof(RoundManager), "SpawnScrapInLevel", nameof(RoundManagerSpawnScrapInLevelPostfix), ref patched);
 
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPrefix), ref patched);
         PatchPostfix(harmony, AccessTools.Method(typeof(TMP_InputField), "OnEnable"), nameof(TmpInputFieldOnEnablePostfix), ref patched);
@@ -95,6 +100,7 @@ internal static partial class TextPatches
         }
 
         PatchPostfix(harmony, AccessTools.Method(typeof(TMP_FontAsset), "Awake"), nameof(TmpFontAssetAwakePostfix), ref patched);
+        PatchPrefix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetTrigger), new[] { typeof(string) }), nameof(AnimatorSetTriggerPrefix), ref patched);
         PatchPostfix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetTrigger), new[] { typeof(string) }), nameof(AnimatorSetTriggerPostfix), ref patched);
         PatchPrefix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetBool), new[] { typeof(string), typeof(bool) }), nameof(AnimatorSetBoolPrefix), ref patched);
         PatchPostfix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetBool), new[] { typeof(string), typeof(bool) }), nameof(AnimatorSetBoolPostfix), ref patched);
@@ -176,24 +182,24 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPostfix), ref patched);
     }
 
-    private static void PatchPrefix(Harmony harmony, Type targetType, string targetMethod, string patchMethod, ref int patched)
+    private static void PatchPrefix(Harmony harmony, Type targetType, string targetMethod, string patchMethod, ref int patched, int priority = Priority.Normal)
     {
-        PatchPrefix(harmony, AccessTools.Method(targetType, targetMethod), patchMethod, ref patched);
+        PatchPrefix(harmony, AccessTools.Method(targetType, targetMethod), patchMethod, ref patched, priority);
     }
 
-    private static void PatchPostfix(Harmony harmony, Type targetType, string targetMethod, string patchMethod, ref int patched)
+    private static void PatchPostfix(Harmony harmony, Type targetType, string targetMethod, string patchMethod, ref int patched, int priority = Priority.Normal)
     {
-        PatchPostfix(harmony, AccessTools.Method(targetType, targetMethod), patchMethod, ref patched);
+        PatchPostfix(harmony, AccessTools.Method(targetType, targetMethod), patchMethod, ref patched, priority);
     }
 
-    private static void PatchPrefix(Harmony harmony, MethodBase? original, string patchMethod, ref int patched)
+    private static void PatchPrefix(Harmony harmony, MethodBase? original, string patchMethod, ref int patched, int priority = Priority.Normal)
     {
-        Patch(harmony, original, prefixName: patchMethod, postfixName: null, ref patched);
+        Patch(harmony, original, prefixName: patchMethod, postfixName: null, ref patched, priority);
     }
 
-    private static void PatchPostfix(Harmony harmony, MethodBase? original, string patchMethod, ref int patched)
+    private static void PatchPostfix(Harmony harmony, MethodBase? original, string patchMethod, ref int patched, int priority = Priority.Normal)
     {
-        Patch(harmony, original, prefixName: null, postfixName: patchMethod, ref patched);
+        Patch(harmony, original, prefixName: null, postfixName: patchMethod, ref patched, priority);
     }
 
     private static void PatchOptionalPrefix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched)
@@ -262,7 +268,7 @@ internal static partial class TextPatches
         return null;
     }
 
-    private static void Patch(Harmony harmony, MethodBase? original, string? prefixName, string? postfixName, ref int patched)
+    private static void Patch(Harmony harmony, MethodBase? original, string? prefixName, string? postfixName, ref int patched, int priority = Priority.Normal)
     {
         var patchName = prefixName ?? postfixName ?? "";
         try
@@ -282,13 +288,24 @@ internal static partial class TextPatches
 
             harmony.Patch(
                 original,
-                prefixName == null ? null : new HarmonyMethod(patchMethod),
-                postfixName == null ? null : new HarmonyMethod(patchMethod));
+                prefixName == null ? null : CreateHarmonyMethod(patchMethod, priority),
+                postfixName == null ? null : CreateHarmonyMethod(patchMethod, priority));
             patched++;
         }
         catch (Exception ex)
         {
             Plugin.Log.LogWarning($"Manual patch failed for {patchName}: {ex.GetType().Name}: {ex.Message}");
         }
+    }
+
+    private static HarmonyMethod CreateHarmonyMethod(MethodInfo patchMethod, int priority)
+    {
+        var harmonyMethod = new HarmonyMethod(patchMethod);
+        if (priority != Priority.Normal)
+        {
+            harmonyMethod.priority = priority;
+        }
+
+        return harmonyMethod;
     }
 }

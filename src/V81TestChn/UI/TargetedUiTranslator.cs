@@ -20,6 +20,7 @@ internal static class TargetedUiTranslator
     private static readonly HashSet<int> MenuPanelTranslationRunning = new();
     private static readonly HashSet<int> HudChatOutputTranslationPending = new();
     private static readonly HashSet<int> HudChatOutputTranslationRunning = new();
+    private static readonly Dictionary<int, int> HudChatOutputTranslationGenerations = new();
     private static readonly Dictionary<int, ProcessedTextState> TranslationProcessedCache = new();
     private static readonly Dictionary<int, List<int>> TmpDropdownOptionTextCache = new();
     private static readonly Dictionary<int, List<int>> DropdownOptionTextCache = new();
@@ -41,6 +42,7 @@ internal static class TargetedUiTranslator
     private const string PlanetRiskValueObjectName = "HazardLevelLetter";
     private const int PlanetRiskMergeLogLimit = 6;
     private static bool _sceneUnloadSubscribed;
+    private static bool _hudChatOutputDeferredByRoundTransition;
     private static int _planetRiskMergeLogRemaining = PlanetRiskMergeLogLimit;
     [System.ThreadStatic]
     private static int _planetRiskTextMutationDepth;
@@ -122,12 +124,15 @@ internal static class TargetedUiTranslator
         MenuPanelTranslationRunning.Clear();
         HudChatOutputTranslationPending.Clear();
         HudChatOutputTranslationRunning.Clear();
+        HudChatOutputTranslationGenerations.Clear();
+        _hudChatOutputDeferredByRoundTransition = false;
         TranslationProcessedCache.Clear();
         TmpDropdownOptionTextCache.Clear();
         DropdownOptionTextCache.Clear();
         ChatOutputStates.Clear();
         CursorTipStates.Clear();
         PlanetRiskTextPairCache.Clear();
+        RoundTransitionTextThrottle.Reset();
         ClearScanBuffers();
     }
 
@@ -1185,9 +1190,43 @@ internal static class TargetedUiTranslator
         return hud != null && HudChatOutputTranslationPending.Contains(hud.GetInstanceID());
     }
 
+    public static bool ShouldBypassHudChatOutputTmpText(TMP_Text? text, string? value, string reason)
+    {
+        if (text == null)
+        {
+            return false;
+        }
+
+        var hud = HUDManager.Instance;
+        if (hud == null || !ReferenceEquals(text, hud.chatText))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            FontFallbackService.ApplyFallback(text, value);
+        }
+
+        if (RoundTransitionTextThrottle.ShouldDeferHudChatOutput())
+        {
+            MarkHudChatOutputTranslationPending(hud);
+            return true;
+        }
+
+        if (IsHudChatOutputTranslationPending(hud))
+        {
+            return true;
+        }
+
+        MarkHudChatOutputTranslationPending(hud);
+        ScheduleHudChatOutput(hud, reason);
+        return true;
+    }
+
     public static bool ShouldBypassPendingHudChatOutputTmpText(TMP_Text? text)
     {
-        if (text == null || HudChatOutputTranslationPending.Count == 0)
+        if (text == null)
         {
             return false;
         }
@@ -1195,7 +1234,8 @@ internal static class TargetedUiTranslator
         var hud = HUDManager.Instance;
         return hud != null &&
                ReferenceEquals(text, hud.chatText) &&
-               IsHudChatOutputTranslationPending(hud);
+               (RoundTransitionTextThrottle.ShouldDeferHudChatOutput() ||
+                IsHudChatOutputTranslationPending(hud));
     }
 
     public static void MarkHudChatOutputTranslationPending(HUDManager? hud)
@@ -1205,13 +1245,27 @@ internal static class TargetedUiTranslator
             return;
         }
 
-        HudChatOutputTranslationPending.Add(hud.GetInstanceID());
+        if (RoundTransitionTextThrottle.ShouldDeferHudChatOutput())
+        {
+            _hudChatOutputDeferredByRoundTransition = true;
+            return;
+        }
+
+        var instanceId = hud.GetInstanceID();
+        HudChatOutputTranslationPending.Add(instanceId);
+        IncrementHudChatOutputTranslationGeneration(instanceId);
     }
 
     public static void ScheduleHudChatOutput(HUDManager? hud, string reason)
     {
         if (hud == null || Plugin.IsRuntimeShuttingDown)
         {
+            return;
+        }
+
+        if (RoundTransitionTextThrottle.ShouldDeferHudChatOutput())
+        {
+            _hudChatOutputDeferredByRoundTransition = true;
             return;
         }
 
@@ -1225,23 +1279,26 @@ internal static class TargetedUiTranslator
         if (!hud.isActiveAndEnabled)
         {
             HudChatOutputTranslationPending.Remove(instanceId);
+            HudChatOutputTranslationGenerations.Remove(instanceId);
             return;
         }
 
         try
         {
+            var scheduledGeneration = GetHudChatOutputTranslationGeneration(instanceId);
             HudChatOutputTranslationRunning.Add(instanceId);
-            hud.StartCoroutine(TranslateHudChatOutputDeferred(hud, reason, instanceId));
+            hud.StartCoroutine(TranslateHudChatOutputDeferred(hud, reason, instanceId, scheduledGeneration));
         }
         catch (Exception ex)
         {
             HudChatOutputTranslationPending.Remove(instanceId);
             HudChatOutputTranslationRunning.Remove(instanceId);
+            HudChatOutputTranslationGenerations.Remove(instanceId);
             Plugin.Log.LogWarning($"HUD chat output translation scheduling failed: {ex.GetType().Name}: {ex.Message}");
         }
     }
 
-    private static IEnumerator TranslateHudChatOutputDeferred(HUDManager hud, string reason, int instanceId)
+    private static IEnumerator TranslateHudChatOutputDeferred(HUDManager hud, string reason, int instanceId, int scheduledGeneration)
     {
         try
         {
@@ -1256,9 +1313,48 @@ internal static class TargetedUiTranslator
         }
         finally
         {
-            HudChatOutputTranslationPending.Remove(instanceId);
             HudChatOutputTranslationRunning.Remove(instanceId);
+            var currentGeneration = GetHudChatOutputTranslationGeneration(instanceId);
+            if (!Plugin.IsRuntimeShuttingDown &&
+                hud != null &&
+                hud.isActiveAndEnabled &&
+                currentGeneration != scheduledGeneration)
+            {
+                HudChatOutputTranslationPending.Add(instanceId);
+                ScheduleHudChatOutput(hud, reason + ".coalesced");
+            }
+            else
+            {
+                HudChatOutputTranslationPending.Remove(instanceId);
+                HudChatOutputTranslationGenerations.Remove(instanceId);
+            }
         }
+    }
+
+    private static int IncrementHudChatOutputTranslationGeneration(int instanceId)
+    {
+        HudChatOutputTranslationGenerations.TryGetValue(instanceId, out var current);
+        var next = current == int.MaxValue ? 1 : current + 1;
+        HudChatOutputTranslationGenerations[instanceId] = next;
+        return next;
+    }
+
+    private static int GetHudChatOutputTranslationGeneration(int instanceId)
+    {
+        return HudChatOutputTranslationGenerations.TryGetValue(instanceId, out var generation)
+            ? generation
+            : 0;
+    }
+
+    public static void FlushHudChatOutputDeferredByRoundTransition(HUDManager? hud, string reason)
+    {
+        if (!_hudChatOutputDeferredByRoundTransition)
+        {
+            return;
+        }
+
+        _hudChatOutputDeferredByRoundTransition = false;
+        ScheduleHudChatOutput(hud, reason);
     }
 
     private static ChatOutputState GetChatOutputState(HUDManager hud)
@@ -1803,7 +1899,7 @@ internal static class TargetedUiTranslator
         }
 
         OriginalResourceStateService.CaptureItem(item);
-        if (RuntimeIconsCompatibilityService.TryTranslateItemName(item))
+        if (ItemIdentityCompatibilityService.TryTranslateItemName(item))
         {
             Plugin.ReportTranslationHit();
         }

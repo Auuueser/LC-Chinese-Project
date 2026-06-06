@@ -28,7 +28,7 @@ internal static class GameResourceTranslator
             }
 
             OriginalResourceStateService.CaptureItem(item);
-            translated += RuntimeIconsCompatibilityService.TranslateResourceItemName(item);
+            translated += ItemIdentityCompatibilityService.TranslateResourceItemName(item);
             if (item.toolTips == null)
             {
                 continue;

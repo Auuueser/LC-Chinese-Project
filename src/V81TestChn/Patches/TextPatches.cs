@@ -39,13 +39,7 @@ internal static partial class TextPatches
     private static readonly HashSet<int> TmpColorHookCandidateTextIds = new(TmpColorHookCandidateCacheLimit);
     private static readonly HashSet<string> TmpHookSourceNoopCache = new(TmpHookSourceNoopCacheLimit, StringComparer.Ordinal);
     [ThreadStatic]
-    private static bool _skipTmpSetTextPostfixFromPrefix;
-    [ThreadStatic]
-    private static int _skipTmpSetTextPostfixTextId;
-    [ThreadStatic]
-    private static string? _skipTmpSetTextPostfixValue;
-    [ThreadStatic]
-    private static bool _skipTmpSetTextPostfixRequiresValueMatch;
+    private static List<TmpSetTextPostfixSkipEntry>? _tmpSetTextPostfixSkipStack;
     private static ConfigEntry<bool>? _enableTmpHookPerfCounters;
     private static ConfigEntry<int>? _tmpHookPerfLogIntervalSeconds;
     private static ConfigEntry<bool>? _enableGlobalTmpColorHook;
@@ -146,6 +140,20 @@ internal static partial class TextPatches
         public string? Source { get; }
         public string Translated { get; }
         public int FontId { get; }
+    }
+
+    private readonly struct TmpSetTextPostfixSkipEntry
+    {
+        public TmpSetTextPostfixSkipEntry(int textId, string? value, bool requiresValueMatch)
+        {
+            TextId = textId;
+            Value = value;
+            RequiresValueMatch = requiresValueMatch;
+        }
+
+        public int TextId { get; }
+        public string? Value { get; }
+        public bool RequiresValueMatch { get; }
     }
 
     private readonly struct CachedTmpColorHookEligibility
@@ -330,6 +338,7 @@ internal static partial class TextPatches
         TmpColorHookEligibilityCache.Clear();
         TmpColorHookCandidateTextIds.Clear();
         TmpHookSourceNoopCache.Clear();
+        AdvancedFeaturesGradeTextIds.Clear();
         ExternalEnglishCompatibilityService.ClearRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
         ResetTmpHookPerfCounters();
@@ -553,11 +562,21 @@ internal static partial class TextPatches
         HudEndGameLocalizationService.ApplySpectateUi(__instance, "HUDManager.SetSpectatingTextToPlayer");
     }
 
+    private static void HudManagerFillEndGameStatsPrefix(int scrapCollected = 0)
+    {
+        EndGameScrapValueGuard.EnsureSafeScrapDenominator("HUDManager.FillEndGameStats", scrapCollected);
+    }
+
     [HarmonyPatch(typeof(HUDManager), "FillEndGameStats")]
     [HarmonyPostfix]
     private static void HudManagerFillEndGameStatsPostfix(HUDManager __instance)
     {
         HudEndGameLocalizationService.ApplyHudEndGame(__instance, "HUDManager.FillEndGameStats");
+    }
+
+    private static void HudManagerSetPlayerLevelPrefix()
+    {
+        EndGameScrapValueGuard.EnsureSafeScrapDenominator("HUDManager.SetPlayerLevel");
     }
 
     [HarmonyPatch(typeof(HUDManager), "ApplyPenalty")]
@@ -742,6 +761,11 @@ internal static partial class TextPatches
         DirectTextLocalizationService.ApplyComposite(HUDManager.Instance?.loadingText, "RoundManager.GenerateNewLevelClientRpc");
     }
 
+    private static void RoundManagerSpawnScrapInLevelPostfix(RoundManager __instance)
+    {
+        EndGameScrapValueGuard.EnsureSafeScrapDenominator(__instance, "RoundManager.SpawnScrapInLevel");
+    }
+
     [HarmonyPatch(typeof(TMP_Text), "set_text")]
     [HarmonyPrefix]
     private static void TmpSetTextPrefix(TMP_Text __instance, ref string value)
@@ -767,15 +791,24 @@ internal static partial class TextPatches
 
     private static void TmpSetTextPrefixCore(TMP_Text __instance, ref string value, bool skipAlreadyChecked)
     {
-        ClearTmpSetTextPostfixSkip();
         if (Plugin.IsRuntimeShuttingDown)
         {
             return;
         }
 
-        if (TargetedUiTranslator.ShouldBypassPendingHudChatOutputTmpText(__instance))
+        if (TargetedUiTranslator.ShouldBypassHudChatOutputTmpText(__instance, value, "TMP_Text.set_text.chat-output"))
         {
             MarkTmpSetTextPostfixSkip(__instance, value);
+            return;
+        }
+
+        if (TryNormalizeHudEndGameGradeLetterText(__instance, ref value))
+        {
+            return;
+        }
+
+        if (TryNormalizeAdvancedFeaturesGradeText(__instance, ref value))
+        {
             return;
         }
 
@@ -818,6 +851,62 @@ internal static partial class TextPatches
 
         HudEndGameLocalizationService.TryRewriteSpectateDeadValue(__instance, ref value, "TMP_Text.set_text");
         TranslateTmpText(__instance, ref value);
+    }
+
+    private static bool TryNormalizeHudEndGameGradeLetterText(TMP_Text text, ref string value)
+    {
+        if (!ReferenceEquals(text, HUDManager.Instance?.statsUIElements?.gradeLetter) ||
+            !TryNormalizeHudEndGameGradeLetterValue(value, out var normalized))
+        {
+            return false;
+        }
+
+        value = normalized;
+        MarkTmpSetTextPostfixSkip(text, value);
+        return true;
+    }
+
+    private static bool TryNormalizeHudEndGameGradeLetterValue(string? value, out string normalized)
+    {
+        return TryNormalizeVanillaEndgameGradeLetter(value, out normalized);
+    }
+
+    private static bool TryNormalizeAdvancedFeaturesGradeText(TMP_Text text, ref string value)
+    {
+        if (!TryNormalizeAdvancedFeaturesGradeTextValue(text, value, out var normalized))
+        {
+            return false;
+        }
+
+        value = normalized;
+        MarkTmpSetTextPostfixSkip(text, value);
+        return true;
+    }
+
+    private static bool TryNormalizeAdvancedFeaturesGradeText(TMP_Text text, ref StringBuilder sourceText)
+    {
+        if (sourceText == null ||
+            sourceText.Length != 1 ||
+            !TryNormalizeAdvancedFeaturesGradeTextValue(text, sourceText.ToString(), out var normalized))
+        {
+            return false;
+        }
+
+        sourceText = new StringBuilder(normalized);
+        MarkTmpSetTextPostfixSkip(text);
+        return true;
+    }
+
+    private static void NormalizeHudEndGameGradeLetterSource(TMP_Text? text)
+    {
+        if (text == null ||
+            !TryNormalizeHudEndGameGradeLetterValue(text.text, out var normalized) ||
+            string.Equals(text.text?.Trim(), normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        text.text = normalized;
     }
 
     private static bool TryTranslateHudPlanetRiskText(TMP_Text? text, ref string value)
@@ -978,10 +1067,7 @@ internal static partial class TextPatches
             return;
         }
 
-        _skipTmpSetTextPostfixFromPrefix = false;
-        _skipTmpSetTextPostfixTextId = 0;
-        _skipTmpSetTextPostfixValue = null;
-        _skipTmpSetTextPostfixRequiresValueMatch = false;
+        _tmpSetTextPostfixSkipStack?.Clear();
     }
 
     private static void MarkTmpSetTextPostfixSkip(TMP_Text? text, string? value)
@@ -996,10 +1082,7 @@ internal static partial class TextPatches
             return;
         }
 
-        _skipTmpSetTextPostfixFromPrefix = true;
-        _skipTmpSetTextPostfixTextId = text.GetInstanceID();
-        _skipTmpSetTextPostfixValue = value;
-        _skipTmpSetTextPostfixRequiresValueMatch = true;
+        AddTmpSetTextPostfixSkip(text.GetInstanceID(), value, requiresValueMatch: true);
     }
 
     private static void MarkTmpSetTextPostfixSkip(TMP_Text? text)
@@ -1014,10 +1097,7 @@ internal static partial class TextPatches
             return;
         }
 
-        _skipTmpSetTextPostfixFromPrefix = true;
-        _skipTmpSetTextPostfixTextId = text.GetInstanceID();
-        _skipTmpSetTextPostfixValue = null;
-        _skipTmpSetTextPostfixRequiresValueMatch = false;
+        AddTmpSetTextPostfixSkip(text.GetInstanceID(), null, requiresValueMatch: false);
     }
 
     private static void MarkTmpSetTextPostfixSkipForTranslatedOutput(TMP_Text? text, string? translated)
@@ -1035,49 +1115,72 @@ internal static partial class TextPatches
 
     private static bool TrySkipTmpSetTextPostfixFromPrefix(TMP_Text text, string? value)
     {
-        var result = false;
-        if (_skipTmpSetTextPostfixFromPrefix &&
-            _skipTmpSetTextPostfixTextId == text.GetInstanceID())
+        var stack = _tmpSetTextPostfixSkipStack;
+        if (stack == null || stack.Count == 0)
         {
-            if (!_skipTmpSetTextPostfixRequiresValueMatch)
-            {
-                result = true;
-            }
-            else
-            {
-                var expected = _skipTmpSetTextPostfixValue;
-                result = ReferenceEquals(expected, value) ||
-                         (expected != null &&
-                          value != null &&
-                          expected.Length == value.Length &&
-                          string.Equals(expected, value, StringComparison.Ordinal));
-            }
+            return false;
         }
 
-        ClearTmpSetTextPostfixSkip();
-        return result;
+        var textId = text.GetInstanceID();
+        for (var i = stack.Count - 1; i >= 0; i--)
+        {
+            var entry = stack[i];
+            if (entry.TextId != textId)
+            {
+                continue;
+            }
+
+            if (!entry.RequiresValueMatch || TextEquals(entry.Value, value))
+            {
+                stack.RemoveAt(i);
+                return true;
+            }
+
+            stack.RemoveAt(i);
+            return false;
+        }
+
+        return false;
     }
 
     private static bool TrySkipTmpSetTextPostfixFromPrefix(TMP_Text text)
     {
-        if (!_skipTmpSetTextPostfixFromPrefix)
+        var stack = _tmpSetTextPostfixSkipStack;
+        if (stack == null || stack.Count == 0)
         {
             return false;
         }
 
-        if (_skipTmpSetTextPostfixTextId != text.GetInstanceID())
+        var textId = text.GetInstanceID();
+        for (var i = stack.Count - 1; i >= 0; i--)
         {
-            ClearTmpSetTextPostfixSkip();
-            return false;
+            var entry = stack[i];
+            if (entry.TextId != textId)
+            {
+                continue;
+            }
+
+            if (entry.RequiresValueMatch)
+            {
+                return false;
+            }
+
+            stack.RemoveAt(i);
+            return true;
         }
 
-        if (_skipTmpSetTextPostfixRequiresValueMatch)
+        return false;
+    }
+
+    private static void AddTmpSetTextPostfixSkip(int textId, string? value, bool requiresValueMatch)
+    {
+        var stack = _tmpSetTextPostfixSkipStack ??= new List<TmpSetTextPostfixSkipEntry>(4);
+        if (stack.Count >= 8)
         {
-            return false;
+            stack.RemoveAt(0);
         }
 
-        ClearTmpSetTextPostfixSkip();
-        return true;
+        stack.Add(new TmpSetTextPostfixSkipEntry(textId, value, requiresValueMatch));
     }
 
     private static bool TextEquals(string? expected, string? value)
@@ -1204,6 +1307,22 @@ internal static partial class TextPatches
         FontFallbackAuditService.RecordFontAssetSnapshot(__instance, "TMP_FontAsset.Awake.before-fallback");
         FontFallbackService.OnFontAssetAwake(__instance);
         FontFallbackAuditService.RecordFontAssetSnapshot(__instance, "TMP_FontAsset.Awake.after-fallback");
+    }
+
+    private static void AnimatorSetTriggerPrefix(Animator __instance, string name)
+    {
+        if (__instance == null || name != "displayStats")
+        {
+            return;
+        }
+
+        var hud = HUDManager.Instance;
+        if (hud == null || !ReferenceEquals(__instance, hud.endgameStatsAnimator))
+        {
+            return;
+        }
+
+        NormalizeHudEndGameGradeLetterSource(hud.statsUIElements?.gradeLetter);
     }
 
     private static void AnimatorSetTriggerPostfix(Animator __instance, string name)
@@ -1666,6 +1785,11 @@ internal static partial class TextPatches
             return;
         }
 
+        if (TryNormalizeAdvancedFeaturesGradeText(__instance, ref sourceText))
+        {
+            return;
+        }
+
         if (TryTranslateHudPlanetRiskText(__instance, ref sourceText))
         {
             return;
@@ -1696,6 +1820,11 @@ internal static partial class TextPatches
             return;
         }
 
+        if (TryNormalizeAdvancedFeaturesGradeText(__instance, ref sourceText))
+        {
+            return;
+        }
+
         if (TryTranslateHudPlanetRiskText(__instance, ref sourceText))
         {
             return;
@@ -1721,6 +1850,11 @@ internal static partial class TextPatches
     [HarmonyPrefix]
     private static void TmpSetTextStringBuilderPrefix(TMP_Text __instance, ref StringBuilder sourceText)
     {
+        if (TryNormalizeAdvancedFeaturesGradeText(__instance, ref sourceText))
+        {
+            return;
+        }
+
         if (TryTranslateHudPlanetRiskText(__instance, ref sourceText))
         {
             return;

@@ -19,7 +19,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.1.2";
+    public const string PluginVersion = "3.1.3";
     private const string ConfigFileName = "LC Chinese Project.cfg";
     private const string LegacyConfigFileName = PluginGuid + ".cfg";
 
@@ -59,7 +59,7 @@ public sealed class Plugin : BaseUnityPlugin
         TranslationGuard.Initialize(runtimeConfig);
         TextPatches.Initialize(runtimeConfig);
         TryInitialize("CustomLocalizationExtensionService", () => { CustomLocalizationExtensionService.Initialize(pluginDir, runtimeConfig); });
-        TryInitialize("RuntimeIconsCompatibilityService", () => { RuntimeIconsCompatibilityService.Initialize(); });
+        TryInitialize("ItemIdentityCompatibilityService", () => { ItemIdentityCompatibilityService.Initialize(); });
         try
         {
             TranslationService.Initialize(runtimeConfig);
@@ -189,7 +189,7 @@ public sealed class Plugin : BaseUnityPlugin
 
         TryCleanup("Harmony.UnpatchSelf", _harmony.UnpatchSelf);
         TryCleanup("OriginalResourceStateService.RestoreAll", () => { OriginalResourceStateService.RestoreAll(); });
-        TryCleanup("RuntimeIconsCompatibilityService.Shutdown", () => { RuntimeIconsCompatibilityService.Shutdown(); });
+        TryCleanup("ItemIdentityCompatibilityService.Shutdown", () => { ItemIdentityCompatibilityService.Shutdown(); });
         TryCleanup("TextPatches.Clear", () => { TextPatches.Clear(); });
         TryCleanup("TranslationGuard.Clear", () => { TranslationGuard.Clear(); });
         TryCleanup("TargetedUiTranslator.Shutdown", () => { TargetedUiTranslator.Shutdown(); });

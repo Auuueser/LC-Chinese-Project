@@ -138,7 +138,8 @@ internal static partial class TranslationService
                           TryTranslateKnownDynamicTextFast(source, out translated);
                 break;
             case DynamicTextDomain.ChatOutput:
-                matched = ChatDynamicTranslator.Translate(source, out translated);
+                matched = ChatDynamicTranslator.Translate(source, out translated) ||
+                          ExternalEnglishCompatibilityService.TryTranslateFast(source, out translated);
                 break;
             case DynamicTextDomain.EndGame:
                 matched = EndGameDynamicTranslator.Translate(source, out translated) ||

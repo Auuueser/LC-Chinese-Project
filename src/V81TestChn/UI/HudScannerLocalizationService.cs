@@ -2,6 +2,7 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 
@@ -407,12 +408,18 @@ internal static class HudScannerLocalizationService
         }
 
         state.Node = node;
-        if (TrySkipUnchangedHudScannerSourceNode(node, state))
+        var resolvedUnknownSubText = TryResolveUnknownHudScannerScrapValue(node, out var resolvedSubText);
+        if (resolvedUnknownSubText)
+        {
+            node.subText = resolvedSubText;
+        }
+
+        if (!resolvedUnknownSubText && TrySkipUnchangedHudScannerSourceNode(node, state))
         {
             return;
         }
 
-        var changed = false;
+        var changed = resolvedUnknownSubText;
         if (TryTranslateHudScannerSourceField(
                 node.headerText,
                 state.OriginalHeader,
@@ -538,6 +545,72 @@ internal static class HudScannerLocalizationService
                 // Unity objects may already be tearing down; cleanup must stay best-effort.
             }
         }
+    }
+
+    private static bool TryResolveUnknownHudScannerScrapValue(ScanNodeProperties node, out string resolved)
+    {
+        resolved = node.subText ?? string.Empty;
+        if (node.nodeType != 2 || !LooksLikeUnknownHudScannerValueText(node.subText))
+        {
+            return false;
+        }
+
+        var grabbable = node.GetComponentInParent<GrabbableObject>();
+        if (!CanRevealHudScannerScrapValue(grabbable))
+        {
+            return false;
+        }
+
+        var scrapValue = grabbable.scrapValue > 0 ? grabbable.scrapValue : node.scrapValue;
+        return TryBuildResolvedHudScannerScrapValueText(node.subText, scrapValue, out resolved);
+    }
+
+    private static bool CanRevealHudScannerScrapValue(GrabbableObject? grabbable)
+    {
+        return grabbable != null &&
+               (grabbable.hasBeenHeld ||
+                grabbable.isHeld ||
+                grabbable.heldByPlayerOnServer ||
+                grabbable.playerHeldBy != null);
+    }
+
+    private static bool TryBuildResolvedHudScannerScrapValueText(string? current, int scrapValue, out string resolved)
+    {
+        resolved = current ?? string.Empty;
+        if (scrapValue <= 0 || !LooksLikeUnknownHudScannerValueText(current))
+        {
+            return false;
+        }
+
+        resolved = "Value: $" + scrapValue.ToString(CultureInfo.InvariantCulture);
+        return true;
+    }
+
+    private static bool LooksLikeUnknownHudScannerValueText(string? current)
+    {
+        if (string.IsNullOrWhiteSpace(current))
+        {
+            return false;
+        }
+
+        var text = current.Trim();
+        var colonIndex = text.IndexOf(':');
+        var fullWidthColonIndex = text.IndexOf('\uff1a');
+        if (fullWidthColonIndex >= 0 && (colonIndex < 0 || fullWidthColonIndex < colonIndex))
+        {
+            colonIndex = fullWidthColonIndex;
+        }
+
+        if (colonIndex <= 0 || colonIndex >= text.Length - 1)
+        {
+            return false;
+        }
+
+        var label = text[..colonIndex].Trim();
+        var value = text[(colonIndex + 1)..].Trim();
+        return string.Equals(value, "???", StringComparison.Ordinal) &&
+               (string.Equals(label, "Value", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(label, "\u4ef7\u503c", StringComparison.Ordinal));
     }
 
     private static bool ApplyHudScannerTextTranslation(TMP_Text? text, string reason)

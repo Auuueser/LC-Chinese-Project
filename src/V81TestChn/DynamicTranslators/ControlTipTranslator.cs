@@ -66,6 +66,11 @@ internal static partial class TranslationService
                 return true;
             }
 
+            if (TryTranslateKeyFirstControlTip(trimmed, out translated))
+            {
+                return true;
+            }
+
             if (TryTranslateControlTipSegments(trimmed, out translated))
             {
                 return true;
@@ -166,6 +171,28 @@ internal static partial class TranslationService
             }
 
             translated = $"[{localized}]";
+            return true;
+        }
+
+        private static bool TryTranslateKeyFirstControlTip(string trimmed, out string translated)
+        {
+            translated = trimmed;
+            var match = SafeRegexMatch(
+                trimmed,
+                @"^(?<key>\[[^\]]+\])\s+(?<action>[^:\uff1a]+?)\s*$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            var action = NormalizeAction(match.Groups["action"].Value, out var actionImpliesHold);
+            if (!ControlTipActionEntries.TryGetValue(action, out var localizedAction))
+            {
+                return false;
+            }
+
+            translated = match.Groups["key"].Value.Trim() + " " + localizedAction + (actionImpliesHold ? "\uff08\u957f\u6309\uff09" : string.Empty);
             return true;
         }
 
