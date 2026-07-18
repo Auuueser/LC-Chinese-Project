@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="124" height="24" role="img" aria-label="提交问题反馈">
+  <rect width="124" height="24" rx="5" fill="#24282C"/>
+  <path d="M58 0h61a5 5 0 0 1 5 5v14a5 5 0 0 1-5 5H58Z" fill="#C84C2F"/>
+  <g fill="#FFF" font-family="'Microsoft YaHei','Noto Sans SC',Arial,sans-serif" font-size="12" text-anchor="middle">
+    <text x="29" y="16">问题</text>
+    <text x="91" y="16" font-weight="700">反馈</text>
+  </g>
+</svg>

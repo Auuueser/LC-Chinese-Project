@@ -15,11 +15,12 @@ namespace V81TestChn;
 [BepInDependency("Zaggy1024.OpenBodyCams", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("LCBetterSaves", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("com.example.Advancedfeatures", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("FlipMods.TooManyEmotes", BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.1.3";
+    public const string PluginVersion = "3.2.0";
     private const string ConfigFileName = "LC Chinese Project.cfg";
     private const string LegacyConfigFileName = PluginGuid + ".cfg";
 

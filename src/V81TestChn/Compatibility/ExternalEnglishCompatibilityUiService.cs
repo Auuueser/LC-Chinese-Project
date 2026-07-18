@@ -9,15 +9,13 @@ namespace V81TestChn;
 internal static class ExternalEnglishCompatibilityUiService
 {
     private const int ComponentCacheLimit = 16384;
-    private static readonly List<TMP_Text> TmpTextBuffer = new(128);
-    private static readonly List<Text> UiTextBuffer = new(128);
-    private static readonly List<TextMesh> TextMeshBuffer = new(32);
-    private static readonly Dictionary<int, CachedProtectedInput> TmpProtectedInputCache = new(ComponentCacheLimit);
-    private static readonly Dictionary<int, CachedProtectedInput> UiProtectedInputCache = new(ComponentCacheLimit);
-    private static readonly Dictionary<int, CachedComponentTranslation> TmpTranslationCache = new(ComponentCacheLimit);
-    private static readonly Dictionary<int, CachedComponentTranslation> UiTranslationCache = new(ComponentCacheLimit);
-    private static readonly Dictionary<int, CachedComponentTranslation> TextMeshTranslationCache = new(ComponentCacheLimit);
-    private static readonly HashSet<int> RepairedTmpInputPlaceholderCache = new(ComponentCacheLimit);
+    private static readonly List<Transform> TraversalBuffer = new(128);
+    private static readonly BoundedCache<int, CachedProtectedInput> TmpProtectedInputCache = new(ComponentCacheLimit);
+    private static readonly BoundedCache<int, CachedProtectedInput> UiProtectedInputCache = new(ComponentCacheLimit);
+    private static readonly BoundedCache<int, CachedComponentTranslation> TmpTranslationCache = new(ComponentCacheLimit);
+    private static readonly BoundedCache<int, CachedComponentTranslation> UiTranslationCache = new(ComponentCacheLimit);
+    private static readonly BoundedCache<int, CachedComponentTranslation> TextMeshTranslationCache = new(ComponentCacheLimit);
+    private static readonly BoundedSet<int> RepairedTmpInputPlaceholderCache = new(ComponentCacheLimit);
 
     private readonly struct CachedProtectedInput
     {
@@ -45,9 +43,7 @@ internal static class ExternalEnglishCompatibilityUiService
 
     public static void ClearRuntimeCaches()
     {
-        TmpTextBuffer.Clear();
-        UiTextBuffer.Clear();
-        TextMeshBuffer.Clear();
+        TraversalBuffer.Clear();
         TmpProtectedInputCache.Clear();
         UiProtectedInputCache.Clear();
         TmpTranslationCache.Clear();
@@ -66,28 +62,31 @@ internal static class ExternalEnglishCompatibilityUiService
         var translated = 0;
         try
         {
-            root.GetComponentsInChildren(includeInactive, TmpTextBuffer);
-            foreach (var text in TmpTextBuffer)
+            TraversalBuffer.Add(root.transform);
+            for (var index = 0; index < TraversalBuffer.Count; index++)
             {
-                if (TranslateTmpText(text, reason))
+                var current = TraversalBuffer[index];
+                if (current == null || (!includeInactive && !current.gameObject.activeInHierarchy))
+                {
+                    continue;
+                }
+
+                for (var childIndex = 0; childIndex < current.childCount; childIndex++)
+                {
+                    TraversalBuffer.Add(current.GetChild(childIndex));
+                }
+
+                if (current.TryGetComponent<TMP_Text>(out var tmpText) && TranslateTmpText(tmpText, reason))
                 {
                     translated++;
                 }
-            }
 
-            root.GetComponentsInChildren(includeInactive, UiTextBuffer);
-            foreach (var text in UiTextBuffer)
-            {
-                if (TranslateUiText(text))
+                if (current.TryGetComponent<Text>(out var uiText) && TranslateUiText(uiText))
                 {
                     translated++;
                 }
-            }
 
-            root.GetComponentsInChildren(includeInactive, TextMeshBuffer);
-            foreach (var text in TextMeshBuffer)
-            {
-                if (TranslateTextMesh(text))
+                if (current.TryGetComponent<TextMesh>(out var textMesh) && TranslateTextMesh(textMesh))
                 {
                     translated++;
                 }
@@ -95,9 +94,7 @@ internal static class ExternalEnglishCompatibilityUiService
         }
         finally
         {
-            TmpTextBuffer.Clear();
-            UiTextBuffer.Clear();
-            TextMeshBuffer.Clear();
+            TraversalBuffer.Clear();
         }
 
         return translated;
@@ -320,11 +317,6 @@ internal static class ExternalEnglishCompatibilityUiService
             return;
         }
 
-        if (RepairedTmpInputPlaceholderCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit)
-        {
-            return;
-        }
-
         var fontSize = text.fontSize;
         if (fontSize <= 0f)
         {
@@ -336,7 +328,7 @@ internal static class ExternalEnglishCompatibilityUiService
         text.fontSizeMin = Math.Min(text.fontSizeMin > 0f ? text.fontSizeMin : fontSize * 0.65f, fontSize * 0.65f);
         text.enableWordWrapping = false;
         text.overflowMode = TextOverflowModes.Overflow;
-        RepairedTmpInputPlaceholderCache.Add(id);
+        RepairedTmpInputPlaceholderCache.Add(id, RuntimePerformanceSettings.ComponentTextCacheLimit);
     }
 
     private static bool ApplyTranslatedUiText(Text text, string source, string translated)
@@ -365,7 +357,7 @@ internal static class ExternalEnglishCompatibilityUiService
 
     private static bool TryGetCachedTranslation(
         Component text,
-        Dictionary<int, CachedComponentTranslation> cache,
+        BoundedCache<int, CachedComponentTranslation> cache,
         string? source,
         out string translated)
     {
@@ -399,7 +391,7 @@ internal static class ExternalEnglishCompatibilityUiService
 
     private static void CacheTranslation(
         Component text,
-        Dictionary<int, CachedComponentTranslation> cache,
+        BoundedCache<int, CachedComponentTranslation> cache,
         string? source,
         string? translated)
     {
@@ -409,27 +401,17 @@ internal static class ExternalEnglishCompatibilityUiService
         }
 
         var id = text.GetInstanceID();
-        if (cache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !cache.ContainsKey(id))
-        {
-            return;
-        }
-
-        cache[id] = new CachedComponentTranslation(source, translated);
+        cache.Set(id, new CachedComponentTranslation(source, translated), RuntimePerformanceSettings.ComponentTextCacheLimit);
     }
 
     private static void CacheProtectedInput(
         Component text,
-        Dictionary<int, CachedProtectedInput> cache,
+        BoundedCache<int, CachedProtectedInput> cache,
         int parentId,
         bool value)
     {
         var id = text.GetInstanceID();
-        if (cache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !cache.ContainsKey(id))
-        {
-            return;
-        }
-
-        cache[id] = new CachedProtectedInput(parentId, value);
+        cache.Set(id, new CachedProtectedInput(parentId, value), RuntimePerformanceSettings.ComponentTextCacheLimit);
     }
 
     private static int GetParentInstanceId(Component text)

@@ -30,16 +30,18 @@ internal static partial class TextPatches
     private const int TmpHookComponentBypassTextLengthLimit = 160;
     private const int TmpNumericFormatTextLengthLimit = 96;
     private const float LobbyNameFallbackGlyphMinFontScale = 0.82f;
-    private static readonly Dictionary<int, CachedTextClassification> InputFieldTextCache = new(TextClassificationCacheLimit);
-    private static readonly Dictionary<int, CachedTextClassification> LobbySlotTextCache = new(TextClassificationCacheLimit);
-    private static readonly Dictionary<int, CachedLobbyNameTypography> LobbyNameTypographyCache = new(TextClassificationCacheLimit);
-    private static readonly Dictionary<int, CachedTmpHookNoop> TmpHookNoopCache = new(TmpHookNoopCacheLimit);
-    private static readonly Dictionary<int, CachedTmpHookTranslation> TmpHookTranslationCache = new(TmpHookTranslationCacheLimit);
-    private static readonly Dictionary<int, CachedTmpColorHookEligibility> TmpColorHookEligibilityCache = new(TmpColorHookEligibilityCacheLimit);
-    private static readonly HashSet<int> TmpColorHookCandidateTextIds = new(TmpColorHookCandidateCacheLimit);
-    private static readonly HashSet<string> TmpHookSourceNoopCache = new(TmpHookSourceNoopCacheLimit, StringComparer.Ordinal);
+    private static readonly BoundedCache<int, CachedTextClassification> InputFieldTextCache = new(TextClassificationCacheLimit);
+    private static readonly BoundedCache<int, CachedTextClassification> LobbySlotTextCache = new(TextClassificationCacheLimit);
+    private static readonly BoundedCache<int, CachedLobbyNameTypography> LobbyNameTypographyCache = new(TextClassificationCacheLimit);
+    private static readonly BoundedCache<int, CachedTmpHookNoop> TmpHookNoopCache = new(TmpHookNoopCacheLimit);
+    private static readonly BoundedCache<int, CachedTmpHookTranslation> TmpHookTranslationCache = new(TmpHookTranslationCacheLimit);
+    private static readonly BoundedCache<int, CachedTmpColorHookEligibility> TmpColorHookEligibilityCache = new(TmpColorHookEligibilityCacheLimit);
+    private static readonly BoundedSet<int> TmpColorHookCandidateTextIds = new(TmpColorHookCandidateCacheLimit);
+    private static readonly BoundedSet<string> TmpHookSourceNoopCache = new(TmpHookSourceNoopCacheLimit, StringComparer.Ordinal);
     [ThreadStatic]
     private static List<TmpSetTextPostfixSkipEntry>? _tmpSetTextPostfixSkipStack;
+    [ThreadStatic]
+    private static bool _restoringLateWriterCursorTipSource;
     private static ConfigEntry<bool>? _enableTmpHookPerfCounters;
     private static ConfigEntry<int>? _tmpHookPerfLogIntervalSeconds;
     private static ConfigEntry<bool>? _enableGlobalTmpColorHook;
@@ -345,6 +347,21 @@ internal static partial class TextPatches
         CustomLocalizationExtensionService.ClearRuntimeCaches();
     }
 
+    internal static void ClearSceneRuntimeCaches()
+    {
+        InputFieldTextCache.Clear();
+        LobbySlotTextCache.Clear();
+        LobbyNameTypographyCache.Clear();
+        TmpHookNoopCache.Clear();
+        TmpHookTranslationCache.Clear();
+        TmpColorHookEligibilityCache.Clear();
+        TmpColorHookCandidateTextIds.Clear();
+        AdvancedFeaturesGradeTextIds.Clear();
+        ClearHudRuntimeCaches();
+        ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
+        FontFallbackService.ClearSceneComponentCaches();
+    }
+
     [HarmonyPatch(typeof(StartOfRound), "FirePlayersAfterDeadlineClientRpc")]
     [HarmonyPostfix]
     private static void StartOfRoundFirePlayersAfterDeadlineClientRpcPostfix()
@@ -368,6 +385,7 @@ internal static partial class TextPatches
 
         ClearHudRuntimeCaches();
         RadiationWarningPlaybackService.ResetForHudLifecycle(__instance, "HUDManager.Start");
+        MeteorShowerWarningLocalizationService.ResetForHudLifecycle(__instance);
         AlertTextureReplacementService.ForceApplySystemOnlineOverlay(__instance, "HUDManager.Start");
         AlertTextureReplacementService.BeginSystemOnlineExactPathWatcher(__instance, "HUDManager.Start");
         AlertTextureReplacementService.SyncFixedSceneLabels(__instance, "HUDManager.Start");
@@ -376,7 +394,15 @@ internal static partial class TextPatches
         HudScannerLocalizationService.ApplyHudScannerLocalization(__instance, "HUDManager.Start.scanner");
         TargetedUiTranslator.TranslateHudPlanetInfo(__instance, "HUDManager.Start.planet-info");
         TargetedUiTranslator.TranslateHudChatPrompts(__instance, "HUDManager.Start.chat-prompts");
+        TranslateTooManyEmotesMenu(__instance);
         // Plugin.Log.LogInfo($"Patch entry HUDManager.Start loadingText={__instance.loadingText?.name ?? "<null>"} riskText={__instance.planetRiskLevelText?.name ?? "<null>"}");
+    }
+
+    [HarmonyPatch(typeof(HUDManager), "MeteorShowerWarningHUD")]
+    [HarmonyPostfix]
+    private static void HudManagerMeteorShowerWarningHudPostfix(HUDManager __instance)
+    {
+        MeteorShowerWarningLocalizationService.Apply(__instance, "HUDManager.MeteorShowerWarningHUD");
     }
 
     private static void ClearHudRuntimeCaches()
@@ -425,9 +451,9 @@ internal static partial class TextPatches
             __instance,
             hasActiveScanner,
             out hasActiveScanner);
-        HudScannerLocalizationService.ApplyHudScannerSourceNodesIfDue(
+        HudScannerLocalizationService.ApplyHudScannerBoundNodesIfDue(
             __instance,
-            "HUDManager.UpdateScanNodes.scan-node-source",
+            "HUDManager.UpdateScanNodes.bound-nodes",
             hasActiveScanner,
             immediatePass);
 
@@ -677,6 +703,26 @@ internal static partial class TextPatches
         HudInteractionLocalizationService.ApplyControlTipPostfix(__instance, "HUDManager.ChangeControlTipMultiple");
     }
 
+    private static void ShipBuildModeManagerCreateGhostObjectAndHighlightPostfix()
+    {
+        var text = HUDManager.Instance?.buildModeControlTip;
+        if (Plugin.IsRuntimeShuttingDown || text == null || string.IsNullOrWhiteSpace(text.text))
+        {
+            return;
+        }
+
+        var source = text.text;
+        var translated = TargetedUiTranslator.TranslateDynamicTargeted(source, DynamicTextDomain.HudControlTip);
+        if (string.Equals(source, translated, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        text.text = translated;
+        FontFallbackService.ApplyFallback(text, translated);
+        Plugin.ReportTranslationHit();
+    }
+
     [HarmonyPatch(typeof(GrabbableObject), "Start")]
     [HarmonyPostfix]
     private static void GrabbableObjectStartPostfix(GrabbableObject __instance)
@@ -793,6 +839,19 @@ internal static partial class TextPatches
     {
         if (Plugin.IsRuntimeShuttingDown)
         {
+            return;
+        }
+
+        if (_restoringLateWriterCursorTipSource)
+        {
+            MarkTmpSetTextPostfixSkip(__instance, value);
+            return;
+        }
+
+        if (SignalTranslatorLocalizationService.IsPlayerMessageText(__instance))
+        {
+            SignalTranslatorLocalizationService.PreservePlayerMessageText(__instance, value);
+            MarkTmpSetTextPostfixSkip(__instance, value);
             return;
         }
 
@@ -925,7 +984,8 @@ internal static partial class TextPatches
             return true;
         }
 
-        if (!TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.PlanetInfo, value, out var translated) ||
+        if (!TranslationService.LooksLikePlanetInfoTextCheap(value) ||
+            !TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.PlanetInfo, value, out var translated) ||
             string.Equals(value, translated, StringComparison.Ordinal))
         {
             return false;
@@ -1257,13 +1317,7 @@ internal static partial class TextPatches
         }
 
         var id = text.GetInstanceID();
-        if (TmpColorHookCandidateTextIds.Count >= RuntimePerformanceSettings.TmpHookCacheLimit &&
-            !TmpColorHookCandidateTextIds.Contains(id))
-        {
-            return;
-        }
-
-        TmpColorHookCandidateTextIds.Add(id);
+        TmpColorHookCandidateTextIds.Add(id, RuntimePerformanceSettings.TmpHookCacheLimit);
     }
 
     [HarmonyPatch(typeof(TMP_Text), "set_color")]
@@ -1291,13 +1345,10 @@ internal static partial class TextPatches
 
     private static void CacheTmpColorHookEligibility(int textId, string? source, bool value)
     {
-        if (TmpColorHookEligibilityCache.Count >= RuntimePerformanceSettings.TmpHookCacheLimit &&
-            !TmpColorHookEligibilityCache.ContainsKey(textId))
-        {
-            return;
-        }
-
-        TmpColorHookEligibilityCache[textId] = new CachedTmpColorHookEligibility(source, value);
+        TmpColorHookEligibilityCache.Set(
+            textId,
+            new CachedTmpColorHookEligibility(source, value),
+            RuntimePerformanceSettings.TmpHookCacheLimit);
     }
 
     [HarmonyPatch(typeof(TMP_FontAsset), "Awake")]
@@ -1680,10 +1731,7 @@ internal static partial class TextPatches
         if (!LobbyNameTypographyCache.TryGetValue(id, out var baseline) || baseline.ParentId != parentId)
         {
             baseline = new CachedLobbyNameTypography(parentId, text.enableAutoSizing, text.fontSize, text.fontSizeMin, text.fontSizeMax);
-            if (LobbyNameTypographyCache.Count < RuntimePerformanceSettings.TmpHookCacheLimit || LobbyNameTypographyCache.ContainsKey(id))
-            {
-                LobbyNameTypographyCache[id] = baseline;
-            }
+            LobbyNameTypographyCache.Set(id, baseline, RuntimePerformanceSettings.TmpHookCacheLimit);
         }
 
         if (!ContainsLobbyNameFallbackGlyphCandidate(value))
@@ -1740,7 +1788,7 @@ internal static partial class TextPatches
 
     private static bool TryGetCachedTextClassification(
         TMP_Text text,
-        Dictionary<int, CachedTextClassification> cache,
+        BoundedCache<int, CachedTextClassification> cache,
         out bool value)
     {
         var parentId = GetParentInstanceId(text);
@@ -1754,15 +1802,10 @@ internal static partial class TextPatches
         return false;
     }
 
-    private static void CacheTextClassification(TMP_Text text, Dictionary<int, CachedTextClassification> cache, bool value)
+    private static void CacheTextClassification(TMP_Text text, BoundedCache<int, CachedTextClassification> cache, bool value)
     {
         var id = text.GetInstanceID();
-        if (cache.Count >= RuntimePerformanceSettings.TmpHookCacheLimit && !cache.ContainsKey(id))
-        {
-            return;
-        }
-
-        cache[id] = new CachedTextClassification(GetParentInstanceId(text), value);
+        cache.Set(id, new CachedTextClassification(GetParentInstanceId(text), value), RuntimePerformanceSettings.TmpHookCacheLimit);
     }
 
     private static int GetParentInstanceId(TMP_Text text)
@@ -2560,15 +2603,10 @@ internal static partial class TextPatches
             return;
         }
 
-        if (TmpHookTranslationCache.Count >= RuntimePerformanceSettings.TmpHookCacheLimit)
-        {
-            return;
-        }
-
-        TmpHookTranslationCache[text.GetInstanceID()] = new CachedTmpHookTranslation(
+        TmpHookTranslationCache.Set(text.GetInstanceID(), new CachedTmpHookTranslation(
             source,
             translated,
-            GetFontInstanceId(text));
+            GetFontInstanceId(text)), RuntimePerformanceSettings.TmpHookCacheLimit);
     }
 
     private static void RefreshCachedTmpHookTranslationFallback(TMP_Text text, CachedTmpHookTranslation cached)
@@ -2631,11 +2669,6 @@ internal static partial class TextPatches
             return;
         }
 
-        if (TmpHookNoopCache.Count >= RuntimePerformanceSettings.TmpHookCacheLimit)
-        {
-            return;
-        }
-
         var textId = text.GetInstanceID();
         var hasShape = TryBuildTmpHookNoopShapeHash(value, out var shapeHash, out var shapeLength);
         var shapeCount = hasShape ? 1 : 0;
@@ -2671,14 +2704,14 @@ internal static partial class TextPatches
                                     (countComponentMiss && componentMissCount >= TmpHookComponentBypassWarmupCount);
         }
 
-        TmpHookNoopCache[textId] = new CachedTmpHookNoop(
+        TmpHookNoopCache.Set(textId, new CachedTmpHookNoop(
             value,
             hasShape ? shapeHash : 0UL,
             hasShape ? shapeLength : 0,
             shapeCount,
             shapeActive,
             componentMissCount,
-            componentBypassActive);
+            componentBypassActive), RuntimePerformanceSettings.TmpHookCacheLimit);
     }
 
     private static bool CacheUntranslatedTmpHookNoop(TMP_Text? text, string? value)
@@ -2715,12 +2748,7 @@ internal static partial class TextPatches
             return;
         }
 
-        if (TmpHookSourceNoopCache.Count >= RuntimePerformanceSettings.TmpHookCacheLimit)
-        {
-            return;
-        }
-
-        TmpHookSourceNoopCache.Add(value);
+        TmpHookSourceNoopCache.Add(value, RuntimePerformanceSettings.TmpHookCacheLimit);
     }
 
     private static bool CanLookupTmpHookSourceNoopCache(string? value)
@@ -4517,6 +4545,8 @@ internal static partial class TextPatches
             $"exactCache={_tmpPerfExactCacheHits} shapeCache={_tmpPerfShapeCacheHits} componentBypass={_tmpPerfComponentBypassHits} translationCache={_tmpPerfTranslationCacheHits} statusHit={_tmpPerfGenericStatusHits} " +
             $"statusFail(noMarker/control/cjk/shape)={_tmpPerfGenericStatusFailNoMarker}/{_tmpPerfGenericStatusFailControlTip}/{_tmpPerfGenericStatusFailCjk}/{_tmpPerfGenericStatusFailShape} " +
             $"translate={_tmpPerfTranslateCalls} fallback={_tmpPerfFallbackCalls} collector={_tmpPerfCollectorCalls} " +
+            $"cache(noop/translated/source)={TmpHookNoopCache.Count}/{TmpHookTranslationCache.Count}/{TmpHookSourceNoopCache.Count} " +
+            $"evicted(noop/translated/source)={TmpHookNoopCache.EvictionCount}/{TmpHookTranslationCache.EvictionCount}/{TmpHookSourceNoopCache.EvictionCount} " +
             $"ms(prefix/postfix/translate)={prefixMs:0.###}/{postfixMs:0.###}/{translateMs:0.###}");
         ResetTmpHookPerfCounters();
         _tmpPerfNextLogTimestamp = now + GetTmpPerfLogIntervalTicks();

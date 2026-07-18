@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,8 +32,6 @@ internal static class RadiationWarningPlaybackService
     private static readonly Dictionary<string, Texture2D?> TextureCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, Texture2D?> ResolvedFrameTextureCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, Sprite?> SpriteCache = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly FieldInfo? RawOverrideSpriteField = typeof(Image).GetField("m_OverrideSprite", BindingFlags.Instance | BindingFlags.NonPublic);
-
     private static string? _textureDirectory;
     private static ConfigEntry<bool>? _enabled;
     private static ConfigEntry<float>? _followDurationSeconds;
@@ -448,14 +445,9 @@ internal static class RadiationWarningPlaybackService
 
     private static Sprite? ReadRawOverrideSprite(Image image)
     {
-        if (RawOverrideSpriteField == null)
-        {
-            return null;
-        }
-
         try
         {
-            return RawOverrideSpriteField.GetValue(image) as Sprite;
+            return image.m_OverrideSprite;
         }
         catch (Exception ex)
         {

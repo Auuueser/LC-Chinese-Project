@@ -45,6 +45,7 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(StartOfRound), "FirePlayersAfterDeadlineClientRpc", nameof(StartOfRoundFirePlayersAfterDeadlineClientRpcPostfix), ref patched);
         PatchPrefix(harmony, typeof(GameNetworkManager), "SaveGame", nameof(GameNetworkManagerSaveGamePrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "Start", nameof(HudManagerStartPostfix), ref patched);
+        PatchPostfix(harmony, typeof(HUDManager), "MeteorShowerWarningHUD", nameof(HudManagerMeteorShowerWarningHudPostfix), ref patched);
         PatchPrefix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "UpdateScanNodes", nameof(HudManagerUpdateScanNodesPostfix), ref patched);
@@ -77,6 +78,7 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(HUDManager), "ChangeControlTip", nameof(HudManagerChangeControlTipPostfix), ref patched);
         PatchPrefix(harmony, typeof(HUDManager), "ChangeControlTipMultiple", nameof(HudManagerChangeControlTipMultiplePrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "ChangeControlTipMultiple", nameof(HudManagerChangeControlTipMultiplePostfix), ref patched);
+        PatchPostfix(harmony, typeof(ShipBuildModeManager), "CreateGhostObjectAndHighlight", nameof(ShipBuildModeManagerCreateGhostObjectAndHighlightPostfix), ref patched, Priority.Last);
 
         PatchPostfix(harmony, typeof(GrabbableObject), "Start", nameof(GrabbableObjectStartPostfix), ref patched);
         PatchPrefix(harmony, typeof(GrabbableObject), "SetControlTipsForItem", nameof(GrabbableObjectSetControlTipsPrefix), ref patched);
@@ -180,6 +182,22 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "LCBetterSaves.Plugin", "InitializeBetterSaves", nameof(BetterSavesInitializeBetterSavesPostfix), ref patched);
         PatchOptionalPostfix(harmony, "DeleteFileButton_BetterSaves", "UpdateFileToDelete", nameof(BetterSavesDeleteFileButtonUpdateFileToDeletePostfix), ref patched);
         PatchOptionalPostfix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPostfix), ref patched);
+        InstallTooManyEmotesCompatibilityPatches(harmony, ref patched);
+        PatchOptionalPrefix(harmony, "Steamworks.SteamUtils", "ShowGamepadTextInput", nameof(SteamworksShowGamepadTextInputPrefix), ref patched, Priority.First);
+    }
+
+    private static void InstallTooManyEmotesCompatibilityPatches(Harmony harmony, ref int patched)
+    {
+        if (FindLoadedTypeQuiet("TooManyEmotes.Patches.SyncWithEmoteControllerManager") == null)
+        {
+            return;
+        }
+
+        // Patch the shared player update rather than patching another Harmony patch
+        // method. The prefix restores the source string needed by TooManyEmotes'
+        // cleanup check; the lowest-priority postfix runs last and localizes display.
+        PatchPrefix(harmony, typeof(PlayerControllerB), "LateUpdate", nameof(TooManyEmotesPlayerLateUpdatePrefix), ref patched, Priority.First);
+        PatchPostfix(harmony, typeof(PlayerControllerB), "LateUpdate", nameof(TooManyEmotesPlayerLateUpdatePostfix), ref patched, Priority.Last);
     }
 
     private static void PatchPrefix(Harmony harmony, Type targetType, string targetMethod, string patchMethod, ref int patched, int priority = Priority.Normal)
@@ -202,17 +220,17 @@ internal static partial class TextPatches
         Patch(harmony, original, prefixName: null, postfixName: patchMethod, ref patched, priority);
     }
 
-    private static void PatchOptionalPrefix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched)
+    private static void PatchOptionalPrefix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched, int priority = Priority.Normal)
     {
-        PatchOptional(harmony, targetTypeName, targetMethod, patchMethod, prefix: true, ref patched);
+        PatchOptional(harmony, targetTypeName, targetMethod, patchMethod, prefix: true, ref patched, priority);
     }
 
-    private static void PatchOptionalPostfix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched)
+    private static void PatchOptionalPostfix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched, int priority = Priority.Normal)
     {
-        PatchOptional(harmony, targetTypeName, targetMethod, patchMethod, prefix: false, ref patched);
+        PatchOptional(harmony, targetTypeName, targetMethod, patchMethod, prefix: false, ref patched, priority);
     }
 
-    private static void PatchOptional(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, bool prefix, ref int patched)
+    private static void PatchOptional(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, bool prefix, ref int patched, int priority)
     {
         var targetType = FindLoadedTypeQuiet(targetTypeName);
         if (targetType == null)
@@ -229,11 +247,11 @@ internal static partial class TextPatches
 
         if (prefix)
         {
-            PatchPrefix(harmony, original, patchMethod, ref patched);
+            PatchPrefix(harmony, original, patchMethod, ref patched, priority);
             return;
         }
 
-        PatchPostfix(harmony, original, patchMethod, ref patched);
+        PatchPostfix(harmony, original, patchMethod, ref patched, priority);
     }
 
     private static Type? FindLoadedTypeQuiet(string targetTypeName)

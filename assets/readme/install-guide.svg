@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="250" viewBox="0 0 1200 250" role="img" aria-labelledby="title desc">
+  <title id="title">三步安装引导</title>
+  <desc id="desc">安装 BepInExPack，安装 LC Chinese Project，启动游戏</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#101214"/>
+      <stop offset="1" stop-color="#1B1511"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0L9 3 0 6Z" fill="#E45A1C"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="250" rx="20" fill="url(#bg)"/>
+  <g font-family="'Microsoft YaHei', 'Noto Sans SC', sans-serif">
+    <g transform="translate(55 44)">
+      <rect width="290" height="162" rx="16" fill="#171A1D" stroke="#383C40"/>
+      <circle cx="45" cy="44" r="22" fill="#E45A1C"/>
+      <text x="45" y="52" fill="#FFF" font-size="23" font-weight="700" text-anchor="middle">1</text>
+      <text x="32" y="101" fill="#F3EFE9" font-size="27" font-weight="700">安装 BepInExPack</text>
+      <text x="32" y="137" fill="#9FA4A8" font-size="18">模组管理器会自动处理</text>
+    </g>
+    <path d="M365 125H430" stroke="#E45A1C" stroke-width="4" marker-end="url(#arrow)"/>
+    <g transform="translate(455 44)">
+      <rect width="290" height="162" rx="16" fill="#171A1D" stroke="#E45A1C" stroke-width="2"/>
+      <circle cx="45" cy="44" r="22" fill="#E45A1C"/>
+      <text x="45" y="52" fill="#FFF" font-size="23" font-weight="700" text-anchor="middle">2</text>
+      <text x="32" y="101" fill="#F3EFE9" font-size="27" font-weight="700">安装本汉化模组</text>
+      <text x="32" y="137" fill="#9FA4A8" font-size="18">搜索 LC Chinese Project</text>
+    </g>
+    <path d="M765 125H830" stroke="#E45A1C" stroke-width="4" marker-end="url(#arrow)"/>
+    <g transform="translate(855 44)">
+      <rect width="290" height="162" rx="16" fill="#171A1D" stroke="#383C40"/>
+      <circle cx="45" cy="44" r="22" fill="#E45A1C"/>
+      <text x="45" y="52" fill="#FFF" font-size="23" font-weight="700" text-anchor="middle">3</text>
+      <text x="32" y="101" fill="#F3EFE9" font-size="27" font-weight="700">启动游戏</text>
+      <text x="32" y="137" fill="#9FA4A8" font-size="18">首次启动会生成配置</text>
+    </g>
+  </g>
+</svg>

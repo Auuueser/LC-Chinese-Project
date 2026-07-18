@@ -11,6 +11,8 @@ internal static class RuntimePerformanceSettings
     private const int DefaultExternalCompatibilityCacheLimit = 4096;
     private const int DefaultFontFallbackCacheLimit = 16384;
     private const int DefaultMenuTranslationWorkBudgetPerFrame = 12;
+    private const int DefaultChatTranslationMaxEntriesPerFrame = 32;
+    private const int DefaultChatTranslationMaxCharactersPerFrame = 4096;
     private const bool DefaultEnableTargetedUiStyleRepairFastGate = true;
 
     private static ConfigEntry<int>? _tmpHookCacheLimit;
@@ -19,6 +21,8 @@ internal static class RuntimePerformanceSettings
     private static ConfigEntry<int>? _externalCompatibilityCacheLimit;
     private static ConfigEntry<int>? _fontFallbackCacheLimit;
     private static ConfigEntry<int>? _menuTranslationWorkBudgetPerFrame;
+    private static ConfigEntry<int>? _chatTranslationMaxEntriesPerFrame;
+    private static ConfigEntry<int>? _chatTranslationMaxCharactersPerFrame;
     private static ConfigEntry<bool>? _enableTargetedUiStyleRepairFastGate;
 
     public static int TmpHookCacheLimit { get; private set; } = DefaultTmpHookCacheLimit;
@@ -27,6 +31,8 @@ internal static class RuntimePerformanceSettings
     public static int ExternalCompatibilityCacheLimit { get; private set; } = DefaultExternalCompatibilityCacheLimit;
     public static int FontFallbackCacheLimit { get; private set; } = DefaultFontFallbackCacheLimit;
     public static int MenuTranslationWorkBudgetPerFrame { get; private set; } = DefaultMenuTranslationWorkBudgetPerFrame;
+    public static int ChatTranslationMaxEntriesPerFrame { get; private set; } = DefaultChatTranslationMaxEntriesPerFrame;
+    public static int ChatTranslationMaxCharactersPerFrame { get; private set; } = DefaultChatTranslationMaxCharactersPerFrame;
     public static bool EnableTargetedUiStyleRepairFastGate { get; private set; } = DefaultEnableTargetedUiStyleRepairFastGate;
 
     public static void Initialize(ConfigFile config)
@@ -73,6 +79,20 @@ internal static class RuntimePerformanceSettings
             4,
             64,
             "Maximum targeted menu text components translated per frame. Lower values reduce spikes; higher values finish menu localization sooner.");
+        _chatTranslationMaxEntriesPerFrame = BindInt(
+            config,
+            "ChatTranslationMaxEntriesPerFrame",
+            DefaultChatTranslationMaxEntriesPerFrame,
+            4,
+            256,
+            "Maximum chat history entries validated per frame. Visible snapshots use a one-shot line cap of four times this value to avoid stale-work starvation.");
+        _chatTranslationMaxCharactersPerFrame = BindInt(
+            config,
+            "ChatTranslationMaxCharactersPerFrame",
+            DefaultChatTranslationMaxCharactersPerFrame,
+            512,
+            32768,
+            "Maximum characters in a visible chat snapshot or history entry translated in one work item. Oversized third-party output remains unchanged to prevent frame spikes.");
         _enableTargetedUiStyleRepairFastGate = config.Bind(
             ConfigSections.Performance,
             "EnableTargetedUiStyleRepairFastGate",
@@ -115,6 +135,8 @@ internal static class RuntimePerformanceSettings
         ExternalCompatibilityCacheLimit = Clamp(_externalCompatibilityCacheLimit?.Value ?? DefaultExternalCompatibilityCacheLimit, 512, 16384);
         FontFallbackCacheLimit = Clamp(_fontFallbackCacheLimit?.Value ?? DefaultFontFallbackCacheLimit, 1024, 32768);
         MenuTranslationWorkBudgetPerFrame = Clamp(_menuTranslationWorkBudgetPerFrame?.Value ?? DefaultMenuTranslationWorkBudgetPerFrame, 4, 64);
+        ChatTranslationMaxEntriesPerFrame = Clamp(_chatTranslationMaxEntriesPerFrame?.Value ?? DefaultChatTranslationMaxEntriesPerFrame, 4, 256);
+        ChatTranslationMaxCharactersPerFrame = Clamp(_chatTranslationMaxCharactersPerFrame?.Value ?? DefaultChatTranslationMaxCharactersPerFrame, 512, 32768);
         EnableTargetedUiStyleRepairFastGate = _enableTargetedUiStyleRepairFastGate?.Value ?? DefaultEnableTargetedUiStyleRepairFastGate;
     }
 

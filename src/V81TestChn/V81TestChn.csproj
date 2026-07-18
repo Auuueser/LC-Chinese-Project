@@ -22,6 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+
     <Reference Include="BepInEx">
       <HintPath>..\..\lib\BepInEx.dll</HintPath>
       <Private>false</Private>
@@ -30,7 +32,7 @@
       <HintPath>..\..\lib\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Assembly-CSharp">
+    <Reference Include="Assembly-CSharp" Publicize="true">
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
@@ -66,7 +68,7 @@
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="UnityEngine.UI">
+    <Reference Include="UnityEngine.UI" Publicize="true">
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>

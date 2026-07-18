@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using GameNetcodeStuff;
 using TMPro;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ namespace V81TestChn;
 internal static partial class TextPatches
 {
     private const string AdvancedFeaturesGradeLabelLocalized = "\u8bc4\u7ea7";
+    private const string TooManyEmotesSyncTipEnglish = "[E] Sync emote";
+    private const string TooManyEmotesSyncTipLocalized = "[E] \u540c\u6b65\u52a8\u4f5c";
     private static readonly WaitForSeconds AdvancedFeaturesGradeRepairFirstDelay = new(2.35f);
     private static readonly WaitForSeconds AdvancedFeaturesGradeRepairSecondDelay = new(1.25f);
     private static readonly List<TMP_Text> AdvancedFeaturesTmpBuffer = new(64);
@@ -46,6 +49,66 @@ internal static partial class TextPatches
     private static void OpenBodyCamsOverlayUpdateTextPostfix(TMP_Text ___textRenderer)
     {
         ExternalEnglishCompatibilityUiService.TranslateTmpTextKnownNonInput(___textRenderer, "OpenBodyCams.OverlayManager.UpdateText");
+    }
+
+    private static void TranslateTooManyEmotesMenu(HUDManager hud)
+    {
+        var menuRoot = hud.HUDContainer?.transform.parent?.Find("EmotesRadialMenu");
+        if (menuRoot != null)
+        {
+            ExternalEnglishCompatibilityUiService.TranslateRoot(
+                menuRoot.gameObject,
+                includeInactive: true,
+                "HUDManager.Start.TooManyEmotesMenu");
+        }
+    }
+
+    private static void TooManyEmotesPlayerLateUpdatePrefix(PlayerControllerB __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown || __instance == null || __instance != GameNetworkManager.Instance?.localPlayerController)
+        {
+            return;
+        }
+
+        var cursorTip = __instance.cursorTip;
+        if (cursorTip == null || !string.Equals(cursorTip.text, TooManyEmotesSyncTipLocalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        try
+        {
+            _restoringLateWriterCursorTipSource = true;
+            cursorTip.text = TooManyEmotesSyncTipEnglish;
+        }
+        finally
+        {
+            _restoringLateWriterCursorTipSource = false;
+        }
+    }
+
+    private static void TooManyEmotesPlayerLateUpdatePostfix(PlayerControllerB __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown || __instance == null || __instance != GameNetworkManager.Instance?.localPlayerController)
+        {
+            return;
+        }
+
+        var cursorTip = __instance.cursorTip;
+        if (cursorTip == null || !string.Equals(cursorTip.text, TooManyEmotesSyncTipEnglish, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        HudInteractionLocalizationService.ApplyPlayerCursorTip(__instance, "TooManyEmotes.PlayerControllerB.LateUpdate");
+    }
+
+    private static void SteamworksShowGamepadTextInputPrefix(ref string description)
+    {
+        if (string.Equals(description, "Type command", StringComparison.Ordinal))
+        {
+            description = "\u8f93\u5165\u547d\u4ee4";
+        }
     }
 
     private static void TmpInputFieldOnEnablePostfix(TMP_InputField __instance)
@@ -232,13 +295,12 @@ internal static partial class TextPatches
     private static bool TryNormalizeAdvancedFeaturesGradeTextValue(TMP_Text? text, string? value, out string normalized)
     {
         normalized = string.Empty;
-        if (!TryNormalizeVanillaEndgameGradeLetter(value, out normalized) || text == null)
+        if (text == null || !AdvancedFeaturesGradeTextIds.Contains(text.GetInstanceID()))
         {
             return false;
         }
 
-        var id = text.GetInstanceID();
-        if (!AdvancedFeaturesGradeTextIds.Contains(id))
+        if (!TryNormalizeVanillaEndgameGradeLetter(value, out normalized))
         {
             return false;
         }
@@ -248,7 +310,7 @@ internal static partial class TextPatches
             return true;
         }
 
-        AdvancedFeaturesGradeTextIds.Remove(id);
+        AdvancedFeaturesGradeTextIds.Remove(text.GetInstanceID());
         return false;
     }
 

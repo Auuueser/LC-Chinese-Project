@@ -54,6 +54,7 @@ internal static partial class TranslationService
             {
                 DynamicTextDomain.HudScanner => TranslateScannerSubText(source, out translated) ||
                                                 TranslateScanValue(source, out translated) ||
+                                                TryTranslateFastExact(source, out translated) ||
                                                 TranslateScannerLabel(source, out translated) ||
                                                 TranslateFast(source, out translated),
                 DynamicTextDomain.HudRewards => TranslateRewardLine(source, out translated) ||

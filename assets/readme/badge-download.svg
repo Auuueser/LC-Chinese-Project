@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="168" height="24" role="img" aria-label="Thunderstore 下载">
+  <rect width="168" height="24" rx="5" fill="#24282C"/>
+  <path d="M110 0h53a5 5 0 0 1 5 5v14a5 5 0 0 1-5 5h-53Z" fill="#E35B18"/>
+  <g fill="#FFF" font-family="'Microsoft YaHei','Noto Sans SC',Arial,sans-serif" font-size="12" text-anchor="middle">
+    <text x="55" y="16">Thunderstore</text>
+    <text x="139" y="16" font-weight="700">下载</text>
+  </g>
+</svg>

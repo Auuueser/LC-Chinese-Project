@@ -4,8 +4,8 @@
     "locale":  "zh-CN",
     "generated_from":  "translations-source/clean-translation-draft.zh-CN.json",
     "source_seed_path":  "translations-source/clean-source-seed.json",
-    "source_seed_sha256":  "c53c2aeabf868ebea6b9395d42a2402821654d8c5bd4c2e9361116268824aa46",
-    "draft_sha256":  "94f89e2270240e5a16e0ba1e65e887fe6a993e1782b635f21affcf5f143d3836",
+    "source_seed_sha256":  "c4a901a880e15d420e848ee27c207ac82ffe16b051bcf5f5cdc3103f4d313018",
+    "draft_sha256":  "ce3e1155298b7cd4aadef400c64a18bb0ead41c74c2f029587b63b3e0848fea8",
     "runtime_packaged":  true,
     "entries":  [
                     {
@@ -3664,9 +3664,9 @@
                     },
                     {
                         "source":  "Coil",
-                        "target":  "弹簧头",
+                        "target":  "充能线圈",
                         "mode":  "translate",
-                        "note":  "clean-runtime-overlay category=item; status=user-approved-terminology"
+                        "note":  "clean-runtime-overlay category=item; status=reviewed-self-authored"
                     },
                     {
                         "source":  "Coil-head",
@@ -4918,7 +4918,7 @@
                     },
                     {
                         "source":  "Sell scrap for cash.",
-                        "target":  "出售废料换取现金。",
+                        "target":  "出售废料换取现金",
                         "mode":  "translate",
                         "note":  "clean-runtime-overlay category=q-s-short-ui-status; status=draft-self-authored"
                     },
@@ -10057,6 +10057,12 @@
                         "target":  "输入标签或 IP...",
                         "mode":  "translate",
                         "note":  "clean-runtime-overlay category=lobby-ui; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "METEOR SHOWERS DETECTED. UP TO 20-30 PER HOUR. TAKE SHELTER IMMEDIATELY.",
+                        "target":  "检测到陨星雨。每小时多达 20–30 颗。请立即寻找掩体。",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=hud-weather-warning; status=user-approved-wording"
                     }
                 ]
 }

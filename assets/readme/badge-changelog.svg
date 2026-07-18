@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="132" height="24" role="img" aria-label="查看更新日志">
+  <rect width="132" height="24" rx="5" fill="#24282C"/>
+  <path d="M58 0h69a5 5 0 0 1 5 5v14a5 5 0 0 1-5 5H58Z" fill="#526D82"/>
+  <g fill="#FFF" font-family="'Microsoft YaHei','Noto Sans SC',Arial,sans-serif" font-size="12" text-anchor="middle">
+    <text x="29" y="16">版本</text>
+    <text x="95" y="16" font-weight="700">更新日志</text>
+  </g>
+</svg>

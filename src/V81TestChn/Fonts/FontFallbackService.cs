@@ -14,7 +14,7 @@ internal static class FontFallbackService
     private const int FallbackApplicationCacheLimit = 16384;
     private const int FallbackSmallCacheInitialCapacity = 512;
     private static readonly Dictionary<int, Color> BaselineColorByInstance = new(FallbackSmallCacheInitialCapacity);
-    private static readonly Dictionary<int, CachedFallbackApplication> FallbackApplicationCache = new(FallbackApplicationCacheLimit);
+    private static readonly BoundedCache<int, CachedFallbackApplication> FallbackApplicationCache = new(FallbackApplicationCacheLimit);
     private static readonly HashSet<int> FinalRenderSubscribedIds = new(FallbackSmallCacheInitialCapacity);
     private static readonly Dictionary<int, TMP_Text> FinalRenderSubscribedTexts = new(FallbackSmallCacheInitialCapacity);
     private static readonly HashSet<int> SpecialCaseTextIds = new(FallbackSmallCacheInitialCapacity);
@@ -277,6 +277,15 @@ internal static class FontFallbackService
         return false;
     }
 
+    public static void ClearSceneComponentCaches()
+    {
+        BaselineColorByInstance.Clear();
+        FallbackApplicationCache.Clear();
+        SpecialCaseTextIds.Clear();
+        FinalRenderRepairLoggedIds.Clear();
+        RenderAuditLoggedIds.Clear();
+    }
+
     private static bool TryCreateTmpFontAsset(Font? font, string label)
     {
         if (font == null)
@@ -457,13 +466,10 @@ internal static class FontFallbackService
         }
 
         var id = text.GetInstanceID();
-        if (FallbackApplicationCache.Count >= RuntimePerformanceSettings.FontFallbackCacheLimit &&
-            !FallbackApplicationCache.ContainsKey(id))
-        {
-            return;
-        }
-
-        FallbackApplicationCache[id] = new CachedFallbackApplication(displayedText, text.font.GetInstanceID(), cjkFallbackApplied);
+        FallbackApplicationCache.Set(
+            id,
+            new CachedFallbackApplication(displayedText, text.font.GetInstanceID(), cjkFallbackApplied),
+            RuntimePerformanceSettings.FontFallbackCacheLimit);
     }
 
     public static void RegisterTextInstance(TMP_Text? text, string stage)

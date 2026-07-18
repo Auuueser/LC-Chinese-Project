@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using GameNetcodeStuff;
 using TMPro;
 using UnityEngine;
@@ -21,9 +22,9 @@ internal static class TargetedUiTranslator
     private static readonly HashSet<int> HudChatOutputTranslationPending = new();
     private static readonly HashSet<int> HudChatOutputTranslationRunning = new();
     private static readonly Dictionary<int, int> HudChatOutputTranslationGenerations = new();
-    private static readonly Dictionary<int, ProcessedTextState> TranslationProcessedCache = new();
-    private static readonly Dictionary<int, List<int>> TmpDropdownOptionTextCache = new();
-    private static readonly Dictionary<int, List<int>> DropdownOptionTextCache = new();
+    private static readonly BoundedCache<int, ProcessedTextState> TranslationProcessedCache = new(16384);
+    private static readonly BoundedCache<int, List<int>> TmpDropdownOptionTextCache = new(16384);
+    private static readonly BoundedCache<int, List<int>> DropdownOptionTextCache = new(16384);
     private static readonly Dictionary<int, ChatOutputState> ChatOutputStates = new();
     private static readonly Dictionary<int, CursorTipState> CursorTipStates = new();
     private static readonly Dictionary<int, PlanetRiskTextPair> PlanetRiskTextPairCache = new();
@@ -35,6 +36,7 @@ internal static class TargetedUiTranslator
     private static readonly List<InteractTrigger> InteractTriggerScanBuffer = new();
     private static readonly List<TMP_Text> PlanetRiskTmpTextScanBuffer = new();
     private const int ChatLineCacheLimit = 256;
+    private const int ChatHistoryReferenceLimit = 1024;
     private const float PlanetInfoSummaryMiddleThreshold = 0.68f;
     private const float PlanetInfoSummaryAutoSizeMinScale = 0.84f;
     private const string PlanetRiskTitleObjectName = "HazardLevel";
@@ -63,8 +65,9 @@ internal static class TargetedUiTranslator
 
     private sealed class ChatOutputState
     {
-        public int HistoryProcessedCount;
-        public int HistoryTailHash;
+        public int HistoryValidationCursor;
+        public int HistoryKnownCount;
+        public readonly BoundedCache<int, string?> HistoryEntryReferences = new(ChatHistoryReferenceLimit);
         public string? LastOriginalText;
         public string? LastTranslatedText;
         public readonly Dictionary<string, string?> LineTranslationCache = new(StringComparer.Ordinal);
@@ -158,6 +161,7 @@ internal static class TargetedUiTranslator
     {
         ClearCaches();
         CustomLocalizationExtensionService.ClearRuntimeCaches();
+        TextPatches.ClearSceneRuntimeCaches();
     }
 
     public static (int translated, int seen) TranslateRoot(GameObject? root, string reason)
@@ -1162,16 +1166,28 @@ internal static class TargetedUiTranslator
             return (0, 0);
         }
 
-        var state = GetChatOutputState(hud);
-        var translated = 0;
-        var seen = 0;
+        var needsContinuation = TranslateHudChatOutputPass(hud, out var translated, out var seen);
 
-        translated += TranslateHudChatHistory(hud, state);
+        Plugin.LogTargetedTranslation(reason, translated, seen);
+        if (needsContinuation)
+        {
+            ScheduleHudChatOutput(hud, reason + ".continuation");
+        }
+
+        return (translated, seen);
+    }
+
+    private static bool TranslateHudChatOutputPass(HUDManager hud, out int translated, out int seen)
+    {
+        var state = GetChatOutputState(hud);
+        translated = TranslateHudChatHistory(hud, state, out var historyPending);
+        seen = 0;
+        var visiblePending = false;
 
         if (hud.chatText != null)
         {
             seen++;
-            if (TranslateHudChatText(hud.chatText, state, out var textChanged))
+            if (TranslateHudChatTextBudgeted(hud.chatText, state, out var textChanged, out visiblePending))
             {
                 translated++;
                 if (textChanged)
@@ -1181,8 +1197,7 @@ internal static class TargetedUiTranslator
             }
         }
 
-        Plugin.LogTargetedTranslation(reason, translated, seen);
-        return (translated, seen);
+        return historyPending || visiblePending;
     }
 
     public static bool IsHudChatOutputTranslationPending(HUDManager? hud)
@@ -1203,7 +1218,10 @@ internal static class TargetedUiTranslator
             return false;
         }
 
-        if (!string.IsNullOrEmpty(value))
+        if (!string.IsNullOrEmpty(value) &&
+            !ChatWorkBudgetPolicy.ExceedsCharacterBudget(
+                value,
+                RuntimePerformanceSettings.ChatTranslationMaxCharactersPerFrame))
         {
             FontFallbackService.ApplyFallback(text, value);
         }
@@ -1300,6 +1318,7 @@ internal static class TargetedUiTranslator
 
     private static IEnumerator TranslateHudChatOutputDeferred(HUDManager hud, string reason, int instanceId, int scheduledGeneration)
     {
+        var needsContinuation = false;
         try
         {
             yield return null;
@@ -1309,7 +1328,8 @@ internal static class TargetedUiTranslator
                 yield break;
             }
 
-            TranslateHudChatOutput(hud, reason + ".deferred");
+            needsContinuation = TranslateHudChatOutputPass(hud, out var translated, out var seen);
+            Plugin.LogTargetedTranslation(reason + ".deferred", translated, seen);
         }
         finally
         {
@@ -1318,7 +1338,7 @@ internal static class TargetedUiTranslator
             if (!Plugin.IsRuntimeShuttingDown &&
                 hud != null &&
                 hud.isActiveAndEnabled &&
-                currentGeneration != scheduledGeneration)
+                (currentGeneration != scheduledGeneration || needsContinuation))
             {
                 HudChatOutputTranslationPending.Add(instanceId);
                 ScheduleHudChatOutput(hud, reason + ".coalesced");
@@ -1375,50 +1395,107 @@ internal static class TargetedUiTranslator
         return state;
     }
 
-    private static int TranslateHudChatHistory(HUDManager hud, ChatOutputState state)
+    private static int TranslateHudChatHistory(HUDManager hud, ChatOutputState state, out bool needsContinuation)
     {
+        needsContinuation = false;
         if (hud.ChatMessageHistory == null)
         {
-            state.HistoryProcessedCount = 0;
-            state.HistoryTailHash = 0;
+            state.HistoryValidationCursor = 0;
+            state.HistoryKnownCount = 0;
+            state.HistoryEntryReferences.Clear();
             return 0;
         }
 
         var count = hud.ChatMessageHistory.Count;
-        var currentTailHash = count == 0 ? 0 : GetTextHash(hud.ChatMessageHistory[count - 1]);
-        if (count == state.HistoryProcessedCount && currentTailHash == state.HistoryTailHash)
+        if (count == 0)
         {
+            state.HistoryValidationCursor = 0;
+            state.HistoryKnownCount = 0;
+            state.HistoryEntryReferences.Clear();
             return 0;
         }
 
-        var start = count > state.HistoryProcessedCount ? state.HistoryProcessedCount : 0;
+        if (count < state.HistoryKnownCount)
+        {
+            state.HistoryEntryReferences.Clear();
+            state.HistoryValidationCursor = 0;
+        }
+        state.HistoryKnownCount = count;
+
+        var trackedStart = Math.Max(0, count - ChatHistoryReferenceLimit);
+        if (state.HistoryValidationCursor < trackedStart || state.HistoryValidationCursor >= count)
+        {
+            state.HistoryValidationCursor = trackedStart;
+        }
+
+        var start = state.HistoryValidationCursor;
+        var end = Math.Min(count, start + RuntimePerformanceSettings.ChatTranslationMaxEntriesPerFrame);
         var translated = 0;
-        for (var i = start; i < count; i++)
+        for (var i = start; i < end; i++)
         {
             var entry = hud.ChatMessageHistory[i];
-            if (!TryTranslateChatLineCached(state, entry, out var rewritten) ||
-                string.Equals(entry, rewritten, StringComparison.Ordinal))
+            if (state.HistoryEntryReferences.TryGetValue(i, out var previousEntry) &&
+                ReferenceEquals(entry, previousEntry))
             {
                 continue;
             }
 
-            hud.ChatMessageHistory[i] = rewritten;
-            translated++;
+            if (ChatWorkBudgetPolicy.ExceedsCharacterBudget(
+                    entry,
+                    RuntimePerformanceSettings.ChatTranslationMaxCharactersPerFrame))
+            {
+                state.HistoryEntryReferences.Set(i, entry, ChatHistoryReferenceLimit);
+                continue;
+            }
+
+            if (TryTranslateChatLineCached(state, entry, out var rewritten) &&
+                !string.Equals(entry, rewritten, StringComparison.Ordinal))
+            {
+                hud.ChatMessageHistory[i] = rewritten;
+                translated++;
+            }
+
+            state.HistoryEntryReferences.Set(i, hud.ChatMessageHistory[i], ChatHistoryReferenceLimit);
         }
 
-        state.HistoryProcessedCount = count;
-        state.HistoryTailHash = count == 0 ? 0 : GetTextHash(hud.ChatMessageHistory[count - 1]);
+        if (end < count)
+        {
+            state.HistoryValidationCursor = end;
+            needsContinuation = true;
+        }
+        else
+        {
+            state.HistoryValidationCursor = trackedStart;
+        }
+
         return translated;
     }
 
-    private static bool TranslateHudChatText(TMP_Text chatText, ChatOutputState state, out bool changedText)
+    private static bool TranslateHudChatTextBudgeted(
+        TMP_Text chatText,
+        ChatOutputState state,
+        out bool changedText,
+        out bool needsContinuation)
     {
         changedText = false;
+        needsContinuation = false;
         var current = chatText.text;
         if (string.IsNullOrEmpty(current))
         {
             state.LastOriginalText = current;
             state.LastTranslatedText = current;
+            return false;
+        }
+
+        var characterBudget = RuntimePerformanceSettings.ChatTranslationMaxCharactersPerFrame;
+        var visibleLineLimit = Math.Max(1, RuntimePerformanceSettings.ChatTranslationMaxEntriesPerFrame * 4);
+        if (ChatWorkBudgetPolicy.ExceedsCharacterBudget(current, characterBudget) ||
+            ChatWorkBudgetPolicy.ExceedsLineBudget(current, visibleLineLimit))
+        {
+            // One-shot translation avoids stale-snapshot starvation. Hard character and line caps
+            // keep pathological third-party bulk output byte-for-byte unchanged with bounded work.
+            state.LastOriginalText = null;
+            state.LastTranslatedText = null;
             return false;
         }
 
@@ -1441,18 +1518,17 @@ internal static class TargetedUiTranslator
             return false;
         }
 
+        var changed = TryTranslateChatTextCached(state, current, out var rewritten) &&
+                      !string.Equals(current, rewritten, StringComparison.Ordinal);
         state.LastOriginalText = current;
-        if (!TryTranslateChatTextCached(state, current, out var rewritten) ||
-            string.Equals(current, rewritten, StringComparison.Ordinal))
+        state.LastTranslatedText = rewritten;
+        FontFallbackService.ApplyFallback(chatText, rewritten);
+        if (!changed)
         {
-            state.LastTranslatedText = current;
-            FontFallbackService.ApplyFallback(chatText, current);
             return false;
         }
 
-        state.LastTranslatedText = rewritten;
         chatText.text = rewritten;
-        FontFallbackService.ApplyFallback(chatText, rewritten);
         changedText = true;
         return true;
     }
@@ -2152,57 +2228,76 @@ internal static class TargetedUiTranslator
         bool includeInactive,
         TranslationCounts counts)
     {
-        var tmpDropdowns = new List<TMP_Dropdown>();
-        root.GetComponentsInChildren(includeInactive, tmpDropdowns);
-        foreach (var dropdown in tmpDropdowns)
+        var pending = new Stack<Transform>(64);
+        pending.Push(root.transform);
+        var traversedThisFrame = 0;
+        while (pending.Count > 0)
         {
-            TranslateTmpDropdown(dropdown, ref counts.Translated);
-            if (AdvanceMenuBudget(counts))
+            var current = pending.Pop();
+            if (current == null || (!includeInactive && !current.gameObject.activeInHierarchy))
             {
-                yield return null;
+                continue;
             }
-        }
 
-        var dropdowns = new List<Dropdown>();
-        root.GetComponentsInChildren(includeInactive, dropdowns);
-        foreach (var dropdown in dropdowns)
-        {
-            TranslateDropdown(dropdown, ref counts.Translated);
-            if (AdvanceMenuBudget(counts))
+            for (var childIndex = current.childCount - 1; childIndex >= 0; childIndex--)
             {
-                yield return null;
+                pending.Push(current.GetChild(childIndex));
             }
-        }
 
-        var tmpTexts = new List<TMP_Text>();
-        root.GetComponentsInChildren(includeInactive, tmpTexts);
-        foreach (var text in tmpTexts)
-        {
-            TranslateTmp(text, seenObjects, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
+            if (current.TryGetComponent<TMP_Dropdown>(out var tmpDropdown))
             {
-                yield return null;
+                TranslateTmpDropdown(tmpDropdown, ref counts.Translated);
+                if (AdvanceMenuBudget(counts))
+                {
+                    traversedThisFrame = 0;
+                    yield return null;
+                }
             }
-        }
 
-        var uiTexts = new List<Text>();
-        root.GetComponentsInChildren(includeInactive, uiTexts);
-        foreach (var text in uiTexts)
-        {
-            TranslateUiText(text, seenObjects, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
+            if (current.TryGetComponent<Dropdown>(out var dropdown))
             {
-                yield return null;
+                TranslateDropdown(dropdown, ref counts.Translated);
+                if (AdvanceMenuBudget(counts))
+                {
+                    traversedThisFrame = 0;
+                    yield return null;
+                }
             }
-        }
 
-        var textMeshes = new List<TextMesh>();
-        root.GetComponentsInChildren(includeInactive, textMeshes);
-        foreach (var text in textMeshes)
-        {
-            TranslateTextMesh(text, seenObjects, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
+            if (current.TryGetComponent<TMP_Text>(out var tmpText))
             {
+                TranslateTmp(tmpText, seenObjects, ref counts.Translated, ref counts.Seen);
+                if (AdvanceMenuBudget(counts))
+                {
+                    traversedThisFrame = 0;
+                    yield return null;
+                }
+            }
+
+            if (current.TryGetComponent<Text>(out var uiText))
+            {
+                TranslateUiText(uiText, seenObjects, ref counts.Translated, ref counts.Seen);
+                if (AdvanceMenuBudget(counts))
+                {
+                    traversedThisFrame = 0;
+                    yield return null;
+                }
+            }
+
+            if (current.TryGetComponent<TextMesh>(out var textMesh))
+            {
+                TranslateTextMesh(textMesh, seenObjects, ref counts.Translated, ref counts.Seen);
+                if (AdvanceMenuBudget(counts))
+                {
+                    traversedThisFrame = 0;
+                    yield return null;
+                }
+            }
+
+            traversedThisFrame++;
+            if (traversedThisFrame >= RuntimePerformanceSettings.MenuTranslationWorkBudgetPerFrame * 4)
+            {
+                traversedThisFrame = 0;
                 yield return null;
             }
         }
@@ -2590,16 +2685,10 @@ internal static class TargetedUiTranslator
     private static void MarkTranslationProcessed(Component component, string? text)
     {
         var componentId = component.GetInstanceID();
-        if (TranslationProcessedCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit &&
-            !TranslationProcessedCache.ContainsKey(componentId))
-        {
-            return;
-        }
-
-        TranslationProcessedCache[componentId] = new ProcessedTextState(
-            GetParentInstanceId(component),
-            GetTextHash(text),
-            GetStyleHash(component));
+        TranslationProcessedCache.Set(
+            componentId,
+            new ProcessedTextState(GetParentInstanceId(component), GetTextHash(text), GetStyleHash(component)),
+            RuntimePerformanceSettings.ComponentTextCacheLimit);
     }
 
     private static int GetStyleHash(Component component)
@@ -2779,7 +2868,7 @@ internal static class TargetedUiTranslator
         return _dropdownRefreshDepth > 0;
     }
 
-    private static bool WasDropdownOptionProcessed(Dictionary<int, List<int>> cache, int dropdownId, int optionIndex, string? text)
+    private static bool WasDropdownOptionProcessed(BoundedCache<int, List<int>> cache, int dropdownId, int optionIndex, string? text)
     {
         return cache.TryGetValue(dropdownId, out var hashes) &&
             optionIndex >= 0 &&
@@ -2787,17 +2876,12 @@ internal static class TargetedUiTranslator
             hashes[optionIndex] == GetTextHash(text);
     }
 
-    private static void MarkDropdownOptionProcessed(Dictionary<int, List<int>> cache, int dropdownId, int optionIndex, string? text)
+    private static void MarkDropdownOptionProcessed(BoundedCache<int, List<int>> cache, int dropdownId, int optionIndex, string? text)
     {
-        if (cache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !cache.ContainsKey(dropdownId))
-        {
-            return;
-        }
-
         if (!cache.TryGetValue(dropdownId, out var hashes))
         {
             hashes = new List<int>();
-            cache[dropdownId] = hashes;
+            cache.Set(dropdownId, hashes, RuntimePerformanceSettings.ComponentTextCacheLimit);
         }
 
         while (hashes.Count <= optionIndex)

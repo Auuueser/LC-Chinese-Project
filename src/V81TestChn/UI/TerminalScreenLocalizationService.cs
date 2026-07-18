@@ -1,13 +1,9 @@
-using HarmonyLib;
 using System;
-using System.Reflection;
 
 namespace V81TestChn;
 
 internal static class TerminalScreenLocalizationService
 {
-    private static readonly FieldInfo? TerminalModifyingTextField = AccessTools.Field(typeof(Terminal), "modifyingText");
-
     public static void ApplyTextPostProcess(TerminalNode? node, ref string result)
     {
         var translated = TranslationService.TranslateTerminalOutputForNode(result, node != null && node.clearPreviousText);
@@ -32,10 +28,17 @@ internal static class TerminalScreenLocalizationService
         var translated = TranslationService.TranslateTerminalOutputForNode(original, clearPreviousText);
         if (!string.Equals(original, translated, StringComparison.Ordinal))
         {
-            var hadModifyingText = TryGetTerminalModifyingText(terminal, out var previousModifyingText);
-            if (hadModifyingText)
+            var canRestoreModifyingText = false;
+            var previousModifyingText = false;
+            try
             {
-                SetTerminalModifyingText(terminal, true);
+                previousModifyingText = terminal.modifyingText;
+                terminal.modifyingText = true;
+                canRestoreModifyingText = true;
+            }
+            catch (Exception)
+            {
+                // Keep terminal localization best-effort if a future game build changes this private field.
             }
 
             try
@@ -48,9 +51,16 @@ internal static class TerminalScreenLocalizationService
             }
             finally
             {
-                if (hadModifyingText)
+                if (canRestoreModifyingText)
                 {
-                    SetTerminalModifyingText(terminal, previousModifyingText);
+                    try
+                    {
+                        terminal.modifyingText = previousModifyingText;
+                    }
+                    catch (Exception)
+                    {
+                        // Do not break terminal output during a game-version transition.
+                    }
                 }
             }
 
@@ -72,44 +82,4 @@ internal static class TerminalScreenLocalizationService
         FontFallbackService.ApplyFallback(terminal.screenText.textComponent, terminal.screenText.text);
     }
 
-    private static bool TryGetTerminalModifyingText(Terminal terminal, out bool value)
-    {
-        value = false;
-        if (TerminalModifyingTextField == null)
-        {
-            return false;
-        }
-
-        try
-        {
-            if (TerminalModifyingTextField.GetValue(terminal) is bool current)
-            {
-                value = current;
-                return true;
-            }
-        }
-        catch
-        {
-            // Best-effort guard only; fallback translation still works without this private field.
-        }
-
-        return false;
-    }
-
-    private static void SetTerminalModifyingText(Terminal terminal, bool value)
-    {
-        if (TerminalModifyingTextField == null)
-        {
-            return;
-        }
-
-        try
-        {
-            TerminalModifyingTextField.SetValue(terminal, value);
-        }
-        catch
-        {
-            // Best-effort guard only; avoid breaking terminal output if the private field changes.
-        }
-    }
 }

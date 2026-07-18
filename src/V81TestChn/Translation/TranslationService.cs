@@ -74,9 +74,9 @@ internal static partial class TranslationService
     private static readonly List<RegexEntry> RegexEntries = new();
     private static readonly HashSet<string> RegexPatternSet = new(StringComparer.Ordinal);
     private static readonly HashSet<string> WarnedRegexTimeoutPatterns = new(StringComparer.Ordinal);
-    private static readonly Dictionary<string, string?> TranslationResultCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
-    private static readonly Dictionary<string, string> CompositeTranslationResultCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
-    private static readonly HashSet<string> FastExactMissCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
+    private static readonly BoundedCache<string, string?> TranslationResultCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
+    private static readonly BoundedCache<string, string> CompositeTranslationResultCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
+    private static readonly BoundedSet<string> FastExactMissCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(25);
     private const string TemperatureUnitCelsius = "Celsius";
     private const string TemperatureUnitFahrenheit = "Fahrenheit";
@@ -278,6 +278,7 @@ internal static partial class TranslationService
         ["Hold the cord to activate the loud horn."] = "\u62c9\u4f4f\u7ef3\u7d22\u5373\u53ef\u542f\u52a8\u626c\u58f0\u5587\u53ed\u3002",
         ["The signal transmitter can be activated with the \"transmit\" command followed by any message under 10 letters."] = "\u4fe1\u53f7\u53d1\u9001\u5668\u53ef\u901a\u8fc7 \"transmit\" \u547d\u4ee4\u6fc0\u6d3b\uff0c\u540e\u63a5\u4e0d\u8d85\u8fc7 10 \u4e2a\u5b57\u7b26\u7684\u6d88\u606f\u3002",
         ["Press the button and step onto the inverse teleporter while it activates."] = "\u542f\u52a8\u65f6\u6309\u4e0b\u6309\u94ae\u5e76\u8e0f\u4e0a\u9006\u5411\u4f20\u9001\u5668\u3002",
+        ["The most advanced map device, using light-detection and ranging to give you an overhead view of your surroundings."] = "\u6700\u5148\u8fdb\u7684\u5730\u56fe\u8bbe\u5907\uff0c\u5229\u7528\u5149\u63a2\u6d4b\u4e0e\u6d4b\u8ddd\u6280\u672f\u4ece\u4e0a\u65b9\u663e\u793a\u5468\u56f4\u73af\u5883\u3002",
         ["To scan for the number of items left on the current planet"] = "\u626b\u63cf\u5f53\u524d\u661f\u7403\u4e0a\u5269\u4f59\u7269\u54c1\u7684\u6570\u91cf\u3002"
     };
     private static readonly Dictionary<string, string> ControlTipActionEntries = new(StringComparer.OrdinalIgnoreCase)
@@ -433,7 +434,7 @@ internal static partial class TranslationService
         ["Note"] = "\u6ce8\u8bb0",
         ["Pro flashlight"] = "\u4e13\u4e1a\u624b\u7535\u7b52",
         ["Radar booster"] = "\u96f7\u8fbe\u589e\u5f3a\u5668",
-        ["Record player"] = "\u5531\u7247\u64ad\u653e\u673a",
+        ["Record player"] = "\u5531\u7247\u673a",
         ["Scan distance"] = "\u626b\u63cf\u8ddd\u79bb",
         ["Scrap"] = "\u5e9f\u6599",
         ["Scrap value on hand"] = "\u624b\u4e2d\u5e9f\u6599\u4ef7\u503c",
@@ -560,6 +561,22 @@ internal static partial class TranslationService
         new("RECEIVING SIGNAL", "\u6b63\u5728\u63a5\u6536\u4fe1\u53f7"),
         new("Light Switch", "\u7535\u706f\u5f00\u5173"),
         new("Light switch", "\u7535\u706f\u5f00\u5173"),
+        new("Bunker spider", "\u5730\u5821\u8718\u86db"),
+        new("Homemade Flashbang", "\u81ea\u5236\u95ea\u5149\u5f39"),
+        new("Unnamed", "\u672a\u547d\u540d"),
+        new("Fire Entrance", "\u6d88\u9632\u5165\u53e3"),
+        new("Main Exit", "\u4e3b\u51fa\u53e3"),
+        new("Fire Exit", "\u6d88\u9632\u51fa\u53e3"),
+        new("Fire Exit?", "\u6d88\u9632\u51fa\u53e3\uff1f"),
+        new("Dropship", "\u8865\u7ed9\u8231"),
+        new("Radiant", "\u5bb9\u5149\u7115\u53d1"),
+        new("Healthy", "\u5065\u5eb7"),
+        new("Injured", "\u53d7\u4f24"),
+        new("Badly Injured", "\u91cd\u4f24"),
+        new("Near Death", "\u6fd2\u6b7b"),
+        new("BYE LOL", "\u62dc\u62dc\uff0c\u54c8\u54c8"),
+        new("Type command", "\u8f93\u5165\u547d\u4ee4"),
+        new("The most advanced map device, using light-detection and ranging to give you an overhead view of your surroundings.", "\u6700\u5148\u8fdb\u7684\u5730\u56fe\u8bbe\u5907\uff0c\u5229\u7528\u5149\u63a2\u6d4b\u4e0e\u6d4b\u8ddd\u6280\u672f\u4ece\u4e0a\u65b9\u663e\u793a\u5468\u56f4\u73af\u5883\u3002"),
         new("Ship Magnet Activated", "\u98de\u8239\u78c1\u5438\u5df2\u542f\u7528"),
         new("Ship Magnet Deactivated", "\u98de\u8239\u78c1\u5438\u5df2\u505c\u7528"),
         new("Toggle Sprint", "\u5207\u6362\u51b2\u523a"),
@@ -2293,6 +2310,10 @@ internal static partial class TranslationService
 
         var translated = RewriteTerminalRouteWeatherBlocks(source);
         translated = StandardizeTerminalStorePage(translated);
+        // Preserve the original English furniture identifier before the generic
+        // line translator replaces it. STORAGE commands require that identifier
+        // so players can type an unambiguous furniture name when retrieving it.
+        translated = StandardizeTerminalStoragePage(translated);
         translated = TranslateTerminalOutputBody(translated);
         translated = StandardizeTerminalCruiserWarrantyText(translated);
         translated = StandardizeTerminalSignalTranslatorText(translated);
@@ -3120,7 +3141,8 @@ internal static partial class TranslationService
     {
         if (string.IsNullOrEmpty(source) ||
             (!source.Contains("These are the items in storage:", StringComparison.Ordinal) &&
-             !source.Contains("\u4ee5\u4e0b\u662f\u4ed3\u5e93\u4e2d\u7684\u7269\u54c1", StringComparison.Ordinal)))
+             !source.Contains("\u4ee5\u4e0b\u662f\u4ed3\u5e93\u4e2d\u7684\u7269\u54c1", StringComparison.Ordinal) &&
+             !source.Contains("\u4ee5\u4e0b\u662f\u50a8\u5b58\u533a\u4e2d\u7684\u7269\u54c1", StringComparison.Ordinal)))
         {
             return source;
         }
@@ -3171,7 +3193,7 @@ internal static partial class TranslationService
 
         var leadingLength = line.Length - line.TrimStart().Length;
         var leading = leadingLength > 0 ? line[..leadingLength] : string.Empty;
-        var bilingual = BuildChineseFirstBilingual(trimmed);
+        var bilingual = BuildChineseFirstBilingual(trimmed, dimEnglishSuffix: true);
         return bilingual == trimmed ? line : leading + bilingual;
     }
 
@@ -3751,7 +3773,7 @@ internal static partial class TranslationService
         return item.Trim();
     }
 
-    private static string BuildChineseFirstBilingual(string english)
+    private static string BuildChineseFirstBilingual(string english, bool dimEnglishSuffix = false)
     {
         if (string.IsNullOrWhiteSpace(english))
         {
@@ -3781,7 +3803,9 @@ internal static partial class TranslationService
             return sourceName;
         }
 
-        return $"{localized}\uff08{sourceName}\uff09";
+        return dimEnglishSuffix
+            ? $"{localized} <color=#A0A0A0>\uff08{sourceName}\uff09</color>"
+            : $"{localized}\uff08{sourceName}\uff09";
     }
 
     private static bool TryExtractTerminalBilingualEnglish(string source, out string english)
@@ -3804,6 +3828,14 @@ internal static partial class TranslationService
                     : candidate;
                 return true;
             }
+        }
+
+        // A plain unknown English name can belong to a third-party item. Do not
+        // collapse it to a shorter vanilla key merely because it contains words
+        // such as "Table" or "Clock"; exact names are handled above.
+        if (IsLikelyTerminalEnglishName(trimmed))
+        {
+            return false;
         }
 
         foreach (var key in TerminalBilingualOverrides.Keys.OrderByDescending(key => key.Length))
@@ -4155,6 +4187,25 @@ internal static partial class TranslationService
         if (!ExactMapIgnoreCase.ContainsKey(source))
         {
             ExactMapIgnoreCase[source] = target;
+        }
+
+        // Some legacy-authored terminal lore entries contain the two literal
+        // characters "\\r" where the V81 asset contains a carriage return.
+        // Register an equivalent key instead of broad whitespace matching so
+        // only already-approved translations gain line-ending compatibility.
+        if (source.Contains("\\r", StringComparison.Ordinal))
+        {
+            var lineEndingSource = source.Replace("\\r", "\r", StringComparison.Ordinal);
+            var lineEndingTarget = target.Replace("\\r", "\r", StringComparison.Ordinal);
+            if (!ExactMap.ContainsKey(lineEndingSource))
+            {
+                ExactMap[lineEndingSource] = lineEndingTarget;
+            }
+
+            if (!ExactMapIgnoreCase.ContainsKey(lineEndingSource))
+            {
+                ExactMapIgnoreCase[lineEndingSource] = lineEndingTarget;
+            }
         }
     }
 
@@ -4636,12 +4687,7 @@ internal static partial class TranslationService
             return;
         }
 
-        if (TranslationResultCache.Count >= MaxTranslationResultCache)
-        {
-            return;
-        }
-
-        TranslationResultCache[source] = translated;
+        TranslationResultCache.Set(source, translated, MaxTranslationResultCache);
     }
 
     private static void CacheFastExactMiss(string source)
@@ -4653,12 +4699,7 @@ internal static partial class TranslationService
             return;
         }
 
-        if (FastExactMissCache.Count >= MaxTranslationResultCache)
-        {
-            return;
-        }
-
-        FastExactMissCache.Add(source);
+        FastExactMissCache.Add(source, MaxTranslationResultCache);
     }
 
     private static bool LooksLikeVolatileNegativeCacheSource(string source)
@@ -4699,12 +4740,7 @@ internal static partial class TranslationService
             return;
         }
 
-        if (CompositeTranslationResultCache.Count >= MaxTranslationResultCache)
-        {
-            return;
-        }
-
-        CompositeTranslationResultCache[source] = translated;
+        CompositeTranslationResultCache.Set(source, translated, MaxTranslationResultCache);
     }
 }
 

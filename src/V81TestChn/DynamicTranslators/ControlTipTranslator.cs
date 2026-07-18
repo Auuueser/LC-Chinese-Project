@@ -51,6 +51,11 @@ internal static partial class TranslationService
             }
 
             var trimmed = source.Trim();
+            if (TryTranslateControlTipLines(trimmed, out translated))
+            {
+                return true;
+            }
+
             var cooldownMatch = SafeRegexMatch(
                 trimmed,
                 @"^\[\s*Cooldown\s*[:\uff1a]\s*(?<seconds>\d+)\s*sec\.?\s*\]$",
@@ -153,6 +158,38 @@ internal static partial class TranslationService
             }
 
             translated = string.Join("   |   ", parts);
+            return true;
+        }
+
+        private static bool TryTranslateControlTipLines(string trimmed, out string translated)
+        {
+            translated = trimmed;
+            if (trimmed.IndexOf('\n') < 0)
+            {
+                return false;
+            }
+
+            var lines = trimmed.Split('\n');
+            var changed = false;
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i].TrimEnd('\r');
+                if (!Translate(line, out var translatedLine) ||
+                    string.Equals(line, translatedLine, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                lines[i] = translatedLine;
+                changed = true;
+            }
+
+            if (!changed)
+            {
+                return false;
+            }
+
+            translated = string.Join("\n", lines);
             return true;
         }
 

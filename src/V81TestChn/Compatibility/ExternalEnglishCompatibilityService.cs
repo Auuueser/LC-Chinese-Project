@@ -14,11 +14,22 @@ internal static class ExternalEnglishCompatibilityService
     {
         ["Emote Menu"] = "\u52a8\u4f5c\u83dc\u5355",
         ["Random Emote"] = "\u968f\u673a\u52a8\u4f5c",
+        ["Perform Random Emote"] = "\u6267\u884c\u968f\u673a\u52a8\u4f5c",
         ["Zoom"] = "\u7f29\u653e",
         ["Freeze"] = "\u51bb\u7ed3",
         ["Swap Page"] = "\u5207\u6362\u9875\u9762",
         ["Favorite Emote"] = "\u6536\u85cf\u52a8\u4f5c",
         ["Set Quick Emote"] = "\u8bbe\u7f6e\u5feb\u6377\u52a8\u4f5c",
+        ["Mute emote audio"] = "\u9759\u97f3\u52a8\u4f5c\u97f3\u9891",
+        ["Only perform emote"] = "\u4ec5\u64ad\u653e\u52a8\u4f5c",
+        ["no audio"] = "\u65e0\u97f3\u9891",
+        ["(no audio)"] = "\uff08\u65e0\u97f3\u9891\uff09",
+        ["First person emotes"] = "\u7b2c\u4e00\u4eba\u79f0\u52a8\u4f5c",
+        ["Move while emoting"] = "\u505a\u52a8\u4f5c\u65f6\u53ef\u79fb\u52a8",
+        ["experimental"] = "\u5b9e\u9a8c\u6027",
+        ["(experimental)"] = "\uff08\u5b9e\u9a8c\u6027\uff09",
+        ["DMCA-free mode"] = "DMCA \u5b89\u5168\u6a21\u5f0f",
+        ["Emote volume"] = "\u52a8\u4f5c\u97f3\u91cf",
         ["Tell autopilot ship to leave early"] = "\u547d\u4ee4\u81ea\u52a8\u9a7e\u9a76\u98de\u8239\u63d0\u524d\u79bb\u5f00",
         ["Spectate Previous Player"] = "\u5207\u6362\u4e0a\u4e00\u540d\u73a9\u5bb6",
         ["Open Admin UI"] = "\u6253\u5f00\u7ba1\u7406\u754c\u9762",
@@ -159,8 +170,8 @@ internal static class ExternalEnglishCompatibilityService
         " item with a total value of "
     };
 
-    private static readonly Dictionary<string, bool> CanHandleCache = new(RuntimeCacheLimit, StringComparer.Ordinal);
-    private static readonly Dictionary<string, string?> TranslationCache = new(RuntimeCacheLimit, StringComparer.Ordinal);
+    private static readonly BoundedCache<string, bool> CanHandleCache = new(RuntimeCacheLimit, StringComparer.Ordinal);
+    private static readonly BoundedCache<string, string?> TranslationCache = new(RuntimeCacheLimit, StringComparer.Ordinal);
 
     public static void ClearRuntimeCaches()
     {
@@ -481,12 +492,7 @@ internal static class ExternalEnglishCompatibilityService
             return;
         }
 
-        if (CanHandleCache.Count >= RuntimePerformanceSettings.ExternalCompatibilityCacheLimit)
-        {
-            return;
-        }
-
-        CanHandleCache[source] = result;
+        CanHandleCache.Set(source, result, RuntimePerformanceSettings.ExternalCompatibilityCacheLimit);
     }
 
     private static bool TryGetCachedTranslation(string source, out string translated, out bool hasTranslation)
@@ -510,12 +516,7 @@ internal static class ExternalEnglishCompatibilityService
             return;
         }
 
-        if (TranslationCache.Count >= RuntimePerformanceSettings.ExternalCompatibilityCacheLimit)
-        {
-            return;
-        }
-
-        TranslationCache[source] = translated;
+        TranslationCache.Set(source, translated, RuntimePerformanceSettings.ExternalCompatibilityCacheLimit);
     }
 
     private static bool LooksLikeVolatileNegativeCacheSource(string source)

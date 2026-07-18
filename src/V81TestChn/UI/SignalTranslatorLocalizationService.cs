@@ -108,6 +108,24 @@ internal static class SignalTranslatorLocalizationService
         }
     }
 
+    public static bool IsPlayerMessageText(TMP_Text? text)
+    {
+        return text != null && ReferenceEquals(text, HUDManager.Instance?.signalTranslatorText);
+    }
+
+    public static void PreservePlayerMessageText(TMP_Text? text, string? value)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        // Signal Translator payloads are player-authored content. Keep every
+        // character unchanged; only attach a fallback when the player actually
+        // used Chinese or another supported East Asian glyph.
+        FontFallbackService.ApplyFallback(text, value);
+    }
+
     private static TMP_Text[] GetSignalTranslatorTexts(GameObject root)
     {
         var rootId = root.GetInstanceID();
@@ -130,6 +148,12 @@ internal static class SignalTranslatorLocalizationService
 
         seen++;
         var original = text.text;
+        if (IsPlayerMessageText(text))
+        {
+            PreservePlayerMessageText(text, original);
+            return;
+        }
+
         var isReceivingSignal = IsSignalTranslatorReceivingSignalText(original);
         if (!TranslationService.TryTranslate(original, out var value) ||
             string.Equals(original, value, StringComparison.Ordinal))

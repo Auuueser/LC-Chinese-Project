@@ -26,7 +26,7 @@ internal static class CustomLocalizationExtensionService
     private static readonly Dictionary<string, string> ExactIgnoreCaseEntries = new(StringComparer.OrdinalIgnoreCase);
     private static readonly List<RegexEntry> RegexEntries = new();
     private static readonly List<StyleRule> StyleRules = new();
-    private static readonly Dictionary<int, CachedStyleLookup> StyleCache = new(StyleCacheLimit);
+    private static readonly BoundedCache<int, CachedStyleLookup> StyleCache = new(StyleCacheLimit);
     private static ConfigEntry<bool>? _enabled;
     private static ConfigEntry<bool>? _preferCustomTranslations;
     private static ConfigEntry<bool>? _enableRegex;
@@ -626,12 +626,10 @@ internal static class CustomLocalizationExtensionService
 
     private static void CacheStyleResult(int componentId, string value, bool allowRegexStyle, bool matched, StyleRule? style)
     {
-        if (StyleCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !StyleCache.ContainsKey(componentId))
-        {
-            return;
-        }
-
-        StyleCache[componentId] = new CachedStyleLookup(value, allowRegexStyle, matched, style);
+        StyleCache.Set(
+            componentId,
+            new CachedStyleLookup(value, allowRegexStyle, matched, style),
+            RuntimePerformanceSettings.ComponentTextCacheLimit);
     }
 
     private static void ClearStyleCache()

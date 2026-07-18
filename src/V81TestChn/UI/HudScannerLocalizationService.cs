@@ -1,5 +1,4 @@
 using BepInEx.Configuration;
-using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,12 +9,11 @@ namespace V81TestChn;
 
 internal static class HudScannerLocalizationService
 {
-    private static readonly AccessTools.FieldRef<HUDManager, Dictionary<RectTransform, ScanNodeProperties>>? HudScanNodesRef =
-        CreateHudScanNodesRef();
     private const float HudScannerLocalizationIntervalSeconds = 0.5f;
     private const float HudScannerIdleActiveProbeIntervalSeconds = 0.25f;
     private const float HudScannerActiveProbeIntervalSeconds = 0.1f;
     private const float HudScannerRootLocalizationIntervalSeconds = 2.0f;
+    private const float HudScannerBindingSignatureProbeIntervalSeconds = 0.1f;
     private const int HudScannerTextCacheLimit = 16384;
     private const int DefaultHudScannerMaxTextsPerUpdate = 4;
     private const int HudScannerActiveProbeFallbackElementBudget = 4;
@@ -24,8 +22,11 @@ internal static class HudScannerLocalizationService
     private static float _nextHudScannerLocalizationTime;
     private static float _nextHudScannerElementLocalizationTime;
     private static float _nextHudScannerRootLocalizationTime;
-    private static float _nextHudScannerSourceNodeLocalizationTime;
+    private static float _nextHudScannerBoundNodeLocalizationTime;
     private static float _nextHudScannerActiveProbeTime;
+    private static float _nextHudScannerBindingSignatureProbeTime;
+    private static int _cachedHudScannerBindingCount = -1;
+    private static int _cachedHudScannerBindingSignature;
     private static bool _lastHudScannerActive;
     private static bool _lastImmediateHudScannerActive;
     private static int _lastHudScannerRootId;
@@ -33,30 +34,19 @@ internal static class HudScannerLocalizationService
     private static int _lastImmediateHudScannerRootId;
     private static int _lastImmediateHudScannerNodeCount;
     private static int _lastImmediateHudScannerElementCount;
+    private static int _lastImmediateHudScannerBindingSignature;
     private static int _hudScannerElementCursor;
-    private static int _hudScannerSourceNodeCursor;
+    private static int _hudScannerBoundNodeCursor;
     private static int _hudScannerActiveProbeCursor;
     private static string? _lastHudScannerTotalText;
     private static string? _lastImmediateHudScannerTotalText;
-    private static readonly Dictionary<int, TMP_Text[]> HudScannerElementTextCache = new(HudScannerTextCacheLimit);
-    private static readonly Dictionary<int, CachedHudScannerText> HudScannerTextStateCache = new(HudScannerTextCacheLimit);
-    private static readonly Dictionary<int, CachedHudScannerNodeState> HudScannerNodeStateCache = new(HudScannerTextCacheLimit);
+    private static readonly BoundedCache<int, TMP_Text[]> HudScannerElementTextCache = new(HudScannerTextCacheLimit);
+    private static readonly BoundedCache<int, CachedHudScannerText> HudScannerTextStateCache = new(HudScannerTextCacheLimit);
 
     private sealed class CachedHudScannerText
     {
         public string? LastOriginal { get; set; }
         public string? LastTranslated { get; set; }
-    }
-
-    private sealed class CachedHudScannerNodeState
-    {
-        public ScanNodeProperties? Node { get; set; }
-        public string? OriginalHeader { get; set; }
-        public string? OriginalSubText { get; set; }
-        public string? TranslatedHeader { get; set; }
-        public string? TranslatedSubText { get; set; }
-        public string? LastSeenHeader { get; set; }
-        public string? LastSeenSubText { get; set; }
     }
 
     public static void Initialize(ConfigFile config)
@@ -71,12 +61,14 @@ internal static class HudScannerLocalizationService
 
     public static void Clear()
     {
-        RestoreHudScannerSourceNodes();
         _nextHudScannerLocalizationTime = 0f;
         _nextHudScannerElementLocalizationTime = 0f;
         _nextHudScannerRootLocalizationTime = 0f;
-        _nextHudScannerSourceNodeLocalizationTime = 0f;
+        _nextHudScannerBoundNodeLocalizationTime = 0f;
         _nextHudScannerActiveProbeTime = 0f;
+        _nextHudScannerBindingSignatureProbeTime = 0f;
+        _cachedHudScannerBindingCount = -1;
+        _cachedHudScannerBindingSignature = 0;
         _lastHudScannerActive = false;
         _lastImmediateHudScannerActive = false;
         _lastHudScannerRootId = 0;
@@ -84,8 +76,9 @@ internal static class HudScannerLocalizationService
         _lastImmediateHudScannerRootId = 0;
         _lastImmediateHudScannerNodeCount = 0;
         _lastImmediateHudScannerElementCount = 0;
+        _lastImmediateHudScannerBindingSignature = 0;
         _hudScannerElementCursor = 0;
-        _hudScannerSourceNodeCursor = 0;
+        _hudScannerBoundNodeCursor = 0;
         _hudScannerActiveProbeCursor = 0;
         _lastHudScannerTotalText = null;
         _lastImmediateHudScannerTotalText = null;
@@ -96,7 +89,9 @@ internal static class HudScannerLocalizationService
     {
         HudScannerElementTextCache.Clear();
         HudScannerTextStateCache.Clear();
-        HudScannerNodeStateCache.Clear();
+        _nextHudScannerBindingSignatureProbeTime = 0f;
+        _cachedHudScannerBindingCount = -1;
+        _cachedHudScannerBindingSignature = 0;
     }
 
     public static void ApplyHudScannerLocalization(HUDManager? hud, string reason)
@@ -124,7 +119,7 @@ internal static class HudScannerLocalizationService
 
         if (!isUpdateScanNodes)
         {
-            TranslateHudScannerSourceNodes(hud, reason);
+            TranslateHudScannerBoundNodes(hud, reason);
         }
 
         var root = GetHudScannerRoot(hud);
@@ -142,21 +137,21 @@ internal static class HudScannerLocalizationService
         }
     }
 
-    public static void ApplyHudScannerSourceNodesIfDue(HUDManager? hud, string reason)
+    public static void ApplyHudScannerBoundNodesIfDue(HUDManager? hud, string reason)
     {
-        ApplyHudScannerSourceNodesIfDue(hud, reason, HasActiveHudScannerElement(hud));
+        ApplyHudScannerBoundNodesIfDue(hud, reason, HasActiveHudScannerElement(hud));
     }
 
-    public static void ApplyHudScannerSourceNodesIfDue(HUDManager? hud, string reason, bool hasActiveScanner)
+    public static void ApplyHudScannerBoundNodesIfDue(HUDManager? hud, string reason, bool hasActiveScanner)
     {
-        ApplyHudScannerSourceNodesIfDue(hud, reason, hasActiveScanner, immediatePass: false);
+        ApplyHudScannerBoundNodesIfDue(hud, reason, hasActiveScanner, immediatePass: false);
     }
 
-    public static void ApplyHudScannerSourceNodesIfDue(HUDManager? hud, string reason, bool hasActiveScanner, bool immediatePass)
+    public static void ApplyHudScannerBoundNodesIfDue(HUDManager? hud, string reason, bool hasActiveScanner, bool immediatePass)
     {
-        if (ShouldTranslateHudScannerSourceNodes(reason, hasActiveScanner, immediatePass))
+        if (ShouldTranslateHudScannerBoundNodes(reason, hasActiveScanner, immediatePass))
         {
-            TranslateHudScannerSourceNodes(hud, reason, immediatePass);
+            TranslateHudScannerBoundNodes(hud, reason, immediatePass);
         }
     }
 
@@ -177,12 +172,14 @@ internal static class HudScannerLocalizationService
             _lastImmediateHudScannerRootId = 0;
             _lastImmediateHudScannerNodeCount = 0;
             _lastImmediateHudScannerElementCount = 0;
+            _lastImmediateHudScannerBindingSignature = 0;
             _lastImmediateHudScannerTotalText = null;
             return false;
         }
 
         var nodeCount = -1;
-        if (TryGetHudScannerNodeCount(hud, out var scanNodeCount))
+        var bindingSignature = 0;
+        if (TryGetHudScannerBindingState(hud, out var scanNodeCount, out bindingSignature))
         {
             nodeCount = scanNodeCount;
             hasActiveScanner = hasActiveScanner || scanNodeCount > 0;
@@ -194,6 +191,7 @@ internal static class HudScannerLocalizationService
             _lastImmediateHudScannerRootId = 0;
             _lastImmediateHudScannerNodeCount = nodeCount;
             _lastImmediateHudScannerElementCount = hud.scanElements?.Length ?? 0;
+            _lastImmediateHudScannerBindingSignature = bindingSignature;
             _lastImmediateHudScannerTotalText = null;
             return false;
         }
@@ -206,19 +204,21 @@ internal static class HudScannerLocalizationService
                       rootId != _lastImmediateHudScannerRootId ||
                       nodeCount != _lastImmediateHudScannerNodeCount ||
                       elementCount != _lastImmediateHudScannerElementCount ||
+                      bindingSignature != _lastImmediateHudScannerBindingSignature ||
                       !string.Equals(totalText, _lastImmediateHudScannerTotalText, StringComparison.Ordinal);
 
         _lastImmediateHudScannerActive = true;
         _lastImmediateHudScannerRootId = rootId;
         _lastImmediateHudScannerNodeCount = nodeCount;
         _lastImmediateHudScannerElementCount = elementCount;
+        _lastImmediateHudScannerBindingSignature = bindingSignature;
         _lastImmediateHudScannerTotalText = totalText;
         return changed;
     }
 
-    private static bool ShouldTranslateHudScannerSourceNodes(string reason, bool hasActiveScanner, bool immediatePass)
+    private static bool ShouldTranslateHudScannerBoundNodes(string reason, bool hasActiveScanner, bool immediatePass)
     {
-        if (!string.Equals(reason, "HUDManager.UpdateScanNodes.scan-node-source", StringComparison.Ordinal))
+        if (!string.Equals(reason, "HUDManager.UpdateScanNodes.bound-nodes", StringComparison.Ordinal))
         {
             return true;
         }
@@ -229,12 +229,12 @@ internal static class HudScannerLocalizationService
         }
 
         var now = Time.unscaledTime;
-        if (!immediatePass && now < _nextHudScannerSourceNodeLocalizationTime)
+        if (!immediatePass && now < _nextHudScannerBoundNodeLocalizationTime)
         {
             return false;
         }
 
-        _nextHudScannerSourceNodeLocalizationTime = now + HudScannerLocalizationIntervalSeconds;
+        _nextHudScannerBoundNodeLocalizationTime = now + HudScannerLocalizationIntervalSeconds;
         return true;
     }
 
@@ -294,39 +294,47 @@ internal static class HudScannerLocalizationService
         }
     }
 
-    private static void TranslateHudScannerSourceNodes(HUDManager? hud, string reason)
+    private static void TranslateHudScannerBoundNodes(HUDManager? hud, string reason)
     {
-        TranslateHudScannerSourceNodes(hud, reason, immediatePass: false);
+        TranslateHudScannerBoundNodes(hud, reason, immediatePass: false);
     }
 
-    private static void TranslateHudScannerSourceNodes(HUDManager? hud, string reason, bool immediatePass)
+    private static void TranslateHudScannerBoundNodes(HUDManager? hud, string reason, bool immediatePass)
     {
-        if (hud == null || HudScanNodesRef == null)
+        if (hud == null)
         {
             return;
         }
 
-        var scanNodes = HudScanNodesRef(hud);
+        Dictionary<RectTransform, ScanNodeProperties>? scanNodes;
+        try
+        {
+            scanNodes = hud.scanNodes;
+        }
+        catch (Exception)
+        {
+            return;
+        }
 
         if (scanNodes == null || scanNodes.Count == 0)
         {
             return;
         }
 
-        var isUpdateScanNodes = string.Equals(reason, "HUDManager.UpdateScanNodes.scan-node-source", StringComparison.Ordinal);
+        var isUpdateScanNodes = string.Equals(reason, "HUDManager.UpdateScanNodes.bound-nodes", StringComparison.Ordinal);
         var count = scanNodes.Count;
-        var start = isUpdateScanNodes && !immediatePass && _hudScannerSourceNodeCursor < count ? _hudScannerSourceNodeCursor : 0;
+        var start = isUpdateScanNodes && !immediatePass && _hudScannerBoundNodeCursor < count ? _hudScannerBoundNodeCursor : 0;
         var processed = 0;
         var maxTexts = immediatePass ? RuntimePerformanceSettings.HudScannerCacheLimit : GetHudScannerMaxTextsPerUpdate();
         var index = 0;
-        foreach (var node in scanNodes.Values)
+        foreach (var pair in scanNodes)
         {
             if (index++ < start)
             {
                 continue;
             }
 
-            if (node == null)
+            if (pair.Key == null || pair.Value == null)
             {
                 continue;
             }
@@ -335,216 +343,121 @@ internal static class HudScannerLocalizationService
             {
                 if (isUpdateScanNodes)
                 {
-                    _hudScannerSourceNodeCursor = Math.Max(0, (index - 1) % count);
+                    _hudScannerBoundNodeCursor = Math.Max(0, (index - 1) % count);
                 }
 
                 return;
             }
 
             processed++;
-            TranslateHudScannerSourceNode(node, reason);
+            TranslateHudScannerBoundNode(pair.Key, pair.Value);
         }
 
         if (!isUpdateScanNodes || start == 0 || processed >= maxTexts)
         {
             if (isUpdateScanNodes)
             {
-                _hudScannerSourceNodeCursor = 0;
+                _hudScannerBoundNodeCursor = 0;
             }
 
             return;
         }
 
         index = 0;
-        foreach (var node in scanNodes.Values)
+        foreach (var pair in scanNodes)
         {
             if (index++ >= start)
             {
                 break;
             }
 
-            if (node == null)
+            if (pair.Key == null || pair.Value == null)
             {
                 continue;
             }
 
             if (processed >= maxTexts)
             {
-                _hudScannerSourceNodeCursor = Math.Max(0, (index - 1) % count);
+                _hudScannerBoundNodeCursor = Math.Max(0, (index - 1) % count);
                 return;
             }
 
             processed++;
-            TranslateHudScannerSourceNode(node, reason);
+            TranslateHudScannerBoundNode(pair.Key, pair.Value);
         }
 
-        _hudScannerSourceNodeCursor = 0;
+        _hudScannerBoundNodeCursor = 0;
     }
 
-    private static AccessTools.FieldRef<HUDManager, Dictionary<RectTransform, ScanNodeProperties>>? CreateHudScanNodesRef()
+    private static void TranslateHudScannerBoundNode(RectTransform element, ScanNodeProperties node)
     {
-        try
-        {
-            return AccessTools.FieldRefAccess<HUDManager, Dictionary<RectTransform, ScanNodeProperties>>("scanNodes");
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static void TranslateHudScannerSourceNode(ScanNodeProperties node, string reason)
-    {
-        var id = node.GetInstanceID();
-        if (!HudScannerNodeStateCache.TryGetValue(id, out var state))
-        {
-            if (HudScannerNodeStateCache.Count >= RuntimePerformanceSettings.HudScannerCacheLimit)
-            {
-                return;
-            }
-
-            state = new CachedHudScannerNodeState { Node = node };
-            HudScannerNodeStateCache[id] = state;
-        }
-
-        state.Node = node;
-        var resolvedUnknownSubText = TryResolveUnknownHudScannerScrapValue(node, out var resolvedSubText);
-        if (resolvedUnknownSubText)
-        {
-            node.subText = resolvedSubText;
-        }
-
-        if (!resolvedUnknownSubText && TrySkipUnchangedHudScannerSourceNode(node, state))
+        if (!element.gameObject.activeInHierarchy)
         {
             return;
         }
 
-        var changed = resolvedUnknownSubText;
-        if (TryTranslateHudScannerSourceField(
-                node.headerText,
-                state.OriginalHeader,
-                state.TranslatedHeader,
-                out var originalHeader,
-                out var translatedHeader,
-                out var headerValue))
+        var texts = GetHudScannerElementTexts(element);
+        if (texts.Length == 0)
         {
-            state.OriginalHeader = originalHeader;
-            state.TranslatedHeader = translatedHeader;
-            node.headerText = headerValue;
-            changed = true;
+            return;
         }
 
-        if (TryTranslateHudScannerSourceField(
-                node.subText,
-                state.OriginalSubText,
-                state.TranslatedSubText,
-                out var originalSubText,
-                out var translatedSubText,
-                out var subTextValue))
+        // ScanNodeProperties stays in its original language because scanner mods use exact
+        // source strings (for example "Value: $0") to make visibility and caching decisions.
+        ApplyHudScannerBoundText(texts[0], node.headerText, preserveHidden: false);
+        if (texts.Length < 2)
         {
-            state.OriginalSubText = originalSubText;
-            state.TranslatedSubText = translatedSubText;
-            node.subText = subTextValue;
-            changed = true;
+            return;
         }
 
-        UpdateHudScannerSourceNodeSnapshot(node, state);
-        if (changed)
+        var sourceSubText = node.subText ?? string.Empty;
+        if (TryResolveUnknownHudScannerScrapValue(node, out var resolvedSubText))
+        {
+            sourceSubText = resolvedSubText;
+        }
+
+        ApplyHudScannerBoundText(texts[1], sourceSubText, preserveHidden: true);
+    }
+
+    private static void ApplyHudScannerBoundText(TMP_Text? text, string? source, bool preserveHidden)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        var sourceValue = source ?? string.Empty;
+        if (preserveHidden && ShouldPreserveHiddenHudScannerSubText(sourceValue, text.text))
+        {
+            return;
+        }
+
+        var translated = TryTranslateHudScannerSourceText(sourceValue, out var translatedValue) &&
+                         !string.Equals(sourceValue, translatedValue, StringComparison.Ordinal);
+        var displayValue = translated ? translatedValue : sourceValue;
+        if (!string.Equals(text.text, displayValue, StringComparison.Ordinal))
+        {
+            text.text = displayValue;
+        }
+
+        CacheHudScannerText(text.GetInstanceID(), sourceValue, translated ? displayValue : null);
+        ApplyFallbackIfCjk(text, displayValue);
+        if (translated)
         {
             Plugin.ReportTranslationHit();
         }
     }
 
-    private static bool TrySkipUnchangedHudScannerSourceNode(ScanNodeProperties node, CachedHudScannerNodeState state)
+    private static bool ShouldPreserveHiddenHudScannerSubText(string? source, string? rendered)
     {
-        return string.Equals(node.headerText, state.LastSeenHeader, StringComparison.Ordinal) &&
-               string.Equals(node.subText, state.LastSeenSubText, StringComparison.Ordinal);
-    }
-
-    private static void UpdateHudScannerSourceNodeSnapshot(ScanNodeProperties node, CachedHudScannerNodeState state)
-    {
-        state.LastSeenHeader = node.headerText;
-        state.LastSeenSubText = node.subText;
-    }
-
-    private static bool TryTranslateHudScannerSourceField(
-        string? current,
-        string? cachedOriginal,
-        string? cachedTranslated,
-        out string? original,
-        out string? translated,
-        out string value)
-    {
-        original = cachedOriginal;
-        translated = cachedTranslated;
-        value = current ?? string.Empty;
-        if (string.IsNullOrEmpty(current))
-        {
-            return false;
-        }
-
-        if (!string.IsNullOrEmpty(cachedTranslated))
-        {
-            if (string.Equals(current, cachedTranslated, StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            if (string.Equals(current, cachedOriginal, StringComparison.Ordinal))
-            {
-                value = cachedTranslated;
-                return true;
-            }
-        }
-
-        original = current;
-        if (!TryTranslateHudScannerSourceText(current, out var newTranslated) ||
-            string.Equals(current, newTranslated, StringComparison.Ordinal))
-        {
-            translated = null;
-            return false;
-        }
-
-        translated = newTranslated;
-        value = newTranslated;
-        return true;
+        // An empty rendered value with a non-empty source is a third-party visibility decision.
+        return !string.IsNullOrWhiteSpace(source) && string.IsNullOrWhiteSpace(rendered);
     }
 
     private static bool TryTranslateHudScannerSourceText(string source, out string translated)
     {
         return TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.HudScanner, source, out translated) ||
                TranslationService.TryTranslateFastExact(source, out translated);
-    }
-
-    private static void RestoreHudScannerSourceNodes()
-    {
-        foreach (var state in HudScannerNodeStateCache.Values)
-        {
-            try
-            {
-                var node = state.Node;
-                if (node == null)
-                {
-                    continue;
-                }
-
-                if (!string.IsNullOrEmpty(state.OriginalHeader) &&
-                    string.Equals(node.headerText, state.TranslatedHeader, StringComparison.Ordinal))
-                {
-                    node.headerText = state.OriginalHeader;
-                }
-
-                if (!string.IsNullOrEmpty(state.OriginalSubText) &&
-                    string.Equals(node.subText, state.TranslatedSubText, StringComparison.Ordinal))
-                {
-                    node.subText = state.OriginalSubText;
-                }
-            }
-            catch
-            {
-                // Unity objects may already be tearing down; cleanup must stay best-effort.
-            }
-        }
     }
 
     private static bool TryResolveUnknownHudScannerScrapValue(ScanNodeProperties node, out string resolved)
@@ -759,14 +672,9 @@ internal static class HudScannerLocalizationService
     private static bool TryGetHudScannerNodeCount(HUDManager hud, out int count)
     {
         count = 0;
-        if (HudScanNodesRef == null)
-        {
-            return false;
-        }
-
         try
         {
-            var scanNodes = HudScanNodesRef(hud);
+            var scanNodes = hud.scanNodes;
             if (scanNodes == null)
             {
                 return true;
@@ -777,6 +685,57 @@ internal static class HudScannerLocalizationService
         }
         catch
         {
+            return false;
+        }
+    }
+
+    private static bool TryGetHudScannerBindingState(HUDManager hud, out int count, out int signature)
+    {
+        count = 0;
+        signature = 0;
+        try
+        {
+            var scanNodes = hud.scanNodes;
+            if (scanNodes == null)
+            {
+                _cachedHudScannerBindingCount = 0;
+                _cachedHudScannerBindingSignature = 0;
+                return true;
+            }
+
+            count = scanNodes.Count;
+            var now = Time.unscaledTime;
+            if (count == _cachedHudScannerBindingCount &&
+                now < _nextHudScannerBindingSignatureProbeTime)
+            {
+                signature = _cachedHudScannerBindingSignature;
+                return true;
+            }
+
+            unchecked
+            {
+                var hash = 17;
+                foreach (var pair in scanNodes)
+                {
+                    hash = hash * 31 + (pair.Key == null ? 0 : pair.Key.GetInstanceID());
+                    hash = hash * 31 + (pair.Value == null ? 0 : pair.Value.GetInstanceID());
+                    hash = hash * 31 + StringComparer.Ordinal.GetHashCode(pair.Value?.headerText ?? string.Empty);
+                    hash = hash * 31 + StringComparer.Ordinal.GetHashCode(pair.Value?.subText ?? string.Empty);
+                }
+
+                signature = hash;
+            }
+
+            _cachedHudScannerBindingCount = count;
+            _cachedHudScannerBindingSignature = signature;
+            _nextHudScannerBindingSignatureProbeTime = now + HudScannerBindingSignatureProbeIntervalSeconds;
+
+            return true;
+        }
+        catch
+        {
+            count = 0;
+            signature = 0;
             return false;
         }
     }
@@ -800,17 +759,11 @@ internal static class HudScannerLocalizationService
 
     private static void CacheHudScannerText(int id, string original, string? translated)
     {
-        if (HudScannerTextStateCache.Count >= RuntimePerformanceSettings.HudScannerCacheLimit &&
-            !HudScannerTextStateCache.ContainsKey(id))
-        {
-            return;
-        }
-
-        HudScannerTextStateCache[id] = new CachedHudScannerText
+        HudScannerTextStateCache.Set(id, new CachedHudScannerText
         {
             LastOriginal = original,
             LastTranslated = translated
-        };
+        }, RuntimePerformanceSettings.HudScannerCacheLimit);
     }
 
     private static TMP_Text[] GetHudScannerElementTexts(RectTransform element)
@@ -825,11 +778,7 @@ internal static class HudScannerLocalizationService
         try
         {
             var texts = element.GetComponentsInChildren<TMP_Text>(true) ?? Array.Empty<TMP_Text>();
-            if (HudScannerElementTextCache.Count < RuntimePerformanceSettings.HudScannerCacheLimit ||
-                HudScannerElementTextCache.ContainsKey(id))
-            {
-                HudScannerElementTextCache[id] = texts;
-            }
+            HudScannerElementTextCache.Set(id, texts, RuntimePerformanceSettings.HudScannerCacheLimit);
 
             return texts;
         }

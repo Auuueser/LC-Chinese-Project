@@ -12,7 +12,7 @@ internal static class TranslationGuard
     private const int MaxGlobalSetterTextLength = 1024;
     private const int ComponentClassificationCacheLimit = 16384;
     private static readonly HashSet<int> LoggedSkipComponents = new(512);
-    private static readonly Dictionary<int, CachedComponentClassification> ComponentClassificationCache = new(ComponentClassificationCacheLimit);
+    private static readonly BoundedCache<int, CachedComponentClassification> ComponentClassificationCache = new(ComponentClassificationCacheLimit);
     private static ConfigEntry<bool>? _logTranslationGuardSkips;
     private static bool _logTranslationGuardSkipsFast;
 
@@ -300,12 +300,10 @@ internal static class TranslationGuard
         }
 
         var id = component.GetInstanceID();
-        if (ComponentClassificationCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit && !ComponentClassificationCache.ContainsKey(id))
-        {
-            return;
-        }
-
-        ComponentClassificationCache[id] = new CachedComponentClassification(GetParentInstanceId(component), decision, reason);
+        ComponentClassificationCache.Set(
+            id,
+            new CachedComponentClassification(GetParentInstanceId(component), decision, reason),
+            RuntimePerformanceSettings.ComponentTextCacheLimit);
     }
 
     private static int GetParentInstanceId(Component component)

@@ -45,7 +45,7 @@ internal static class AlertTextureReplacementService
     private static HUDManager? _fixedSceneLabelWatcherOwner;
     private static bool _fixedSceneLabelSceneLoadedSubscribed;
     private static string _fixedSceneLabelSceneLoadedStage = "SceneLoaded";
-    private static readonly Dictionary<int, CachedNativeTextRole> NativeTextRoleCache = new(NativeTextRoleCacheLimit);
+    private static readonly BoundedCache<int, CachedNativeTextRole> NativeTextRoleCache = new(NativeTextRoleCacheLimit);
     private static readonly Dictionary<string, string> FixedSceneLabels = new(StringComparer.Ordinal)
     {
         ["TO MEET PROFIT QUOTA"] = "\u4ee5\u8fbe\u5230\u5229\u6da6\u914d\u989d",
@@ -860,13 +860,10 @@ internal static class AlertTextureReplacementService
     private static void CacheNativeTextRole(TMP_Text text, NativeTextRole role)
     {
         var id = text.GetInstanceID();
-        if (NativeTextRoleCache.Count >= RuntimePerformanceSettings.ComponentTextCacheLimit &&
-            !NativeTextRoleCache.ContainsKey(id))
-        {
-            return;
-        }
-
-        NativeTextRoleCache[id] = new CachedNativeTextRole(GetParentInstanceId(text.transform), role);
+        NativeTextRoleCache.Set(
+            id,
+            new CachedNativeTextRole(GetParentInstanceId(text.transform), role),
+            RuntimePerformanceSettings.ComponentTextCacheLimit);
     }
 
     private static int GetParentInstanceId(Transform? transform)

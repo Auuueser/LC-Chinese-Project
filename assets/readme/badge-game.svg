@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="102" height="22" role="img" aria-label="游戏 V81">
+  <rect width="102" height="22" rx="4" fill="#24282C"/>
+  <path d="M58 0h40a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H58Z" fill="#E35B18"/>
+  <g fill="#FFF" font-family="'Microsoft YaHei','Noto Sans SC',Arial,sans-serif" font-size="12" text-anchor="middle">
+    <text x="29" y="15">游戏</text>
+    <text x="80" y="15" font-weight="700">V81</text>
+  </g>
+</svg>
