@@ -1,14 +1,16 @@
 # fonts
 
-放置中文 TMP 字体 AssetBundle。
+放置中文原始字体和旧版 TMP 字体 AssetBundle 兜底资源。
 
-默认文件名：
+运行时加载顺序：
 
 ```text
-fonts/zh-cn-tmp-font
+fonts/NotoSansSC-VF.ttf
+系统中文字体
+fonts/zh-cn-tmp-font（旧版最终兜底）
 ```
 
-AssetBundle 内建议包含一个 `TMP_FontAsset`。插件启动后会尝试加载它，并把它加入现有 TMP 字体的 fallback 列表。
+插件优先从随包 TTF 动态创建 `TMP_FontAsset`，避免 AssetBundle 与 Unity 运行时版本耦合。候选字体必须通过代表性简体中文字形验证才会注册为 fallback。
 
 ## 字符集
 
@@ -29,7 +31,14 @@ fonts\zh-cn-charset-report.md
 
 ## 授权
 
-如果使用 Noto Sans CJK SC 或 Source Han Sans SC / 思源黑体 SC，请随发布包附带 OFL 1.1 授权文本和来源说明。当前 `zh-cn-tmp-font` 由本机 `C:\Windows\Fonts\NotoSansSC-VF.ttf` 生成，发布时需要同时附带 `fonts\OFL-1.1.txt` 和 `THIRD_PARTY_LICENSES.md`。
+随包 `NotoSansSC-VF.ttf` 及旧 `zh-cn-tmp-font` 均源自 Noto Sans SC，采用 SIL Open Font License 1.1。发布时必须同时附带 `fonts\OFL-1.1.txt` 和 `THIRD_PARTY_LICENSES.md`。
+
+当前原始字体：
+
+```text
+fonts/NotoSansSC-VF.ttf
+SHA-256: 763146584CF0710223441356B4395E279021B0806C196614377A7A0174AE074A
+```
 
 详细流程见：
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using TMPro;
 using UnityEngine;
 
@@ -9,13 +8,16 @@ namespace V81TestChn;
 internal static class SignalTranslatorLocalizationService
 {
     private const float SignalTranslatorLocalizationWindowSeconds = 2.0f;
-    private const float SignalTranslatorLocalizationRetryIntervalSeconds = 0.05f;
+    private const float SignalTranslatorLocalizationInitialRetryIntervalSeconds = 0.05f;
+    private const float SignalTranslatorLocalizationMaxRetryIntervalSeconds = 0.4f;
     private const float SignalTranslatorReceivingSignalFontScale = 1.25f;
     private const string SignalTranslatorReceivingSignalEnglish = "RECEIVING SIGNAL";
     private const string SignalTranslatorReceivingSignalChinese = "\u6b63\u5728\u63a5\u6536\u4fe1\u53f7";
 
     private static float _signalTranslatorLocalizationUntil;
     private static float _nextSignalTranslatorLocalizationTime;
+    private static float _signalTranslatorLocalizationRetryInterval;
+    private static int _lastLocalizationBeginFrame = -1;
     private static int _signalTranslatorTextCacheRootId;
     private static TMP_Text[] SignalTranslatorTextCache = Array.Empty<TMP_Text>();
     private static readonly Dictionary<int, float> SignalTranslatorReceivingSignalOriginalFontSizes = new();
@@ -24,6 +26,8 @@ internal static class SignalTranslatorLocalizationService
     {
         _signalTranslatorLocalizationUntil = 0f;
         _nextSignalTranslatorLocalizationTime = 0f;
+        _signalTranslatorLocalizationRetryInterval = 0f;
+        _lastLocalizationBeginFrame = -1;
         ClearCaches();
     }
 
@@ -34,7 +38,7 @@ internal static class SignalTranslatorLocalizationService
         SignalTranslatorReceivingSignalOriginalFontSizes.Clear();
     }
 
-    public static void BeginLocalizationWindow(HUDManager? hud, string reason)
+    public static void BeginLocalizationWindow(HUDManager? hud, string reason, bool applyImmediately = true)
     {
         if (hud == null)
         {
@@ -44,8 +48,20 @@ internal static class SignalTranslatorLocalizationService
         _signalTranslatorLocalizationUntil = Math.Max(
             _signalTranslatorLocalizationUntil,
             Time.unscaledTime + SignalTranslatorLocalizationWindowSeconds);
+        if (!applyImmediately)
+        {
+            return;
+        }
+
+        if (_lastLocalizationBeginFrame == Time.frameCount)
+        {
+            return;
+        }
+
+        _lastLocalizationBeginFrame = Time.frameCount;
+        _signalTranslatorLocalizationRetryInterval = SignalTranslatorLocalizationInitialRetryIntervalSeconds;
         ApplyHudLocalization(hud, reason);
-        _nextSignalTranslatorLocalizationTime = Time.unscaledTime + SignalTranslatorLocalizationRetryIntervalSeconds;
+        _nextSignalTranslatorLocalizationTime = Time.unscaledTime + _signalTranslatorLocalizationRetryInterval;
     }
 
     public static bool ShouldRetryLocalization()
@@ -67,7 +83,12 @@ internal static class SignalTranslatorLocalizationService
             return false;
         }
 
-        _nextSignalTranslatorLocalizationTime = now + SignalTranslatorLocalizationRetryIntervalSeconds;
+        _nextSignalTranslatorLocalizationTime = now + Math.Max(
+            SignalTranslatorLocalizationInitialRetryIntervalSeconds,
+            _signalTranslatorLocalizationRetryInterval);
+        _signalTranslatorLocalizationRetryInterval = Math.Min(
+            SignalTranslatorLocalizationMaxRetryIntervalSeconds,
+            Math.Max(SignalTranslatorLocalizationInitialRetryIntervalSeconds, _signalTranslatorLocalizationRetryInterval * 2f));
         return true;
     }
 
@@ -123,6 +144,7 @@ internal static class SignalTranslatorLocalizationService
         // Signal Translator payloads are player-authored content. Keep every
         // character unchanged; only attach a fallback when the player actually
         // used Chinese or another supported East Asian glyph.
+        ChatEmojiSpriteService.ApplyToText(text);
         FontFallbackService.ApplyFallback(text, value);
     }
 
@@ -203,32 +225,57 @@ internal static class SignalTranslatorLocalizationService
             return false;
         }
 
-        var normalized = NormalizeSignalTranslatorText(value);
-        return string.Equals(normalized, SignalTranslatorReceivingSignalEnglish, StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(normalized, SignalTranslatorReceivingSignalChinese, StringComparison.Ordinal);
+        return EqualsNormalizedWhitespace(value, SignalTranslatorReceivingSignalEnglish, ignoreCase: true) ||
+               EqualsNormalizedWhitespace(value, SignalTranslatorReceivingSignalChinese, ignoreCase: false);
     }
 
-    private static string NormalizeSignalTranslatorText(string value)
+    private static bool EqualsNormalizedWhitespace(string value, string expected, bool ignoreCase)
     {
-        var builder = new StringBuilder(value.Length);
-        var sawWhitespace = false;
-        foreach (var ch in value)
+        var valueIndex = 0;
+        var expectedIndex = 0;
+        while (valueIndex < value.Length && char.IsWhiteSpace(value[valueIndex]))
         {
-            if (char.IsWhiteSpace(ch))
+            valueIndex++;
+        }
+
+        while (valueIndex < value.Length)
+        {
+            if (char.IsWhiteSpace(value[valueIndex]))
             {
-                if (!sawWhitespace)
+                while (valueIndex < value.Length && char.IsWhiteSpace(value[valueIndex]))
                 {
-                    builder.Append(' ');
-                    sawWhitespace = true;
+                    valueIndex++;
+                }
+
+                if (valueIndex >= value.Length)
+                {
+                    break;
+                }
+
+                if (expectedIndex >= expected.Length || expected[expectedIndex++] != ' ')
+                {
+                    return false;
                 }
 
                 continue;
             }
 
-            builder.Append(ch);
-            sawWhitespace = false;
+            if (expectedIndex >= expected.Length ||
+                !CharsEqual(value[valueIndex], expected[expectedIndex], ignoreCase))
+            {
+                return false;
+            }
+
+            valueIndex++;
+            expectedIndex++;
         }
 
-        return builder.ToString().Trim();
+        return expectedIndex == expected.Length;
+    }
+
+    private static bool CharsEqual(char left, char right, bool ignoreCase)
+    {
+        return left == right ||
+               (ignoreCase && char.ToUpperInvariant(left) == char.ToUpperInvariant(right));
     }
 }

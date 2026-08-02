@@ -53,6 +53,34 @@ internal static class ExternalEnglishCompatibilityService
         ["New File"] = "\u65b0\u5b58\u6863",
         ["Players"] = "\u73a9\u5bb6",
         ["Today's discounts"] = "\u4eca\u65e5\u6298\u6263",
+        ["AVAILABLE NOW!"] = "\u73b0\u5df2\u53d1\u552e\uff01",
+        ["CURES CANCER!"] = "\u6cbb\u6108\u764c\u75c7\uff01",
+        ["NO WAY!"] = "\u4e0d\u4f1a\u5427\uff01",
+        ["LIMITED TIME ONLY!"] = "\u9650\u65f6\u4f9b\u5e94\uff01",
+        ["GET YOURS TODAY!"] = "\u4eca\u5929\u5c31\u6765\u9886\u53d6\uff01",
+        ["Cannot return from storage while the ship is landing or leaving."] = "\u98de\u8239\u6b63\u5728\u964d\u843d\u6216\u79bb\u5f00\u65f6\uff0c\u65e0\u6cd5\u4ece\u4ed3\u50a8\u53d6\u56de\u7269\u54c1\u3002",
+        ["Infection"] = "\u611f\u67d3",
+        ["HUDScale"] = "HUD \u7f29\u653e",
+        ["HideHealthbarAutomatically"] = "\u81ea\u52a8\u9690\u85cf\u751f\u547d\u6761",
+        ["HealthbarHideDelay"] = "\u751f\u547d\u6761\u9690\u85cf\u5ef6\u8fdf",
+        ["FlashlightBattery"] = "\u624b\u7535\u7b52\u7535\u91cf\u663e\u793a",
+        ["DetailedStamina"] = "\u8be6\u7ec6\u8010\u529b",
+        ["DisplayTimeLeft"] = "\u663e\u793a\u5269\u4f59\u65f6\u95f4",
+        ["HidePlanetInfo"] = "\u9690\u85cf\u661f\u7403\u4fe1\u606f",
+        ["PercentageOnly"] = "\u4ec5\u767e\u5206\u6bd4",
+        ["The size of the HUD."] = "HUD \u754c\u9762\u7684\u7f29\u653e\u5927\u5c0f\u3002",
+        ["Should the healthbar be hidden after not taking damage for a while."] = "\u4e00\u6bb5\u65f6\u95f4\u672a\u53d7\u4f24\u540e\u662f\u5426\u81ea\u52a8\u9690\u85cf\u751f\u547d\u6761\u3002",
+        ["The amount of time before the healthbar starts fading away."] = "\u751f\u547d\u6761\u5f00\u59cb\u6de1\u51fa\u524d\u7684\u7b49\u5f85\u65f6\u95f4\u3002",
+        ["How the flashlight battery is displayed whilst unequipped."] = "\u672a\u88c5\u5907\u624b\u7535\u7b52\u65f6\u5982\u4f55\u663e\u793a\u5176\u7535\u91cf\u3002",
+        ["Disabled - Flashlight battery will not be displayed."] = "\u7981\u7528 - \u4e0d\u663e\u793a\u624b\u7535\u7b52\u7535\u91cf\u3002",
+        ["Vanilla - Flashlight battery will be displayed when you don't have a battery-using item equipped."] = "\u539f\u7248 - \u672a\u88c5\u5907\u5176\u4ed6\u8017\u7535\u7269\u54c1\u65f6\u663e\u793a\u624b\u7535\u7b52\u7535\u91cf\u3002",
+        ["Separate - Flashlight battery will be displayed using a dedicated panel. (recommended)"] = "\u72ec\u7acb - \u4f7f\u7528\u72ec\u7acb\u9762\u677f\u663e\u793a\u624b\u7535\u7b52\u7535\u91cf\u3002\uff08\u63a8\u8350\uff09",
+        ["What the stamina text should display."] = "\u8010\u529b\u6587\u5b57\u8981\u663e\u793a\u7684\u5185\u5bb9\u3002",
+        ["Disabled - The stamina text will be hidden."] = "\u7981\u7528 - \u9690\u85cf\u8010\u529b\u6587\u5b57\u3002",
+        ["PercentageOnly - Only the percentage will be displayed. (recommended)"] = "\u4ec5\u767e\u5206\u6bd4 - \u53ea\u663e\u793a\u767e\u5206\u6bd4\u3002\uff08\u63a8\u8350\uff09",
+        ["Full - Both percentage and rate of gain/loss will be displayed."] = "\u5b8c\u6574 - \u540c\u65f6\u663e\u793a\u767e\u5206\u6bd4\u4e0e\u589e\u51cf\u901f\u7387\u3002",
+        ["Should the uses/time left for a battery-using item be displayed."] = "\u662f\u5426\u663e\u793a\u8017\u7535\u7269\u54c1\u7684\u5269\u4f59\u4f7f\u7528\u6b21\u6570\u6216\u65f6\u95f4\u3002",
+        ["Should planet info be hidden. If modifying from an in-game menu, this requires you to rejoin the game."] = "\u662f\u5426\u9690\u85cf\u661f\u7403\u4fe1\u606f\u3002\u82e5\u5728\u6e38\u620f\u5185\u83dc\u5355\u4fee\u6539\uff0c\u9700\u8981\u91cd\u65b0\u52a0\u5165\u6e38\u620f\u3002",
         ["Target on ship"] = "\u98de\u8239\u4e0a\u7684\u76ee\u6807",
         ["Signal lost"] = "\u4fe1\u53f7\u4e22\u5931",
         ["Antenna stored"] = "\u5929\u7ebf\u5df2\u5b58\u653e",
@@ -60,10 +88,34 @@ internal static class ExternalEnglishCompatibilityService
         ["NO SURVIVORS"] = "\u65e0\u4eba\u751f\u8fd8",
         ["NOTES"] = "\u5907\u6ce8",
         ["DECEASED"] = "\u6b7b\u4ea1",
+        ["MISSING"] = "\u5931\u8e2a",
         ["Collected"] = "\u5df2\u6536\u96c6",
         ["Grade"] = "\u8bc4\u7ea7",
         ["Rating"] = "\u8bc4\u7ea7",
         ["Lost 100% scrap"] = "\u635f\u5931 100% \u5e9f\u6599",
+        ["* Unknown"] = "* \u672a\u77e5\u539f\u56e0",
+        ["* Bludgeoning"] = "* \u949d\u51fb",
+        ["* Gravity"] = "* \u5760\u843d",
+        ["* Blast"] = "* \u7206\u70b8",
+        ["* Strangulation"] = "* \u52d2\u6740",
+        ["* Suffocation"] = "* \u7a92\u606f",
+        ["* Mauling"] = "* \u6495\u54ac",
+        ["* Gunshots"] = "* \u67aa\u51fb",
+        ["* Crushing"] = "* \u78be\u538b",
+        ["* Drowning"] = "* \u6eba\u6c34",
+        ["* Abandoned"] = "* \u906d\u9057\u5f03",
+        ["* Electrocution"] = "* \u89e6\u7535",
+        ["* Kicking"] = "* \u8e22\u51fb",
+        ["* Burning"] = "* \u71c3\u70e7",
+        ["* Stabbing"] = "* \u523a\u4f24",
+        ["* Fan"] = "* \u98ce\u6247",
+        ["* Inertia"] = "* \u60ef\u6027\u649e\u51fb",
+        ["* Snipping"] = "* \u526a\u4f24",
+        ["* Scratching"] = "* \u6293\u4f24",
+        ["* The laziest employee."] = "* \u6700\u61d2\u60f0\u7684\u5458\u5de5",
+        ["The laziest employee."] = "\u6700\u61d2\u60f0\u7684\u5458\u5de5",
+        ["* Most profitable"] = "* \u6700\u4f1a\u8d5a\u94b1\u7684\u5458\u5de5",
+        ["Most profitable"] = "\u6700\u4f1a\u8d5a\u94b1\u7684\u5458\u5de5",
         ["No items were found"] = "\u672a\u627e\u5230\u53ef\u552e\u7269\u54c1",
         ["Error selling items"] = "\u552e\u5356\u7269\u54c1\u65f6\u51fa\u9519",
         ["You can't afford to sell that amount"] = "\u53ef\u552e\u7269\u54c1\u4e0d\u8db3\uff0c\u65e0\u6cd5\u5356\u51fa\u8be5\u91d1\u989d",
@@ -363,6 +415,12 @@ internal static class ExternalEnglishCompatibilityService
 
     private static bool CanHandleSingleLineCheap(string source)
     {
+        if (TooManyEmotesCompatibilityTranslator.MightTranslateUiTextCheap(source) &&
+            TooManyEmotesCompatibilityTranslator.TryTranslateUiText(source, out _))
+        {
+            return true;
+        }
+
         var text = StripLeadingSimpleRichTextTags(StripOuterSimpleRichTextEnvelope(source)).Trim();
         if (text.Length == 0)
         {
@@ -371,6 +429,9 @@ internal static class ExternalEnglishCompatibilityService
 
         var content = StripMenuSelectionPrefix(text);
         if (ExactEntries.ContainsKey(content) ||
+            LooksLikeAdvertisementSaleText(content) ||
+            LooksLikeEladsHudMetricText(content) ||
+            LooksLikeInfectionPercentageText(content) ||
             LooksLikeBracketedKnownExternalUiToken(content) ||
             LooksLikeDecoratedKnownExternalUiToken(content))
         {
@@ -646,6 +707,11 @@ internal static class ExternalEnglishCompatibilityService
     private static bool TryTranslateSingleLineCore(string source, out string translated)
     {
         translated = source;
+        if (TooManyEmotesCompatibilityTranslator.TryTranslateUiText(source, out translated))
+        {
+            return true;
+        }
+
         var text = source.Trim();
         var richPrefix = string.Empty;
         var richSuffix = string.Empty;
@@ -664,12 +730,15 @@ internal static class ExternalEnglishCompatibilityService
             text = StripMenuSelectionPrefix(text);
         }
 
-        if (LooksLikeNonUiName(text))
+        if (LooksLikeNonUiName(text) && !LooksLikeEladsHudConfigToken(text))
         {
             return false;
         }
 
         if (TryTranslateBracketedCommand(text, out translated) ||
+            TryTranslateAdvertisementSaleText(text, out translated) ||
+            TryTranslateEladsHudMetricText(text, out translated) ||
+            TryTranslateInfectionPercentageText(text, out translated) ||
             TryTranslateDecoratedExactUiText(text, out translated) ||
             TryTranslateControlTip(text, out translated) ||
             TryTranslateLabelValue(text, out translated) ||
@@ -685,6 +754,185 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         return false;
+    }
+
+    private static bool LooksLikeEladsHudConfigToken(string text)
+    {
+        return text.Equals("HUDScale", StringComparison.Ordinal) ||
+               text.Equals("HideHealthbarAutomatically", StringComparison.Ordinal) ||
+               text.Equals("HealthbarHideDelay", StringComparison.Ordinal) ||
+               text.Equals("FlashlightBattery", StringComparison.Ordinal) ||
+               text.Equals("DetailedStamina", StringComparison.Ordinal) ||
+               text.Equals("DisplayTimeLeft", StringComparison.Ordinal) ||
+               text.Equals("HidePlanetInfo", StringComparison.Ordinal) ||
+               text.Equals("PercentageOnly", StringComparison.Ordinal);
+    }
+
+    private static bool LooksLikeAdvertisementSaleText(string text)
+    {
+        text = text.Trim();
+        if (!text.EndsWith("% OFF!", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var percent = text[..^"% OFF!".Length].Trim();
+        return LooksLikeSimpleNumber(percent);
+    }
+
+    private static bool TryTranslateAdvertisementSaleText(string text, out string translated)
+    {
+        translated = text;
+        if (!LooksLikeAdvertisementSaleText(text))
+        {
+            return false;
+        }
+
+        var percent = text.Trim()[..^"% OFF!".Length].Trim();
+        translated = $"\u4f18\u60e0 {percent}%\uff01";
+        return true;
+    }
+
+    private static bool LooksLikeInfectionPercentageText(string text)
+    {
+        text = text.Trim();
+        const string Prefix = "Infection ";
+        if (!text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) ||
+            !text.EndsWith("%", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var percent = text.Substring(Prefix.Length, text.Length - Prefix.Length - 1).Trim();
+        return LooksLikeSimpleNumber(percent);
+    }
+
+    private static bool TryTranslateInfectionPercentageText(string text, out string translated)
+    {
+        translated = text;
+        if (!LooksLikeInfectionPercentageText(text))
+        {
+            return false;
+        }
+
+        var trimmed = text.Trim();
+        const string Prefix = "Infection ";
+        var percent = trimmed.Substring(Prefix.Length, trimmed.Length - Prefix.Length - 1).Trim();
+        translated = $"\u611f\u67d3 {percent}%";
+        return true;
+    }
+
+    private static bool LooksLikeEladsHudMetricText(string text)
+    {
+        text = text.Trim();
+        return text.EndsWith("/sec</size>", StringComparison.OrdinalIgnoreCase) ||
+               LooksLikePercentageTimeRemainingText(text) ||
+               LooksLikeUsesRemainingText(text) ||
+               LooksLikeTimeRemainingText(text);
+    }
+
+    private static bool TryTranslateEladsHudMetricText(string text, out string translated)
+    {
+        translated = text;
+        var trimmed = text.Trim();
+        const string RateSuffix = "/sec</size>";
+        if (trimmed.EndsWith(RateSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            translated = trimmed[..^RateSuffix.Length] + "/\u79d2</size>";
+            return true;
+        }
+
+        if (TryExtractPercentageTimeRemaining(trimmed, out var percent, out var remainingTime))
+        {
+            translated = $"{percent}%\uff08\u5269\u4f59 {remainingTime}\uff09";
+            return true;
+        }
+
+        if (LooksLikeUsesRemainingText(trimmed))
+        {
+            const string Suffix = " uses remaining)";
+            var count = trimmed.Substring(1, trimmed.Length - 1 - Suffix.Length).Trim();
+            translated = $"\uff08\u5269\u4f59 {count} \u6b21\uff09";
+            return true;
+        }
+
+        if (LooksLikeTimeRemainingText(trimmed))
+        {
+            const string Suffix = " remaining)";
+            var time = trimmed.Substring(1, trimmed.Length - 1 - Suffix.Length).Trim();
+            translated = $"\uff08\u5269\u4f59 {time}\uff09";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool LooksLikePercentageTimeRemainingText(string text)
+    {
+        return TryExtractPercentageTimeRemaining(text, out _, out _);
+    }
+
+    private static bool TryExtractPercentageTimeRemaining(string text, out string percent, out string remainingTime)
+    {
+        percent = string.Empty;
+        remainingTime = string.Empty;
+        var trimmed = text.Trim();
+        var percentIndex = trimmed.IndexOf('%');
+        if (percentIndex <= 0 || percentIndex != trimmed.LastIndexOf('%'))
+        {
+            return false;
+        }
+
+        percent = trimmed[..percentIndex].Trim();
+        if (!LooksLikeSimpleNumber(percent))
+        {
+            return false;
+        }
+
+        var suffix = trimmed[(percentIndex + 1)..].TrimStart();
+        const string RemainingSuffix = " remaining)";
+        if (!suffix.StartsWith("(", StringComparison.Ordinal) ||
+            !suffix.EndsWith(RemainingSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        remainingTime = suffix.Substring(1, suffix.Length - 1 - RemainingSuffix.Length).Trim();
+        var colon = remainingTime.IndexOf(':');
+        return colon > 0 &&
+               colon == remainingTime.LastIndexOf(':') &&
+               LooksLikeSimpleNumber(remainingTime[..colon]) &&
+               LooksLikeSimpleNumber(remainingTime[(colon + 1)..]);
+    }
+
+    private static bool LooksLikeUsesRemainingText(string text)
+    {
+        const string Suffix = " uses remaining)";
+        if (!text.StartsWith("(", StringComparison.Ordinal) ||
+            !text.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var count = text.Substring(1, text.Length - 1 - Suffix.Length).Trim();
+        return LooksLikeSimpleNumber(count);
+    }
+
+    private static bool LooksLikeTimeRemainingText(string text)
+    {
+        const string Suffix = " remaining)";
+        if (!text.StartsWith("(", StringComparison.Ordinal) ||
+            !text.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var time = text.Substring(1, text.Length - 1 - Suffix.Length).Trim();
+        var colon = time.IndexOf(':');
+        return colon > 0 &&
+               colon == time.LastIndexOf(':') &&
+               LooksLikeSimpleNumber(time[..colon]) &&
+               LooksLikeSimpleNumber(time[(colon + 1)..]);
     }
 
     private static bool TryTranslateSaveFileLabel(string text, out string translated)

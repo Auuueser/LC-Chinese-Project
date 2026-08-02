@@ -31,6 +31,9 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(QuickMenuManager), "OpenQuickMenu", nameof(QuickMenuManagerOpenPostfix), ref patched);
         PatchPostfix(harmony, typeof(QuickMenuManager), "EnableUIPanel", nameof(QuickMenuManagerEnableUIPanelPostfix), ref patched);
         PatchPostfix(harmony, typeof(QuickMenuManager), "LeaveGame", nameof(QuickMenuManagerLeaveGamePostfix), ref patched);
+        PatchPrefix(harmony, typeof(IngamePlayerSettings), "SetSettingsOptionsText", nameof(IngamePlayerSettingsSetSettingsOptionsTextPrefix), ref patched);
+        PatchPostfix(harmony, typeof(IngamePlayerSettings), "DisplayConfirmChangesScreen", nameof(IngamePlayerSettingsDisplayConfirmChangesScreenPostfix), ref patched);
+        PatchPostfix(harmony, typeof(SandSpiderAI), "Start", nameof(SandSpiderAIStartPostfix), ref patched);
         PatchPrefix(harmony, typeof(StartOfRound), "Start", nameof(StartOfRoundStartPrefix), ref patched);
         PatchPostfix(harmony, typeof(StartOfRound), "Start", nameof(StartOfRoundStartPostfix), ref patched);
         PatchPrefix(harmony, typeof(StartOfRound), "AutoSaveShipData", nameof(StartOfRoundAutoSaveShipDataPrefix), ref patched);
@@ -42,12 +45,22 @@ internal static partial class TextPatches
         PatchPrefix(harmony, typeof(StartOfRound), "SetMapScreenInfoToCurrentLevel", nameof(StartOfRoundSetMapScreenInfoPrefix), ref patched);
         PatchPostfix(harmony, typeof(StartOfRound), "SetMapScreenInfoToCurrentLevel", nameof(StartOfRoundSetMapScreenInfoPostfix), ref patched);
         PatchPostfix(harmony, typeof(StartOfRound), "SwitchMapMonitorPurpose", nameof(StartOfRoundSwitchMapMonitorPurposePostfix), ref patched);
+        PatchPostfix(harmony, typeof(StartOfRound), "SceneManager_OnLoadComplete1", nameof(StartOfRoundSceneManagerOnLoadCompletePostfix), ref patched);
         PatchPostfix(harmony, typeof(StartOfRound), "FirePlayersAfterDeadlineClientRpc", nameof(StartOfRoundFirePlayersAfterDeadlineClientRpcPostfix), ref patched);
         PatchPrefix(harmony, typeof(GameNetworkManager), "SaveGame", nameof(GameNetworkManagerSaveGamePrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "Start", nameof(HudManagerStartPostfix), ref patched);
+        if (AutomaticTranslationService.NeedsMainThreadPump)
+        {
+            PatchPostfix(harmony, typeof(HUDManager), "Update", nameof(HudManagerAutomaticTranslationUpdatePostfix), ref patched);
+        }
+
+        PatchPrefix(harmony, typeof(HUDManager), "BeginDisplayAd", nameof(HudManagerBeginDisplayAdPrefix), ref patched, Priority.First);
+        PatchPostfix(harmony, typeof(HUDManager), "BeginDisplayAd", nameof(HudManagerBeginDisplayAdPostfix), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(HUDManager), "MeteorShowerWarningHUD", nameof(HudManagerMeteorShowerWarningHudPostfix), ref patched);
+        PatchPostfix(harmony, typeof(HUDManager), "RadiationWarningHUD", nameof(HudManagerRadiationWarningHudPostfix), ref patched);
         PatchPrefix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPostfix), ref patched);
+        PatchPrefix(harmony, typeof(HUDManager), "DisplaySignalTranslatorMessage", nameof(HudManagerDisplaySignalTranslatorMessagePrefix), ref patched, Priority.First);
         PatchPostfix(harmony, typeof(HUDManager), "UpdateScanNodes", nameof(HudManagerUpdateScanNodesPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "DisplayCreditsEarning", nameof(HudManagerDisplayCreditsEarningPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "DisplayNewScrapFound", nameof(HudManagerDisplayNewScrapFoundPostfix), ref patched);
@@ -86,11 +99,19 @@ internal static partial class TextPatches
         PatchPostfix(harmony, AccessTools.Method(typeof(StunGrenadeItem), "SetControlTipForGrenade"), nameof(StunGrenadeItemSetControlTipForGrenadePostfix), ref patched);
         PatchPostfix(harmony, AccessTools.Method(typeof(PlayerControllerB), "SetHoverTipAndCurrentInteractTrigger"), nameof(PlayerControllerBSetHoverTipAndCurrentInteractTriggerPostfix), ref patched);
         PatchPostfix(harmony, typeof(VehicleController), "Start", nameof(VehicleControllerStartPostfix), ref patched);
+        PatchPostfix(harmony, typeof(VehicleController), "DestroyCar", nameof(VehicleControllerDestroyCarPostfix), ref patched);
         PatchPostfix(harmony, typeof(RoundManager), "GenerateNewLevelClientRpc", nameof(RoundManagerGenerateNewLevelClientRpcPostfix), ref patched);
+        PatchPostfix(harmony, typeof(RoundManager), "FinishGeneratingNewLevelClientRpc", nameof(RoundManagerFinishGeneratingNewLevelClientRpcPostfix), ref patched);
         PatchPostfix(harmony, typeof(RoundManager), "SpawnScrapInLevel", nameof(RoundManagerSpawnScrapInLevelPostfix), ref patched);
 
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPrefix), ref patched);
         PatchPostfix(harmony, AccessTools.Method(typeof(TMP_InputField), "OnEnable"), nameof(TmpInputFieldOnEnablePostfix), ref patched);
+        PatchPrefix(
+            harmony,
+            AccessTools.Method(typeof(TMP_InputField), "Append", new[] { typeof(string) }),
+            nameof(TmpInputFieldAppendStringPrefix),
+            ref patched,
+            Priority.First);
         if (IsGlobalTmpPostSetRepairEnabled)
         {
             PatchPostfix(harmony, AccessTools.PropertySetter(typeof(TMP_Text), nameof(TMP_Text.text)), nameof(TmpSetTextPostfix), ref patched);
@@ -102,10 +123,6 @@ internal static partial class TextPatches
         }
 
         PatchPostfix(harmony, AccessTools.Method(typeof(TMP_FontAsset), "Awake"), nameof(TmpFontAssetAwakePostfix), ref patched);
-        PatchPrefix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetTrigger), new[] { typeof(string) }), nameof(AnimatorSetTriggerPrefix), ref patched);
-        PatchPostfix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetTrigger), new[] { typeof(string) }), nameof(AnimatorSetTriggerPostfix), ref patched);
-        PatchPrefix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetBool), new[] { typeof(string), typeof(bool) }), nameof(AnimatorSetBoolPrefix), ref patched);
-        PatchPostfix(harmony, AccessTools.Method(typeof(Animator), nameof(Animator.SetBool), new[] { typeof(string), typeof(bool) }), nameof(AnimatorSetBoolPostfix), ref patched);
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(Text), nameof(Text.text)), nameof(UiTextSetTextPrefix), ref patched);
         PatchPrefix(harmony, AccessTools.PropertySetter(typeof(TextMesh), nameof(TextMesh.text)), nameof(TextMeshSetTextPrefix), ref patched);
         if (CustomLocalizationExtensionService.HasGlobalStyleRules)
@@ -181,6 +198,7 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "OpenBodyCams.Overlay.OverlayManager", "UpdateText", nameof(OpenBodyCamsOverlayUpdateTextPostfix), ref patched);
         PatchOptionalPostfix(harmony, "LCBetterSaves.Plugin", "InitializeBetterSaves", nameof(BetterSavesInitializeBetterSavesPostfix), ref patched);
         PatchOptionalPostfix(harmony, "DeleteFileButton_BetterSaves", "UpdateFileToDelete", nameof(BetterSavesDeleteFileButtonUpdateFileToDeletePostfix), ref patched);
+        PatchOptionalPrefix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPrefix), ref patched, Priority.First);
         PatchOptionalPostfix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPostfix), ref patched);
         InstallTooManyEmotesCompatibilityPatches(harmony, ref patched);
         PatchOptionalPrefix(harmony, "Steamworks.SteamUtils", "ShowGamepadTextInput", nameof(SteamworksShowGamepadTextInputPrefix), ref patched, Priority.First);

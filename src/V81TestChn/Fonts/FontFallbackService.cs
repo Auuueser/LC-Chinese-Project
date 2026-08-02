@@ -13,6 +13,8 @@ internal static class FontFallbackService
 {
     private const int FallbackApplicationCacheLimit = 16384;
     private const int FallbackSmallCacheInitialCapacity = 512;
+    private const int UnreadableDynamicAtlasOverrideLimit = 256;
+    private const string RequiredSimplifiedChineseProbe = "\u4e2d\u6587\u6c49\u5316\u6d4b\u8bd5\u7ec8\u7aef\u7269\u54c1\u611f\u67d3\u8b66\u544a";
     private static readonly Dictionary<int, Color> BaselineColorByInstance = new(FallbackSmallCacheInitialCapacity);
     private static readonly BoundedCache<int, CachedFallbackApplication> FallbackApplicationCache = new(FallbackApplicationCacheLimit);
     private static readonly HashSet<int> FinalRenderSubscribedIds = new(FallbackSmallCacheInitialCapacity);
@@ -20,10 +22,13 @@ internal static class FontFallbackService
     private static readonly HashSet<int> SpecialCaseTextIds = new(FallbackSmallCacheInitialCapacity);
     private static readonly HashSet<int> FinalRenderRepairLoggedIds = new(FallbackSmallCacheInitialCapacity);
     private static readonly HashSet<int> RenderAuditLoggedIds = new(FallbackSmallCacheInitialCapacity);
-    private static readonly HashSet<int> AppliedFallbackFontIds = new(FallbackSmallCacheInitialCapacity);
-    private static readonly HashSet<int> NormalizedFallbackMaterialIds = new(FallbackSmallCacheInitialCapacity);
+    private static readonly BoundedSet<int> AppliedFallbackFontIds = new(FallbackApplicationCacheLimit);
+    private static readonly BoundedSet<int> NormalizedFallbackMaterialIds = new(FallbackApplicationCacheLimit);
+    private static readonly List<int> StaleFinalRenderTextIds = new(FallbackSmallCacheInitialCapacity);
     private static readonly List<TMP_FontAsset> SupplementalFallbackFonts = new(4);
     private static readonly HashSet<int> OwnedSupplementalFallbackFontIds = new(4);
+    private static readonly Dictionary<int, UnreadableDynamicAtlasOverride> UnreadableDynamicAtlasOverrides = new(32);
+    private static readonly List<int> StaleUnreadableDynamicAtlasOverrideIds = new(8);
     private static int _renderAuditBudget = 80;
     private static int _finalRenderRepairLogBudget = 80;
     private static int _specialCaseLogBudget = 60;
@@ -33,6 +38,7 @@ internal static class FontFallbackService
     private static int _runtimeCjkSweepLogBudget = 180;
     private static int _canvasGroupBypassLogBudget = 80;
     private static TMP_FontAsset? _fallbackFont;
+    private static Font? _fallbackSourceFont;
     private static AssetBundle? _fallbackFontBundle;
     private static bool _ownsFallbackFont;
     private static string? _pluginDir;
@@ -51,6 +57,18 @@ internal static class FontFallbackService
         public string Source { get; }
         public int FontId { get; }
         public bool CjkFallbackApplied { get; }
+    }
+
+    private readonly struct UnreadableDynamicAtlasOverride
+    {
+        public UnreadableDynamicAtlasOverride(TMP_FontAsset fontAsset, AtlasPopulationMode originalMode)
+        {
+            FontAsset = new WeakReference<TMP_FontAsset>(fontAsset);
+            OriginalMode = originalMode;
+        }
+
+        public WeakReference<TMP_FontAsset> FontAsset { get; }
+        public AtlasPopulationMode OriginalMode { get; }
     }
 
     public static void Shutdown()
@@ -72,6 +90,7 @@ internal static class FontFallbackService
         SpecialCaseTextIds.Clear();
         FinalRenderRepairLoggedIds.Clear();
         RenderAuditLoggedIds.Clear();
+        RestoreUnreadableDynamicAtlasPopulationModes();
         AppliedFallbackFontIds.Clear();
         NormalizedFallbackMaterialIds.Clear();
 
@@ -107,6 +126,12 @@ internal static class FontFallbackService
             UnityEngine.Object.Destroy(_fallbackFont);
         }
 
+        if (_fallbackSourceFont != null)
+        {
+            UnityEngine.Object.Destroy(_fallbackSourceFont);
+            _fallbackSourceFont = null;
+        }
+
         foreach (var supplementalFont in SupplementalFallbackFonts)
         {
             if (supplementalFont != null && OwnedSupplementalFallbackFontIds.Contains(supplementalFont.GetInstanceID()))
@@ -140,6 +165,13 @@ internal static class FontFallbackService
             return;
         }
 
+        if (TryLoadSystemFontAsset())
+        {
+            TryLoadSupplementalSystemFallbackFonts();
+            ApplyFallbackGlobally();
+            return;
+        }
+
         var bundlePath = Path.Combine(pluginDir, "V81TestChn", "fonts", "zh-cn-tmp-font");
         if (!File.Exists(bundlePath))
         {
@@ -149,11 +181,6 @@ internal static class FontFallbackService
         if (!File.Exists(bundlePath))
         {
             Plugin.Log.LogWarning($"Chinese TMP font bundle not found: {bundlePath}");
-            if (TryLoadSystemFontAsset())
-            {
-                TryLoadSupplementalSystemFallbackFonts();
-                ApplyFallbackGlobally();
-            }
             return;
         }
 
@@ -165,11 +192,6 @@ internal static class FontFallbackService
             if (bundle == null)
             {
                 Plugin.Log.LogWarning("Failed to load Chinese TMP font bundle.");
-                if (TryLoadSystemFontAsset())
-                {
-                    TryLoadSupplementalSystemFallbackFonts();
-                    ApplyFallbackGlobally();
-                }
                 return;
             }
 
@@ -192,20 +214,10 @@ internal static class FontFallbackService
             bundle.Unload(false);
             bundle = null;
             Plugin.Log.LogWarning($"No TMP_FontAsset found in Chinese font bundle: {bundlePath}");
-            if (TryLoadSystemFontAsset())
-            {
-                TryLoadSupplementalSystemFallbackFonts();
-                ApplyFallbackGlobally();
-            }
         }
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Failed to load Chinese font bundle: {ex}");
-            if (TryLoadSystemFontAsset())
-            {
-                TryLoadSupplementalSystemFallbackFonts();
-                ApplyFallbackGlobally();
-            }
         }
         finally
         {
@@ -279,6 +291,22 @@ internal static class FontFallbackService
 
     public static void ClearSceneComponentCaches()
     {
+        StaleFinalRenderTextIds.Clear();
+        foreach (var pair in FinalRenderSubscribedTexts)
+        {
+            if (pair.Value == null)
+            {
+                StaleFinalRenderTextIds.Add(pair.Key);
+            }
+        }
+
+        foreach (var staleId in StaleFinalRenderTextIds)
+        {
+            FinalRenderSubscribedTexts.Remove(staleId);
+            FinalRenderSubscribedIds.Remove(staleId);
+        }
+
+        StaleFinalRenderTextIds.Clear();
         BaselineColorByInstance.Clear();
         FallbackApplicationCache.Clear();
         SpecialCaseTextIds.Clear();
@@ -293,7 +321,7 @@ internal static class FontFallbackService
             return false;
         }
 
-        _fallbackFont = TMP_FontAsset.CreateFontAsset(
+        var candidate = TMP_FontAsset.CreateFontAsset(
             font,
             90,
             9,
@@ -303,17 +331,51 @@ internal static class FontFallbackService
             AtlasPopulationMode.Dynamic,
             true);
 
-        if (_fallbackFont == null)
+        if (candidate == null)
         {
+            UnityEngine.Object.Destroy(font);
             return false;
         }
 
-        _fallbackFont.name = $"V81TestChn_SystemFallback_{label}";
+        candidate.name = $"V81TestChn_SystemFallback_{label}";
+        candidate.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+        if (!TryValidateSimplifiedChineseCandidate(candidate, out var missingCharacters))
+        {
+            Plugin.Log.LogWarning(
+                $"Rejected Chinese fallback font candidate '{label}' because required glyphs are unavailable: {missingCharacters}");
+            UnityEngine.Object.Destroy(candidate);
+            UnityEngine.Object.Destroy(font);
+            return false;
+        }
+
+        _fallbackFont = candidate;
+        _fallbackSourceFont = font;
         _ownsFallbackFont = true;
-        _fallbackFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
         NormalizeFallbackFontMaterials();
         WarmFallbackCharacters();
         return true;
+    }
+
+    private static bool TryValidateSimplifiedChineseCandidate(TMP_FontAsset candidate, out string missingCharacters)
+    {
+        missingCharacters = RequiredSimplifiedChineseProbe;
+        try
+        {
+            if (!candidate.TryAddCharacters(RequiredSimplifiedChineseProbe, out var missing) ||
+                !string.IsNullOrEmpty(missing))
+            {
+                missingCharacters = string.IsNullOrEmpty(missing) ? RequiredSimplifiedChineseProbe : missing;
+                return false;
+            }
+
+            missingCharacters = string.Empty;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogDebug($"Chinese fallback glyph validation failed: {ex.Message}");
+            return false;
+        }
     }
 
     private static void TryLoadSupplementalSystemFallbackFonts()
@@ -675,6 +737,8 @@ internal static class FontFallbackService
             return;
         }
 
+        DisableUnreadableDynamicAtlasPopulation(fontAsset, fontId);
+
         if (fontAsset.fallbackFontAssetTable == null)
         {
             fontAsset.fallbackFontAssetTable = new List<TMP_FontAsset>();
@@ -693,8 +757,88 @@ internal static class FontFallbackService
             }
         }
 
-        AppliedFallbackFontIds.Add(fontId);
+        AppliedFallbackFontIds.Add(fontId, RuntimePerformanceSettings.FontFallbackCacheLimit);
         NormalizeFontMaterialForFallback(fontAsset);
+    }
+
+    private static void DisableUnreadableDynamicAtlasPopulation(TMP_FontAsset fontAsset, int fontId)
+    {
+        if (fontAsset.atlasPopulationMode != AtlasPopulationMode.Dynamic)
+        {
+            return;
+        }
+
+        var atlasTexture = fontAsset.atlasTexture;
+        if (atlasTexture == null || atlasTexture.isReadable)
+        {
+            return;
+        }
+
+        if (UnreadableDynamicAtlasOverrides.TryGetValue(fontId, out var existing))
+        {
+            if (existing.FontAsset.TryGetTarget(out var existingFont) && existingFont != null && existingFont == fontAsset)
+            {
+                return;
+            }
+
+            UnreadableDynamicAtlasOverrides.Remove(fontId);
+        }
+
+        PruneUnreadableDynamicAtlasOverrides();
+        if (UnreadableDynamicAtlasOverrides.Count >= UnreadableDynamicAtlasOverrideLimit)
+        {
+            return;
+        }
+
+        var originalMode = fontAsset.atlasPopulationMode;
+        UnreadableDynamicAtlasOverrides.Add(fontId, new UnreadableDynamicAtlasOverride(fontAsset, originalMode));
+        fontAsset.atlasPopulationMode = AtlasPopulationMode.Static;
+        Plugin.Log.LogInfo($"Disabled invalid dynamic atlas population for font '{fontAsset.name}'; unreadable atlas will use existing glyphs and fallback fonts.");
+    }
+
+    private static void PruneUnreadableDynamicAtlasOverrides()
+    {
+        if (UnreadableDynamicAtlasOverrides.Count < UnreadableDynamicAtlasOverrideLimit)
+        {
+            return;
+        }
+
+        StaleUnreadableDynamicAtlasOverrideIds.Clear();
+        foreach (var pair in UnreadableDynamicAtlasOverrides)
+        {
+            if (!pair.Value.FontAsset.TryGetTarget(out var fontAsset) || fontAsset == null)
+            {
+                StaleUnreadableDynamicAtlasOverrideIds.Add(pair.Key);
+            }
+        }
+
+        foreach (var fontId in StaleUnreadableDynamicAtlasOverrideIds)
+        {
+            UnreadableDynamicAtlasOverrides.Remove(fontId);
+        }
+
+        StaleUnreadableDynamicAtlasOverrideIds.Clear();
+    }
+
+    private static void RestoreUnreadableDynamicAtlasPopulationModes()
+    {
+        foreach (var entry in UnreadableDynamicAtlasOverrides.Values)
+        {
+            try
+            {
+                if (entry.FontAsset.TryGetTarget(out var fontAsset) && fontAsset != null)
+                {
+                    fontAsset.atlasPopulationMode = entry.OriginalMode;
+                }
+            }
+            catch
+            {
+                // Cleanup stays best-effort while Unity objects are being torn down.
+            }
+        }
+
+        UnreadableDynamicAtlasOverrides.Clear();
+        StaleUnreadableDynamicAtlasOverrideIds.Clear();
     }
 
     private static void NormalizeFontMaterialForFallback(TMP_FontAsset fontAsset)
@@ -710,7 +854,9 @@ internal static class FontFallbackService
             return;
         }
 
-        if (!NormalizedFallbackMaterialIds.Add(material.GetInstanceID()))
+        if (!NormalizedFallbackMaterialIds.Add(
+                material.GetInstanceID(),
+                RuntimePerformanceSettings.FontFallbackCacheLimit))
         {
             return;
         }

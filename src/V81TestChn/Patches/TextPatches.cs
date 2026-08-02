@@ -42,6 +42,8 @@ internal static partial class TextPatches
     private static List<TmpSetTextPostfixSkipEntry>? _tmpSetTextPostfixSkipStack;
     [ThreadStatic]
     private static bool _restoringLateWriterCursorTipSource;
+    [ThreadStatic]
+    private static bool _restoringAdvancedFeaturesEndscreenSource;
     private static ConfigEntry<bool>? _enableTmpHookPerfCounters;
     private static ConfigEntry<int>? _tmpHookPerfLogIntervalSeconds;
     private static ConfigEntry<bool>? _enableGlobalTmpColorHook;
@@ -331,6 +333,8 @@ internal static partial class TextPatches
     {
         HudScannerLocalizationService.Clear();
         SignalTranslatorLocalizationService.Clear();
+        TerminalScreenLocalizationService.ClearRuntimeCache();
+        ChatEmojiPasteService.Clear();
         ClearHudRuntimeCaches();
         InputFieldTextCache.Clear();
         LobbySlotTextCache.Clear();
@@ -341,6 +345,7 @@ internal static partial class TextPatches
         TmpColorHookCandidateTextIds.Clear();
         TmpHookSourceNoopCache.Clear();
         AdvancedFeaturesGradeTextIds.Clear();
+        _restoringAdvancedFeaturesEndscreenSource = false;
         ExternalEnglishCompatibilityService.ClearRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
         ResetTmpHookPerfCounters();
@@ -349,6 +354,7 @@ internal static partial class TextPatches
 
     internal static void ClearSceneRuntimeCaches()
     {
+        ChatEmojiPasteService.Clear();
         InputFieldTextCache.Clear();
         LobbySlotTextCache.Clear();
         LobbyNameTypographyCache.Clear();
@@ -357,8 +363,13 @@ internal static partial class TextPatches
         TmpColorHookEligibilityCache.Clear();
         TmpColorHookCandidateTextIds.Clear();
         AdvancedFeaturesGradeTextIds.Clear();
+        TerminalScreenLocalizationService.ClearRuntimeCache();
         ClearHudRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
+        ClipboardManualLocalizationService.OnSceneUnloaded();
+        EnvironmentTextureLocalizationService.OnSceneUnloaded();
+        OriginalResourceStateService.PruneDestroyed();
+        ChatEmojiSpriteService.OnSceneUnloaded();
         FontFallbackService.ClearSceneComponentCaches();
     }
 
@@ -394,6 +405,7 @@ internal static partial class TextPatches
         HudScannerLocalizationService.ApplyHudScannerLocalization(__instance, "HUDManager.Start.scanner");
         TargetedUiTranslator.TranslateHudPlanetInfo(__instance, "HUDManager.Start.planet-info");
         TargetedUiTranslator.TranslateHudChatPrompts(__instance, "HUDManager.Start.chat-prompts");
+        ChatEmojiSpriteService.ApplyToHud(__instance);
         TranslateTooManyEmotesMenu(__instance);
         // Plugin.Log.LogInfo($"Patch entry HUDManager.Start loadingText={__instance.loadingText?.name ?? "<null>"} riskText={__instance.planetRiskLevelText?.name ?? "<null>"}");
     }
@@ -403,6 +415,17 @@ internal static partial class TextPatches
     private static void HudManagerMeteorShowerWarningHudPostfix(HUDManager __instance)
     {
         MeteorShowerWarningLocalizationService.Apply(__instance, "HUDManager.MeteorShowerWarningHUD");
+    }
+
+    private static void HudManagerRadiationWarningHudPostfix(HUDManager __instance)
+    {
+        RadiationWarningAuditService.OnRadiationWarningTriggered(__instance, "HUDManager.RadiationWarningHUD");
+        RadiationWarningPlaybackService.OnRadiationWarningTriggered(__instance, "HUDManager.RadiationWarningHUD");
+    }
+
+    private static void HudManagerAutomaticTranslationUpdatePostfix()
+    {
+        AutomaticTranslationService.PumpMainThread();
     }
 
     private static void ClearHudRuntimeCaches()
@@ -422,7 +445,11 @@ internal static partial class TextPatches
             return;
         }
 
-        SignalTranslatorLocalizationService.BeginLocalizationWindow(__instance, "HUDManager.UseSignalTranslatorClientRpc.prefix");
+        ChatEmojiSpriteService.ApplyToSignalTranslator(__instance);
+        SignalTranslatorLocalizationService.BeginLocalizationWindow(
+            __instance,
+            "HUDManager.UseSignalTranslatorClientRpc.prefix",
+            applyImmediately: false);
     }
 
     [HarmonyPatch(typeof(HUDManager), "UseSignalTranslatorClientRpc")]
@@ -435,6 +462,21 @@ internal static partial class TextPatches
         }
 
         SignalTranslatorLocalizationService.BeginLocalizationWindow(__instance, "HUDManager.UseSignalTranslatorClientRpc.postfix");
+    }
+
+    private static void HudManagerDisplaySignalTranslatorMessagePrefix(ref string signalMessage)
+    {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        signalMessage = ChatEmojiSpriteService.EncodeForSignalTranslatorTypewriter(signalMessage);
+    }
+
+    private static bool TmpInputFieldAppendStringPrefix(TMP_InputField __instance, string input)
+    {
+        return !ChatEmojiPasteService.TryHandlePaste(__instance, input);
     }
 
     [HarmonyPatch(typeof(HUDManager), "UpdateScanNodes")]
@@ -572,6 +614,7 @@ internal static partial class TextPatches
             return;
         }
 
+        ChatEmojiSpriteService.ApplyToText(__instance.LobbyName);
         TargetedUiTranslator.TranslateLobbySlotStatic(__instance, "LobbySlot.SetModdedIcon");
         FontFallbackAuditService.RecordLobbySlot(__instance, "LobbySlot.SetModdedIcon");
     }
@@ -598,6 +641,7 @@ internal static partial class TextPatches
     private static void HudManagerFillEndGameStatsPostfix(HUDManager __instance)
     {
         HudEndGameLocalizationService.ApplyHudEndGame(__instance, "HUDManager.FillEndGameStats");
+        NormalizeHudEndGameGradeLetterSource(__instance.statsUIElements?.gradeLetter);
     }
 
     private static void HudManagerSetPlayerLevelPrefix()
@@ -733,6 +777,8 @@ internal static partial class TextPatches
         }
 
         HudInteractionLocalizationService.ApplyGrabbableItem(__instance);
+        ClipboardManualLocalizationService.Apply(__instance);
+        StickyNoteLocalizationService.Apply(__instance);
     }
 
     [HarmonyPatch(typeof(GrabbableObject), "SetControlTipsForItem")]
@@ -793,6 +839,20 @@ internal static partial class TextPatches
         }
 
         HudInteractionLocalizationService.ApplyVehicleStaticTexts(__instance, "VehicleController.Start");
+        EnvironmentTextureLocalizationService.ApplyVehicle(__instance);
+        ClipboardManualLocalizationService.ApplyVehicle(__instance);
+    }
+
+    private static void VehicleControllerDestroyCarPostfix(VehicleController __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        // The dirty body is inactive during Start. Localize it only when the game
+        // activates the destroyed mesh so its 4K texture is not uploaded on spawn.
+        EnvironmentTextureLocalizationService.ApplyVehicle(__instance);
     }
 
     [HarmonyPatch(typeof(RoundManager), "GenerateNewLevelClientRpc")]
@@ -805,6 +865,16 @@ internal static partial class TextPatches
         }
 
         DirectTextLocalizationService.ApplyComposite(HUDManager.Instance?.loadingText, "RoundManager.GenerateNewLevelClientRpc");
+        AlertTextureReplacementService.TryApplyEnteringAtmosphereOverlayFromLoadingScreen(
+            HUDManager.Instance,
+            "RoundManager.GenerateNewLevelClientRpc");
+    }
+
+    private static void RoundManagerFinishGeneratingNewLevelClientRpcPostfix()
+    {
+        AlertTextureReplacementService.HideEnteringAtmosphereOverlayForHud(
+            HUDManager.Instance,
+            "RoundManager.FinishGeneratingNewLevelClientRpc");
     }
 
     private static void RoundManagerSpawnScrapInLevelPostfix(RoundManager __instance)
@@ -842,7 +912,7 @@ internal static partial class TextPatches
             return;
         }
 
-        if (_restoringLateWriterCursorTipSource)
+        if (_restoringLateWriterCursorTipSource || _restoringAdvancedFeaturesEndscreenSource)
         {
             MarkTmpSetTextPostfixSkip(__instance, value);
             return;
@@ -1358,94 +1428,6 @@ internal static partial class TextPatches
         FontFallbackAuditService.RecordFontAssetSnapshot(__instance, "TMP_FontAsset.Awake.before-fallback");
         FontFallbackService.OnFontAssetAwake(__instance);
         FontFallbackAuditService.RecordFontAssetSnapshot(__instance, "TMP_FontAsset.Awake.after-fallback");
-    }
-
-    private static void AnimatorSetTriggerPrefix(Animator __instance, string name)
-    {
-        if (__instance == null || name != "displayStats")
-        {
-            return;
-        }
-
-        var hud = HUDManager.Instance;
-        if (hud == null || !ReferenceEquals(__instance, hud.endgameStatsAnimator))
-        {
-            return;
-        }
-
-        NormalizeHudEndGameGradeLetterSource(hud.statsUIElements?.gradeLetter);
-    }
-
-    private static void AnimatorSetTriggerPostfix(Animator __instance, string name)
-    {
-        if (__instance == null || name != "RadiationWarning")
-        {
-            return;
-        }
-
-        var hud = HUDManager.Instance;
-        if (hud != null && ReferenceEquals(__instance, hud.radiationGraphicAnimator))
-        {
-            RadiationWarningAuditService.OnRadiationWarningTriggered(hud, "Animator.SetTrigger.RadiationWarning");
-            RadiationWarningPlaybackService.OnRadiationWarningTriggered(hud, "Animator.SetTrigger.RadiationWarning");
-        }
-    }
-
-    private static void AnimatorSetBoolPrefix(Animator __instance, string name, bool value)
-    {
-        if (__instance == null || name != "IsLoading" || !value)
-        {
-            return;
-        }
-
-        var hud = HUDManager.Instance;
-        if (hud == null || !ReferenceEquals(__instance, hud.LoadingScreen))
-        {
-            return;
-        }
-
-        AlertTextureReplacementService.TryApplyEnteringAtmosphereOverlayFromLoadingScreen(hud, "Animator.SetBool.IsLoading.prefix.true");
-    }
-
-    private static void AnimatorSetBoolPostfix(Animator __instance, string name, bool value)
-    {
-        if (__instance == null ||
-            (name != "transmitting" && name != "IsLoading"))
-        {
-            return;
-        }
-
-        var hud = HUDManager.Instance;
-        if (hud == null)
-        {
-            return;
-        }
-
-        if (name == "transmitting" && ReferenceEquals(__instance, hud.signalTranslatorAnimator))
-        {
-            if (value)
-            {
-                SignalTranslatorLocalizationService.BeginLocalizationWindow(hud, "Animator.SetBool.transmitting.true");
-            }
-            else
-            {
-                SignalTranslatorLocalizationService.EndLocalizationWindow();
-            }
-        }
-
-        if (name != "IsLoading" || !ReferenceEquals(__instance, hud.LoadingScreen))
-        {
-            return;
-        }
-
-        if (value)
-        {
-            AlertTextureReplacementService.TryApplyEnteringAtmosphereOverlayFromLoadingScreen(hud, "Animator.SetBool.IsLoading.postfix.true");
-        }
-        else
-        {
-            AlertTextureReplacementService.HideEnteringAtmosphereOverlayForHud(hud, "Animator.SetBool.IsLoading.false");
-        }
     }
 
     private static bool TranslateTmpText(TMP_Text __instance, ref string value)

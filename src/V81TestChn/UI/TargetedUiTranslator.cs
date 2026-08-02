@@ -35,6 +35,7 @@ internal static class TargetedUiTranslator
     private static readonly List<TextMesh> TextMeshScanBuffer = new();
     private static readonly List<InteractTrigger> InteractTriggerScanBuffer = new();
     private static readonly List<TMP_Text> PlanetRiskTmpTextScanBuffer = new();
+    private static readonly HashSet<int> HudEventSeenObjects = new();
     private const int ChatLineCacheLimit = 256;
     private const int ChatHistoryReferenceLimit = 1024;
     private const float PlanetInfoSummaryMiddleThreshold = 0.68f;
@@ -135,6 +136,7 @@ internal static class TargetedUiTranslator
         ChatOutputStates.Clear();
         CursorTipStates.Clear();
         PlanetRiskTextPairCache.Clear();
+        HudEventSeenObjects.Clear();
         RoundTransitionTextThrottle.Reset();
         ClearScanBuffers();
     }
@@ -1643,10 +1645,11 @@ internal static class TargetedUiTranslator
             return (0, 0);
         }
 
-        var seenObjects = new HashSet<int>();
+        HudEventSeenObjects.Clear();
         var translated = 0;
         var totalSeen = 0;
-        TranslateTmpArrayTargeted(hud.controlTipLines, DynamicTextDomain.HudControlTip, seenObjects, ref translated, ref totalSeen);
+        TranslateTmpArrayTargeted(hud.controlTipLines, DynamicTextDomain.HudControlTip, HudEventSeenObjects, ref translated, ref totalSeen);
+        HudEventSeenObjects.Clear();
         Plugin.LogTargetedTranslation(reason, translated, totalSeen);
         return (translated, totalSeen);
     }
@@ -1658,7 +1661,7 @@ internal static class TargetedUiTranslator
             return (0, 0);
         }
 
-        var seenObjects = new HashSet<int>();
+        HudEventSeenObjects.Clear();
         var translated = 0;
         var totalSeen = 0;
         foreach (var box in hud.ScrapItemBoxes)
@@ -1668,10 +1671,11 @@ internal static class TargetedUiTranslator
                 continue;
             }
 
-            TranslateTmpTargeted(box.headerText, DynamicTextDomain.HudRewards, seenObjects, ref translated, ref totalSeen);
-            TranslateTmpTargeted(box.valueText, DynamicTextDomain.HudRewards, seenObjects, ref translated, ref totalSeen);
+            TranslateTmpTargeted(box.headerText, DynamicTextDomain.HudRewards, HudEventSeenObjects, ref translated, ref totalSeen);
+            TranslateTmpTargeted(box.valueText, DynamicTextDomain.HudRewards, HudEventSeenObjects, ref translated, ref totalSeen);
         }
 
+        HudEventSeenObjects.Clear();
         Plugin.LogTargetedTranslation(reason, translated, totalSeen);
         return (translated, totalSeen);
     }

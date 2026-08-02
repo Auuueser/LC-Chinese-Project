@@ -28,8 +28,16 @@ internal static partial class TextPatches
             return;
         }
 
+        EnvironmentTextureLocalizationService.ApplyShipEnvironment(__instance);
         // Plugin.Log.LogInfo($"RoomCreateProbe StartOfRound.Start exit inShipPhase={__instance.inShipPhase} currentLevel={LevelName(__instance)}");
         // Plugin.Log.LogInfo($"Patch entry StartOfRound.Start shipHasLanded={__instance.shipHasLanded} inShipPhase={__instance.inShipPhase} currentLevel={__instance.currentLevel?.name ?? "<null>"}");
+    }
+
+    private static void StartOfRoundSceneManagerOnLoadCompletePostfix()
+    {
+        AlertTextureReplacementService.TryApplyEnteringAtmosphereOverlayFromLoadingScreen(
+            HUDManager.Instance,
+            "StartOfRound.SceneManager_OnLoadComplete1");
     }
 
     [HarmonyPatch(typeof(StartOfRound), "ChangeLevel")]

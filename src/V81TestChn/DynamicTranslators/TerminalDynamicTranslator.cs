@@ -177,6 +177,118 @@ internal static partial class TranslationService
             return false;
         }
 
+        public static bool TranslateWelcomeLine(string source, out string translated)
+        {
+            translated = source;
+            var trimmed = source.Trim();
+            if (trimmed.Equals("BG IG, A System-Act Ally", System.StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "BG IG，System-Act 助手";
+                return true;
+            }
+
+            if (trimmed.Equals("Courtesy of the Company.", System.StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("Courtesy of the Company", System.StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "由公司提供。";
+                return true;
+            }
+
+            var copyrightMatch = SafeRegexMatch(
+                trimmed,
+                @"^Copyright\s+\(C\)\s+(?<years>[^,]+),\s*(?<owner>.+?)\.?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (copyrightMatch.Success)
+            {
+                translated = $"版权所有 (C) {copyrightMatch.Groups["years"].Value.Trim()}，{copyrightMatch.Groups["owner"].Value.Trim().TrimEnd('.')}";
+                return true;
+            }
+
+            var biosMatch = SafeRegexMatch(
+                trimmed,
+                @"^Bios\s+for\s+(?<system>.+?)\s+SYSTEM$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (biosMatch.Success)
+            {
+                translated = $"{biosMatch.Groups["system"].Value.Trim()} 系统 BIOS";
+                return true;
+            }
+
+            var dateMatch = SafeRegexMatch(
+                trimmed,
+                @"^Current\s+date\s+is\s+(?<weekday>[A-Za-z]+)\s+(?<date>.+?)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (dateMatch.Success)
+            {
+                translated = $"当前日期：{LocalizeWelcomeWeekday(dateMatch.Groups["weekday"].Value)} {dateMatch.Groups["date"].Value.Trim()}";
+                return true;
+            }
+
+            var localizedTimeMatch = SafeRegexMatch(
+                trimmed,
+                @"^当前时间\s*[:：]\s*(?<time>\d{1,2})[:：](?<minute>\d{2})[:：](?<second>\d{2}(?:\.\d+)?)$",
+                RegexOptions.CultureInvariant);
+            if (localizedTimeMatch.Success)
+            {
+                translated = $"当前时间：{localizedTimeMatch.Groups["time"].Value}时{localizedTimeMatch.Groups["minute"].Value}分{localizedTimeMatch.Groups["second"].Value}秒";
+                return true;
+            }
+
+            var timeMatch = SafeRegexMatch(
+                trimmed,
+                @"^Current\s+time\s+is\s+(?<time>.+?)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (timeMatch.Success)
+            {
+                var timeValue = timeMatch.Groups["time"].Value.Trim();
+                var clockMatch = SafeRegexMatch(
+                    timeValue,
+                    @"^(?<hour>\d{1,2}):(?<minute>\d{2}):(?<second>\d{2}(?:\.\d+)?)$",
+                    RegexOptions.CultureInvariant);
+                translated = clockMatch.Success
+                    ? $"当前时间：{clockMatch.Groups["hour"].Value}时{clockMatch.Groups["minute"].Value}分{clockMatch.Groups["second"].Value}秒"
+                    : $"当前时间：{timeValue}";
+                return true;
+            }
+
+            var animalMatch = SafeRegexMatch(
+                trimmed,
+                @"^Please\s+enter\s+favorite\s+animal\s*:\s*(?<answer>.*)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (animalMatch.Success)
+            {
+                translated = $"请输入你最喜欢的动物：{animalMatch.Groups["answer"].Value}";
+                return true;
+            }
+
+            var roleMatch = SafeRegexMatch(
+                trimmed,
+                @"^Please\s+describe\s+your\s+role\s+in\s+a\s+team\s+dynamic\s*:\s*(?<answer>.*)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (roleMatch.Success)
+            {
+                translated = $"请描述你在团队中的角色：{roleMatch.Groups["answer"].Value}";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static string LocalizeWelcomeWeekday(string weekday)
+        {
+            return weekday.Trim().ToLowerInvariant() switch
+            {
+                "sun" or "sunday" => "星期日",
+                "mon" or "monday" => "星期一",
+                "tue" or "tues" or "tuesday" => "星期二",
+                "wed" or "wednesday" => "星期三",
+                "thu" or "thur" or "thurs" or "thursday" => "星期四",
+                "fri" or "friday" => "星期五",
+                "sat" or "saturday" => "星期六",
+                _ => weekday.Trim()
+            };
+        }
+
         public static bool TranslateCompanyBuyingStatus(string source, out string translated)
         {
             translated = source;

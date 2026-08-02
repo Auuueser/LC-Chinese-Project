@@ -92,8 +92,10 @@
 
   <ItemGroup>
     <None Include="..\..\translations-clean\**\*" CopyToOutputDirectory="PreserveNewest" Link="translations-clean\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\translations-clean')" />
+    <None Include="..\..\fonts\NotoSansSC-VF.ttf" CopyToOutputDirectory="PreserveNewest" Link="fonts\NotoSansSC-VF.ttf" Condition="Exists('..\..\fonts\NotoSansSC-VF.ttf')" />
     <None Include="..\..\fonts\zh-cn-tmp-font" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-tmp-font" Condition="Exists('..\..\fonts\zh-cn-tmp-font')" />
     <None Include="..\..\fonts\OFL-1.1.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\OFL-1.1.txt" Condition="Exists('..\..\fonts\OFL-1.1.txt')" />
+    <None Include="..\..\licenses\Apache-2.0.txt" CopyToOutputDirectory="PreserveNewest" Link="licenses\Apache-2.0.txt" Condition="Exists('..\..\licenses\Apache-2.0.txt')" />
     <None Include="..\..\fonts\zh-cn-charset.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-charset.txt" Condition="Exists('..\..\fonts\zh-cn-charset.txt')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png" CopyToOutputDirectory="PreserveNewest" Link="textures\AlertText [52CF932FDE-AB216CEFD9].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png')" />
@@ -106,6 +108,20 @@
     <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsBoxesLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsBoxesLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsBoxesLocalized.png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsDeceased.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsDeceased.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsDeceased.png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\EndgameStatsMissing.png" CopyToOutputDirectory="PreserveNewest" Link="textures\EndgameStatsMissing.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\EndgameStatsMissing.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ClipboardManualPage1.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ClipboardManualPage1.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ClipboardManualPage1.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ClipboardManualPage2.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ClipboardManualPage2.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ClipboardManualPage2.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ClipboardManualPage3.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ClipboardManualPage3.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ClipboardManualPage3.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ClipboardManualPage4.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ClipboardManualPage4.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ClipboardManualPage4.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\CruiserManualPage1.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CruiserManualPage1.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CruiserManualPage1.bc3')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\CruiserManualPage2.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CruiserManualPage2.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CruiserManualPage2.bc3')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\CruiserManualPage3.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CruiserManualPage3.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CruiserManualPage3.bc3')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\CruiserManualPage4.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CruiserManualPage4.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CruiserManualPage4.bc3')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\StickyNoteLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\StickyNoteLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\StickyNoteLocalized.png')" />
+    <None Include="..\..\assets\emoji\noto\ChatEmojiAtlas.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ChatEmojiAtlas.png" Condition="Exists('..\..\assets\emoji\noto\ChatEmojiAtlas.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ShipPostersLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ShipPostersLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ShipPostersLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ShipTipsPosterLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ShipTipsPosterLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ShipTipsPosterLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\CompanyCruiserDiffuseLocalized.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CompanyCruiserDiffuseLocalized.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CompanyCruiserDiffuseLocalized.bc3')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\CompanyCruiserDiffuseDirtyLocalized.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CompanyCruiserDiffuseDirtyLocalized.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CompanyCruiserDiffuseDirtyLocalized.bc3')" />
   </ItemGroup>
 
   <Target Name="RequireGameDir" BeforeTargets="ResolveReferences" Condition="'$(GameDir)' == ''">

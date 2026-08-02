@@ -341,6 +341,12 @@ internal static class AutomaticTranslationService
                 _inFlightRequests--;
             }
 
+            var completedRequestLimit = Math.Max(1, GetMaxPendingRequests() * 2);
+            while (CompletedRequests.Count >= completedRequestLimit)
+            {
+                CompletedRequests.Dequeue();
+            }
+
             CompletedRequests.Enqueue(result);
         }
     }

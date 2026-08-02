@@ -13,7 +13,7 @@ internal static class HudScannerLocalizationService
     private const float HudScannerIdleActiveProbeIntervalSeconds = 0.25f;
     private const float HudScannerActiveProbeIntervalSeconds = 0.1f;
     private const float HudScannerRootLocalizationIntervalSeconds = 2.0f;
-    private const float HudScannerBindingSignatureProbeIntervalSeconds = 0.1f;
+    private const float HudScannerBindingSignatureProbeIntervalSeconds = 1.0f;
     private const int HudScannerTextCacheLimit = 16384;
     private const int DefaultHudScannerMaxTextsPerUpdate = 4;
     private const int HudScannerActiveProbeFallbackElementBudget = 4;
@@ -38,6 +38,8 @@ internal static class HudScannerLocalizationService
     private static int _hudScannerElementCursor;
     private static int _hudScannerBoundNodeCursor;
     private static int _hudScannerActiveProbeCursor;
+    private static Dictionary<RectTransform, ScanNodeProperties>? _hudScannerBoundNodeSnapshotSource;
+    private static readonly List<KeyValuePair<RectTransform, ScanNodeProperties>> HudScannerBoundNodeSnapshot = new();
     private static string? _lastHudScannerTotalText;
     private static string? _lastImmediateHudScannerTotalText;
     private static readonly BoundedCache<int, TMP_Text[]> HudScannerElementTextCache = new(HudScannerTextCacheLimit);
@@ -80,6 +82,8 @@ internal static class HudScannerLocalizationService
         _hudScannerElementCursor = 0;
         _hudScannerBoundNodeCursor = 0;
         _hudScannerActiveProbeCursor = 0;
+        _hudScannerBoundNodeSnapshotSource = null;
+        HudScannerBoundNodeSnapshot.Clear();
         _lastHudScannerTotalText = null;
         _lastImmediateHudScannerTotalText = null;
         ClearRuntimeCaches();
@@ -89,6 +93,9 @@ internal static class HudScannerLocalizationService
     {
         HudScannerElementTextCache.Clear();
         HudScannerTextStateCache.Clear();
+        _hudScannerBoundNodeSnapshotSource = null;
+        HudScannerBoundNodeSnapshot.Clear();
+        _hudScannerBoundNodeCursor = 0;
         _nextHudScannerBindingSignatureProbeTime = 0f;
         _cachedHudScannerBindingCount = -1;
         _cachedHudScannerBindingSignature = 0;
@@ -253,7 +260,7 @@ internal static class HudScannerLocalizationService
 
         var isUpdateScanNodes = string.Equals(reason, "HUDManager.UpdateScanNodes", StringComparison.Ordinal);
         var processed = 0;
-        var maxTexts = immediatePass ? RuntimePerformanceSettings.HudScannerCacheLimit : GetHudScannerMaxTextsPerUpdate();
+        var maxTexts = GetHudScannerMaxTextsPerUpdate();
         var count = elements.Length;
         if (count <= 0)
         {
@@ -322,17 +329,21 @@ internal static class HudScannerLocalizationService
         }
 
         var isUpdateScanNodes = string.Equals(reason, "HUDManager.UpdateScanNodes.bound-nodes", StringComparison.Ordinal);
-        var count = scanNodes.Count;
-        var start = isUpdateScanNodes && !immediatePass && _hudScannerBoundNodeCursor < count ? _hudScannerBoundNodeCursor : 0;
-        var processed = 0;
-        var maxTexts = immediatePass ? RuntimePerformanceSettings.HudScannerCacheLimit : GetHudScannerMaxTextsPerUpdate();
-        var index = 0;
-        foreach (var pair in scanNodes)
+        RefreshHudScannerBoundNodeSnapshot(scanNodes);
+        var count = HudScannerBoundNodeSnapshot.Count;
+        if (count == 0)
         {
-            if (index++ < start)
-            {
-                continue;
-            }
+            _hudScannerBoundNodeCursor = 0;
+            return;
+        }
+
+        var start = isUpdateScanNodes && _hudScannerBoundNodeCursor < count ? _hudScannerBoundNodeCursor : 0;
+        var processed = 0;
+        var maxTexts = GetHudScannerMaxTextsPerUpdate();
+        for (var offset = 0; offset < count; offset++)
+        {
+            var index = (start + offset) % count;
+            var pair = HudScannerBoundNodeSnapshot[index];
 
             if (pair.Key == null || pair.Value == null)
             {
@@ -343,7 +354,7 @@ internal static class HudScannerLocalizationService
             {
                 if (isUpdateScanNodes)
                 {
-                    _hudScannerBoundNodeCursor = Math.Max(0, (index - 1) % count);
+                    _hudScannerBoundNodeCursor = index;
                 }
 
                 return;
@@ -351,42 +362,45 @@ internal static class HudScannerLocalizationService
 
             processed++;
             TranslateHudScannerBoundNode(pair.Key, pair.Value);
-        }
-
-        if (!isUpdateScanNodes || start == 0 || processed >= maxTexts)
-        {
             if (isUpdateScanNodes)
             {
-                _hudScannerBoundNodeCursor = 0;
+                _hudScannerBoundNodeCursor = (index + 1) % count;
             }
+        }
 
+        if (isUpdateScanNodes)
+        {
+            _hudScannerBoundNodeCursor = (start + Math.Max(1, count)) % count;
+        }
+    }
+
+    private static void RefreshHudScannerBoundNodeSnapshot(
+        Dictionary<RectTransform, ScanNodeProperties> scanNodes,
+        bool force = false)
+    {
+        if (!force &&
+            ReferenceEquals(_hudScannerBoundNodeSnapshotSource, scanNodes) &&
+            HudScannerBoundNodeSnapshot.Count == scanNodes.Count)
+        {
             return;
         }
 
-        index = 0;
+        HudScannerBoundNodeSnapshot.Clear();
         foreach (var pair in scanNodes)
         {
-            if (index++ >= start)
-            {
-                break;
-            }
-
             if (pair.Key == null || pair.Value == null)
             {
                 continue;
             }
 
-            if (processed >= maxTexts)
-            {
-                _hudScannerBoundNodeCursor = Math.Max(0, (index - 1) % count);
-                return;
-            }
-
-            processed++;
-            TranslateHudScannerBoundNode(pair.Key, pair.Value);
+            HudScannerBoundNodeSnapshot.Add(pair);
         }
 
-        _hudScannerBoundNodeCursor = 0;
+        _hudScannerBoundNodeSnapshotSource = scanNodes;
+        if (_hudScannerBoundNodeCursor >= HudScannerBoundNodeSnapshot.Count)
+        {
+            _hudScannerBoundNodeCursor = 0;
+        }
     }
 
     private static void TranslateHudScannerBoundNode(RectTransform element, ScanNodeProperties node)
@@ -719,8 +733,6 @@ internal static class HudScannerLocalizationService
                 {
                     hash = hash * 31 + (pair.Key == null ? 0 : pair.Key.GetInstanceID());
                     hash = hash * 31 + (pair.Value == null ? 0 : pair.Value.GetInstanceID());
-                    hash = hash * 31 + StringComparer.Ordinal.GetHashCode(pair.Value?.headerText ?? string.Empty);
-                    hash = hash * 31 + StringComparer.Ordinal.GetHashCode(pair.Value?.subText ?? string.Empty);
                 }
 
                 signature = hash;
@@ -729,6 +741,7 @@ internal static class HudScannerLocalizationService
             _cachedHudScannerBindingCount = count;
             _cachedHudScannerBindingSignature = signature;
             _nextHudScannerBindingSignatureProbeTime = now + HudScannerBindingSignatureProbeIntervalSeconds;
+            RefreshHudScannerBoundNodeSnapshot(scanNodes, force: true);
 
             return true;
         }

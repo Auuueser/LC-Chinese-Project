@@ -118,6 +118,7 @@ internal static partial class TextPatches
             return;
         }
 
+        ChatEmojiSpriteService.ApplyToText(__instance?.textComponent);
         ExternalEnglishCompatibilityUiService.TranslateTmpInputPlaceholder(__instance, "TMP_InputField.OnEnable");
     }
 
@@ -147,11 +148,113 @@ internal static partial class TextPatches
         ExternalEnglishCompatibilityUiService.TranslateRoot(confirmationRoot, includeInactive: true, "BetterSaves.DeleteFileConfirmation");
     }
 
+    private static void AdvancedFeaturesEndscreenOpenPrefix()
+    {
+        RestoreAdvancedFeaturesEndscreenSourceData();
+        NormalizeHudEndGameGradeLetterSource(HUDManager.Instance?.statsUIElements?.gradeLetter);
+    }
+
     private static void AdvancedFeaturesEndscreenOpenPostfix(GameObject ___Container)
     {
         ExternalEnglishCompatibilityUiService.TranslateRoot(___Container, includeInactive: true, "AdvancedFeatures.Endscreen.Open");
         RegisterAdvancedFeaturesGradeText(TryGetAdvancedFeaturesGradeTextByPrefabPath(___Container));
         StartAdvancedFeaturesGradeRepair(___Container);
+    }
+
+    private static void RestoreAdvancedFeaturesEndscreenSourceData()
+    {
+        var hud = HUDManager.Instance;
+        var round = StartOfRound.Instance;
+        var elements = hud?.statsUIElements;
+        var players = round?.allPlayerScripts;
+        var notes = elements?.playerNotesText;
+        var states = elements?.playerStates;
+        if (elements == null || players == null || notes == null || states == null)
+        {
+            return;
+        }
+
+        var playerStats = round?.gameStats?.allPlayerStats;
+        var count = Math.Min(players.Length, Math.Min(notes.Length, states.Length));
+        var restoredNotes = 0;
+        var restoredStates = 0;
+
+        _restoringAdvancedFeaturesEndscreenSource = true;
+        try
+        {
+            for (var index = 0; index < count; index++)
+            {
+                var player = players[index];
+                if (player == null)
+                {
+                    continue;
+                }
+
+                var activePlayer = player.disconnectedMidGame || player.isPlayerDead || player.isPlayerControlled;
+                var noteText = notes[index];
+                if (noteText != null)
+                {
+                    var sourceNotes = BuildAdvancedFeaturesPlayerNotesSource(
+                        activePlayer,
+                        playerStats != null && index < playerStats.Length ? playerStats[index]?.playerNotes : null);
+                    noteText.text = sourceNotes;
+                    restoredNotes++;
+                }
+
+                var stateImage = states[index];
+                if (stateImage == null)
+                {
+                    continue;
+                }
+
+                if (!activePlayer)
+                {
+                    stateImage.enabled = false;
+                    continue;
+                }
+
+                stateImage.enabled = true;
+                stateImage.sprite = player.isPlayerDead
+                    ? player.causeOfDeath == CauseOfDeath.Abandoned
+                        ? elements.missingIcon
+                        : elements.deceasedIcon
+                    : elements.aliveIcon;
+                restoredStates++;
+            }
+        }
+        finally
+        {
+            _restoringAdvancedFeaturesEndscreenSource = false;
+        }
+
+        if (Plugin.RuntimeLocalizationLogsEnabled)
+        {
+            Plugin.Log.LogInfo(
+                $"AdvancedFeatures.Endscreen.Open source restored: notes={restoredNotes}, states={restoredStates}");
+        }
+    }
+
+    private static string BuildAdvancedFeaturesPlayerNotesSource(bool activePlayer, IReadOnlyList<string>? playerNotes)
+    {
+        if (!activePlayer)
+        {
+            return string.Empty;
+        }
+
+        var builder = new System.Text.StringBuilder("Notes: \n");
+        if (playerNotes == null)
+        {
+            return builder.ToString();
+        }
+
+        for (var index = 0; index < 3 && index < playerNotes.Count; index++)
+        {
+            builder.Append("* ");
+            builder.Append(playerNotes[index]);
+            builder.Append('\n');
+        }
+
+        return builder.ToString();
     }
 
     private static void ApplyTranslatedTmpText(TMP_Text text, string translated, string reason)

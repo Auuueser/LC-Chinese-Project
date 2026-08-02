@@ -105,6 +105,8 @@ internal static partial class TextPatches
     [HarmonyPostfix]
     private static void TerminalBeginUsingPostfix(Terminal __instance)
     {
+        ChatEmojiPasteService.RegisterTerminalInput(__instance);
+        ChatEmojiSpriteService.ApplyToText(__instance?.screenText?.textComponent);
         TerminalScreenLocalizationService.ApplyFontFallback(__instance);
     }
 }

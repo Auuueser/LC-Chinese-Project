@@ -4,6 +4,9 @@ namespace V81TestChn;
 
 internal static class TerminalScreenLocalizationService
 {
+    private static int _lastProcessedNodeId;
+    private static string? _lastProcessedOutput;
+
     public static void ApplyTextPostProcess(TerminalNode? node, ref string result)
     {
         var translated = TranslationService.TranslateTerminalOutputForNode(result, node != null && node.clearPreviousText);
@@ -12,6 +15,9 @@ internal static class TerminalScreenLocalizationService
             result = translated;
             Plugin.ReportTranslationHit();
         }
+
+        _lastProcessedNodeId = node == null ? 0 : node.GetInstanceID();
+        _lastProcessedOutput = result;
     }
 
     public static void ApplyScreenFallback(Terminal? terminal, string reason)
@@ -24,6 +30,14 @@ internal static class TerminalScreenLocalizationService
         var original = terminal.screenText.text ?? string.Empty;
         terminal.screenText.richText = true;
         terminal.screenText.textComponent.richText = true;
+        if (WasJustProcessed(terminal, original))
+        {
+            _lastProcessedNodeId = 0;
+            _lastProcessedOutput = null;
+            FontFallbackService.ApplyFallback(terminal.screenText.textComponent, original);
+            return;
+        }
+
         var clearPreviousText = terminal.currentNode == null || terminal.currentNode.clearPreviousText;
         var translated = TranslationService.TranslateTerminalOutputForNode(original, clearPreviousText);
         if (!string.Equals(original, translated, StringComparison.Ordinal))
@@ -72,6 +86,12 @@ internal static class TerminalScreenLocalizationService
         FontFallbackService.ApplyFallback(terminal.screenText.textComponent, terminal.screenText.text);
     }
 
+    public static void ClearRuntimeCache()
+    {
+        _lastProcessedNodeId = 0;
+        _lastProcessedOutput = null;
+    }
+
     public static void ApplyFontFallback(Terminal? terminal)
     {
         if (terminal?.screenText?.textComponent == null)
@@ -80,6 +100,19 @@ internal static class TerminalScreenLocalizationService
         }
 
         FontFallbackService.ApplyFallback(terminal.screenText.textComponent, terminal.screenText.text);
+    }
+
+    private static bool WasJustProcessed(Terminal terminal, string screenText)
+    {
+        if (string.IsNullOrEmpty(_lastProcessedOutput) ||
+            terminal.currentNode == null ||
+            terminal.currentNode.GetInstanceID() != _lastProcessedNodeId)
+        {
+            return false;
+        }
+
+        return string.Equals(screenText, _lastProcessedOutput, StringComparison.Ordinal) ||
+               screenText.EndsWith(_lastProcessedOutput, StringComparison.Ordinal);
     }
 
 }

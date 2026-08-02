@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.IO;
 using System.Linq;
 using BepInEx;
@@ -20,7 +19,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.2.0";
+    public const string PluginVersion = "3.2.1";
     private const string ConfigFileName = "LC Chinese Project.cfg";
     private const string LegacyConfigFileName = PluginGuid + ".cfg";
 
@@ -35,7 +34,6 @@ public sealed class Plugin : BaseUnityPlugin
     private static bool _logRuntimeLocalizationEventsFast;
     private ConfigFile? _runtimeConfig;
     private bool _cleanupCompleted;
-    private Coroutine? _automaticTranslationPumpCoroutine;
 
     internal static bool IsRuntimeShuttingDown => _cleanupInProgress || _runtimeShutDown;
     internal static bool RuntimeLocalizationLogsEnabled => _logRuntimeLocalizationEventsFast;
@@ -72,12 +70,11 @@ public sealed class Plugin : BaseUnityPlugin
         }
 
         TryInitialize("AutomaticTranslationService", () => { AutomaticTranslationService.Initialize(pluginDir, runtimeConfig); });
-        if (AutomaticTranslationService.NeedsMainThreadPump)
-        {
-            _automaticTranslationPumpCoroutine = StartCoroutine(PumpAutomaticTranslation());
-        }
-
         TryInitialize("RuntimeTextCollector", () => { RuntimeTextCollector.Initialize(pluginDir, runtimeConfig); });
+        TryInitialize("ClipboardManualLocalizationService", () => { ClipboardManualLocalizationService.Initialize(pluginDir); });
+        TryInitialize("StickyNoteLocalizationService", () => { StickyNoteLocalizationService.Initialize(pluginDir); });
+        TryInitialize("EnvironmentTextureLocalizationService", () => { EnvironmentTextureLocalizationService.Initialize(pluginDir); });
+        TryInitialize("ChatEmojiSpriteService", () => { ChatEmojiSpriteService.Initialize(pluginDir); });
 
         var existingPatchCount = CountOwnHarmonyPatches();
         var manualPatchCount = 0;
@@ -136,15 +133,6 @@ public sealed class Plugin : BaseUnityPlugin
         }
     }
 
-    private IEnumerator PumpAutomaticTranslation()
-    {
-        while (!IsRuntimeShuttingDown && AutomaticTranslationService.NeedsMainThreadPump)
-        {
-            AutomaticTranslationService.PumpMainThread();
-            yield return null;
-        }
-    }
-
     private void OnApplicationQuit()
     {
         _isShuttingDown = true;
@@ -182,12 +170,6 @@ public sealed class Plugin : BaseUnityPlugin
         Application.quitting -= OnUnityQuitting;
         _cleanupInProgress = true;
         _runtimeShutDown = true;
-        if (_automaticTranslationPumpCoroutine != null)
-        {
-            StopCoroutine(_automaticTranslationPumpCoroutine);
-            _automaticTranslationPumpCoroutine = null;
-        }
-
         TryCleanup("Harmony.UnpatchSelf", _harmony.UnpatchSelf);
         TryCleanup("OriginalResourceStateService.RestoreAll", () => { OriginalResourceStateService.RestoreAll(); });
         TryCleanup("ItemIdentityCompatibilityService.Shutdown", () => { ItemIdentityCompatibilityService.Shutdown(); });
@@ -196,8 +178,13 @@ public sealed class Plugin : BaseUnityPlugin
         TryCleanup("TargetedUiTranslator.Shutdown", () => { TargetedUiTranslator.Shutdown(); });
         TryCleanup("TranslationService.ClearCaches", () => { TranslationService.ClearCaches(); });
         TryCleanup("CustomLocalizationExtensionService.Shutdown", () => { CustomLocalizationExtensionService.Shutdown(); });
+        TryCleanup("ChatEmojiSpriteService.Shutdown", () => { ChatEmojiSpriteService.Shutdown(); });
         TryCleanup("FontFallbackAuditService.Shutdown", () => { FontFallbackAuditService.Shutdown(); });
         TryCleanup("FontFallbackService.Shutdown", () => { FontFallbackService.Shutdown(); });
+        TryCleanup("ClipboardManualLocalizationService.Shutdown", () => { ClipboardManualLocalizationService.Shutdown(); });
+        TryCleanup("StickyNoteLocalizationService.Shutdown", () => { StickyNoteLocalizationService.Shutdown(); });
+        TryCleanup("EnvironmentTextureLocalizationService.Shutdown", () => { EnvironmentTextureLocalizationService.Shutdown(); });
+        TryCleanup("SpiderSafeModeLocalizationService.Shutdown", () => { SpiderSafeModeLocalizationService.Shutdown(); });
         TryCleanup("AlertTextureReplacementService.Shutdown", () => { AlertTextureReplacementService.Shutdown(); });
         TryCleanup("RadiationWarningAuditService.Shutdown", () => { RadiationWarningAuditService.Shutdown(); });
         TryCleanup("RadiationWarningPlaybackService.Shutdown", () => { RadiationWarningPlaybackService.Shutdown(); });

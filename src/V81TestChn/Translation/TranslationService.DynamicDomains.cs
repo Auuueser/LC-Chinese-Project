@@ -19,6 +19,19 @@ internal static partial class TranslationService
             return FinishKnownDynamicTranslation(source, ref translated, "HostModWarning.Fast");
         }
 
+        if (LooksLikeInfectionStatusTextCheap(source))
+        {
+            if (TryTranslateHighFeverFahrenheitStatus(source, out translated))
+            {
+                return FinishKnownDynamicTranslation(source, ref translated, "HighFever.Fast");
+            }
+
+            if (TryTranslateInfectionHazardStatus(source, out translated))
+            {
+                return FinishKnownDynamicTranslation(source, ref translated, "InfectionHazardStatus.Fast");
+            }
+        }
+
         if (WeightUnitTranslator.Translate(source, out translated))
         {
             return FinishKnownDynamicTranslation(source, ref translated, "WeightUnit.Fast");
@@ -188,6 +201,7 @@ internal static partial class TranslationService
         }
 
         return WeightUnitTranslator.CanHandleCheap(source) ||
+               LooksLikeInfectionStatusTextCheap(source) ||
                LooksLikeVoteTextCheap(source) ||
                LooksLikeDaysLeftTextCheap(source) ||
                LooksLikeLoadingInfoTextCheap(source) ||
@@ -202,6 +216,18 @@ internal static partial class TranslationService
                LooksLikeChatSystemMessageCheap(source) ||
                LooksLikeCombatNotificationTextCheap(source) ||
                LooksLikeHostModWarningTextCheap(source);
+    }
+
+    private static bool LooksLikeInfectionStatusTextCheap(string source)
+    {
+        if (source.Length > 192)
+        {
+            return false;
+        }
+
+        return source.IndexOf("FEVER", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               source.IndexOf("FOREIGN BODIES", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               source.IndexOf("BRAINWAVE", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     public static bool LooksLikeCombatNotificationTextCheap(string? source)

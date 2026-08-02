@@ -196,7 +196,7 @@
                     },
                     {
                         "source":  "Confirm changes?",
-                        "target":  "确认更改",
+                        "target":  "确认更改？",
                         "mode":  "translate",
                         "note":  "clean-runtime-overlay category=core-ui; status=user-approved-wording"
                     },
@@ -2677,6 +2677,12 @@
                         "target":  "取消更改",
                         "mode":  "translate",
                         "note":  "clean-runtime-overlay category=menu-button; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "Discard",
+                        "target":  "取消更改",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=menu-button; status=user-approved-wording"
                     },
                     {
                         "source":  "Discard changes",
@@ -9967,6 +9973,12 @@
                         "target":  "未找到设备",
                         "mode":  "translate",
                         "note":  "clean-runtime-overlay category=ui-gap; status=draft-self-authored"
+                    },
+                    {
+                        "source":  "No device found \n (click to refresh)",
+                        "target":  "未找到设备\n（点击刷新）",
+                        "mode":  "translate",
+                        "note":  "clean-runtime-overlay category=settings-dynamic; status=user-approved-wording"
                     },
                     {
                         "source":  "(click to refresh)",

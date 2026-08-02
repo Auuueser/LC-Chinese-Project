@@ -260,6 +260,7 @@ internal static partial class TranslationService
         ["Toggling radar cam"] = "\u6b63\u5728\u5207\u6362\u96f7\u8fbe\u6444\u50cf\u5934\u3002",
         ["Cancelled ejection sequence."] = "\u5df2\u53d6\u6d88\u5f39\u5c04\u5e8f\u5217\u3002",
         ["Cancelled order."] = "\u5df2\u53d6\u6d88\u8ba2\u5355\u3002",
+        ["Cannot return from storage while the ship is landing or leaving."] = "\u98de\u8239\u6b63\u5728\u964d\u843d\u6216\u79bb\u5f00\u65f6\uff0c\u65e0\u6cd5\u4ece\u4ed3\u50a8\u53d6\u56de\u7269\u54c1\u3002",
         ["Our contractors enjoy fast, free shipping while on the job! Any purchased items will arrive hourly at your approximate location."] = "\u6211\u4eec\u7684\u627f\u5305\u5546\u5728\u5de5\u4f5c\u671f\u95f4\u4eab\u6709\u5feb\u901f\u514d\u8d39\u914d\u9001\u670d\u52a1\uff0c\u5df2\u8d2d\u7269\u54c1\u4f1a\u6309\u5c0f\u65f6\u9001\u8fbe\u4f60\u5927\u81f4\u6240\u5728\u4f4d\u7f6e\u3002",
         ["There was no action supplied with the word."] = "\u8be5\u5355\u8bcd\u672a\u63d0\u4f9b\u5bf9\u5e94\u52a8\u4f5c\u3002",
         ["There was no object supplied with the action, or your word was typed incorrectly or does not exist."] = "\u672a\u4e3a\u8be5\u52a8\u4f5c\u63d0\u4f9b\u5bf9\u8c61\uff0c\u6216\u4f60\u8f93\u5165\u7684\u5355\u8bcd\u6709\u8bef\u6216\u4e0d\u5b58\u5728\u3002",
@@ -330,6 +331,7 @@ internal static partial class TranslationService
         ["Pull cord"] = "\u62c9\u7ef3",
         ["Pull down"] = "\u4e0b\u62c9",
         ["Pull drawer"] = "\u62c9\u5f00\u62bd\u5c49",
+        ["Pull lever"] = "\u62c9\u52a8\u63a7\u5236\u6746",
         ["Pull valve"] = "\u62c9\u52a8\u9600\u95e8",
         ["Reload"] = "\u88c5\u586b",
         ["Reload / Check ammo"] = "\u88c5\u586b / \u68c0\u67e5\u5f39\u836f",
@@ -1761,6 +1763,13 @@ internal static partial class TranslationService
             return false;
         }
 
+        var normalized = source.Replace("\r\n", "\n").Trim();
+        if (normalized.Equals("FIGHTING INFECTION!\nReduction in fever", StringComparison.OrdinalIgnoreCase))
+        {
+            translated = "\u6b63\u5728\u5bf9\u6297\u611f\u67d3\uff01\n\u9ad8\u70e7\u6b63\u5728\u7f13\u89e3";
+            return true;
+        }
+
         if (!TrySafeRegexMatch(InfectionHazardStatusRegex, source, out var match) || !match.Success)
         {
             return false;
@@ -2309,11 +2318,22 @@ internal static partial class TranslationService
         }
 
         var translated = RewriteTerminalRouteWeatherBlocks(source);
-        translated = StandardizeTerminalStorePage(translated);
+        translated = TooManyEmotesCompatibilityTranslator.TranslateTerminalOutput(translated);
+        var standardizedStoreBeforeBody = LooksLikeTerminalStorePage(translated);
+        if (standardizedStoreBeforeBody)
+        {
+            translated = StandardizeTerminalStorePage(translated);
+        }
+
         // Preserve the original English furniture identifier before the generic
         // line translator replaces it. STORAGE commands require that identifier
         // so players can type an unambiguous furniture name when retrieving it.
-        translated = StandardizeTerminalStoragePage(translated);
+        var standardizedStorageBeforeBody = LooksLikeTerminalStoragePage(translated);
+        if (standardizedStorageBeforeBody)
+        {
+            translated = StandardizeTerminalStoragePage(translated);
+        }
+
         translated = TranslateTerminalOutputBody(translated);
         translated = StandardizeTerminalCruiserWarrantyText(translated);
         translated = StandardizeTerminalSignalTranslatorText(translated);
@@ -2325,12 +2345,23 @@ internal static partial class TranslationService
         translated = StandardizeTerminalMoonList(translated);
         translated = StandardizeTerminalMoonInfoPages(translated);
         translated = StandardizeTerminalBestiaryPage(translated);
-        translated = StandardizeTerminalStorePage(translated);
-        translated = StandardizeTerminalStoragePage(translated);
+        if (!standardizedStoreBeforeBody)
+        {
+            translated = StandardizeTerminalStorePage(translated);
+        }
+
+        if (!standardizedStorageBeforeBody)
+        {
+            translated = StandardizeTerminalStoragePage(translated);
+        }
         translated = StandardizeTerminalOtherPage(translated);
         translated = StandardizeTerminalRouteAndEjectPages(translated);
         translated = StandardizeTerminalStoreTransactions(translated);
         translated = StandardizeTerminalGeneralStatus(translated);
+        // Some exact runtime entries expand the welcome questionnaire before the
+        // generic terminal standardizers run. A final line pass normalizes those
+        // dynamic date/time and player-answer lines without touching commands.
+        translated = TranslateTerminalOutputLinewise(translated);
         return SanitizeTranslatedText(translated);
     }
 
@@ -2649,6 +2680,11 @@ internal static partial class TranslationService
         if (string.IsNullOrEmpty(line))
         {
             return false;
+        }
+
+        if (TerminalDynamicTranslator.TranslateWelcomeLine(line, out translated))
+        {
+            return true;
         }
 
         if (TerminalBodyEntries.TryGetValue(line, out translated))
@@ -3058,12 +3094,7 @@ internal static partial class TranslationService
 
     private static string StandardizeTerminalStorePage(string source)
     {
-        if (string.IsNullOrEmpty(source) ||
-            ((!source.Contains("//", StringComparison.Ordinal) ||
-              (!source.Contains("Price", StringComparison.OrdinalIgnoreCase) &&
-               !source.Contains("\u4ef7\u683c", StringComparison.Ordinal))) &&
-             !source.Contains("SHIP UPGRADES:", StringComparison.Ordinal) &&
-             !source.Contains("\u98de\u8239\u5347\u7ea7\uff1a", StringComparison.Ordinal)))
+        if (!LooksLikeTerminalStorePage(source))
         {
             return source;
         }
@@ -3087,6 +3118,16 @@ internal static partial class TranslationService
         }
 
         return changed ? string.Join("\n", lines) : source;
+    }
+
+    private static bool LooksLikeTerminalStorePage(string source)
+    {
+        return !string.IsNullOrEmpty(source) &&
+               ((source.Contains("//", StringComparison.Ordinal) &&
+                 (source.Contains("Price", StringComparison.OrdinalIgnoreCase) ||
+                  source.Contains("\u4ef7\u683c", StringComparison.Ordinal))) ||
+                source.Contains("SHIP UPGRADES:", StringComparison.Ordinal) ||
+                source.Contains("\u98de\u8239\u5347\u7ea7\uff1a", StringComparison.Ordinal));
     }
 
     private static string RewriteTerminalStoreLine(string line)
@@ -3139,10 +3180,7 @@ internal static partial class TranslationService
 
     private static string StandardizeTerminalStoragePage(string source)
     {
-        if (string.IsNullOrEmpty(source) ||
-            (!source.Contains("These are the items in storage:", StringComparison.Ordinal) &&
-             !source.Contains("\u4ee5\u4e0b\u662f\u4ed3\u5e93\u4e2d\u7684\u7269\u54c1", StringComparison.Ordinal) &&
-             !source.Contains("\u4ee5\u4e0b\u662f\u50a8\u5b58\u533a\u4e2d\u7684\u7269\u54c1", StringComparison.Ordinal)))
+        if (!LooksLikeTerminalStoragePage(source))
         {
             return source;
         }
@@ -3166,6 +3204,14 @@ internal static partial class TranslationService
         }
 
         return changed ? string.Join("\n", lines) : source;
+    }
+
+    private static bool LooksLikeTerminalStoragePage(string source)
+    {
+        return !string.IsNullOrEmpty(source) &&
+               (source.Contains("These are the items in storage:", StringComparison.Ordinal) ||
+                source.Contains("\u4ee5\u4e0b\u662f\u4ed3\u5e93\u4e2d\u7684\u7269\u54c1", StringComparison.Ordinal) ||
+                source.Contains("\u4ee5\u4e0b\u662f\u50a8\u5b58\u533a\u4e2d\u7684\u7269\u54c1", StringComparison.Ordinal));
     }
 
     private static string RewriteTerminalStorageLine(string line)

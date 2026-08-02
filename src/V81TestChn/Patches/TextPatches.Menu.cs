@@ -9,6 +9,7 @@ internal static partial class TextPatches
     [HarmonyPostfix]
     private static void MenuManagerOnEnablePostfix(MenuManager __instance)
     {
+        ChatEmojiSpriteService.ApplyToText(__instance?.lobbyNameInputField?.textComponent);
         MenuSceneLocalizationService.ApplyMenuManager(__instance, "MenuManager.OnEnable");
     }
 
@@ -21,6 +22,7 @@ internal static partial class TextPatches
 
     private static void MenuManagerEnableUIPanelPostfix(MenuManager __instance, GameObject enablePanel)
     {
+        ChatEmojiSpriteService.ApplyToText(__instance?.lobbyNameInputField?.textComponent);
         MenuSceneLocalizationService.ApplyEnabledPanel(__instance, enablePanel, "MenuManager.EnableUIPanel");
     }
 
@@ -32,6 +34,25 @@ internal static partial class TextPatches
     private static void QuickMenuManagerLeaveGamePostfix(QuickMenuManager __instance)
     {
         MenuSceneLocalizationService.ApplyQuickMenuLeaveGamePanel(__instance.leaveGameConfirmPanel, "QuickMenuManager.LeaveGame");
+    }
+
+    private static void IngamePlayerSettingsSetSettingsOptionsTextPrefix(
+        SettingsOptionType optionType,
+        ref string setToText)
+    {
+        SettingsLocalizationService.LocalizeOptionText(optionType, ref setToText);
+    }
+
+    private static void IngamePlayerSettingsDisplayConfirmChangesScreenPostfix(bool visible)
+    {
+        SettingsLocalizationService.ApplyConfirmChangesPanel(
+            visible,
+            "IngamePlayerSettings.DisplayConfirmChangesScreen");
+    }
+
+    private static void SandSpiderAIStartPostfix(SandSpiderAI __instance)
+    {
+        SpiderSafeModeLocalizationService.Apply(__instance);
     }
 
     private static void DeleteFileButtonSetFileToDeletePostfix(DeleteFileButton __instance)

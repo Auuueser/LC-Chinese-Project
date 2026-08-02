@@ -14,6 +14,7 @@ internal static class RuntimeTextCollector
 {
     private const int MaxTextLength = 2000;
     private static readonly object SyncRoot = new();
+    private static readonly object FlushWriteRoot = new();
     private static readonly Dictionary<string, RuntimeTextRecord> Records = new(StringComparer.Ordinal);
     private static readonly List<RuntimeTextRecord> PendingRecords = new();
     private static ConfigEntry<bool>? _enabled;
@@ -25,6 +26,8 @@ internal static class RuntimeTextCollector
     private static bool _enabledFast;
     private static bool _isInitialized;
     private static bool _maxRecordsWarningLogged;
+    private static bool _saturatedFast;
+    private static int _flushQueued;
     private static DateTime _nextFlushUtc;
     private static Timer? _flushTimer;
 
@@ -77,6 +80,7 @@ internal static class RuntimeTextCollector
             Records.Clear();
             PendingRecords.Clear();
             _maxRecordsWarningLogged = false;
+            _saturatedFast = false;
         }
 
         if (!IsEnabled)
@@ -117,6 +121,7 @@ internal static class RuntimeTextCollector
         _enabledFast = false;
         _isInitialized = false;
         _maxRecordsWarningLogged = false;
+        _saturatedFast = false;
         _collectorUseFullTranslationCheck = null;
     }
 
@@ -187,13 +192,14 @@ internal static class RuntimeTextCollector
         {
             if (Records.Count >= GetMaxCollectedRecords())
             {
+                _saturatedFast = true;
                 WarnMaxCollectedRecordsOnce();
                 return;
             }
 
             if (Records.ContainsKey(key))
             {
-                shouldFlush = ShouldFlushPendingRecordsLocked();
+                return;
             }
             else
             {
@@ -209,18 +215,23 @@ internal static class RuntimeTextCollector
                 Records[key] = record;
                 PendingRecords.Add(record);
                 shouldFlush = ShouldFlushPendingRecordsLocked();
+                if (Records.Count >= GetMaxCollectedRecords())
+                {
+                    _saturatedFast = true;
+                    WarnMaxCollectedRecordsOnce();
+                }
             }
         }
 
         if (shouldFlush)
         {
-            FlushPending();
+            QueueFlushPending();
         }
     }
 
     private static bool IsCollectionActive()
     {
-        return IsEnabled && _isInitialized && !string.IsNullOrEmpty(_outputPath);
+        return IsEnabled && _isInitialized && !_saturatedFast && !string.IsNullOrEmpty(_outputPath);
     }
 
     private static bool ShouldCollect(string? source)
@@ -300,7 +311,30 @@ internal static class RuntimeTextCollector
 
         if (shouldFlush)
         {
-            FlushPending();
+            QueueFlushPending();
+        }
+    }
+
+    private static void QueueFlushPending()
+    {
+        if (Interlocked.Exchange(ref _flushQueued, 1) != 0)
+        {
+            return;
+        }
+
+        if (!ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    FlushPending();
+                }
+                finally
+                {
+                    Volatile.Write(ref _flushQueued, 0);
+                }
+            }))
+        {
+            Volatile.Write(ref _flushQueued, 0);
         }
     }
 
@@ -327,30 +361,33 @@ internal static class RuntimeTextCollector
             _nextFlushUtc = DateTime.UtcNow.AddSeconds(GetFlushIntervalSeconds());
         }
 
-        try
+        lock (FlushWriteRoot)
         {
-            WriteHeaderIfMissing(outputPath);
-            var builder = new StringBuilder();
-            foreach (var record in pending)
+            try
             {
-                builder.Append(Csv(record.FirstSeenUtc)).Append(',')
-                    .Append(Csv(record.Scene)).Append(',')
-                    .Append(Csv(record.Component)).Append(',')
-                    .Append(Csv(record.ObjectPath)).Append(',')
-                    .Append(Csv(record.FontName)).Append(',')
-                    .Append(Csv(record.Text)).AppendLine();
-            }
-
-            File.AppendAllText(outputPath, builder.ToString(), Encoding.UTF8);
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.LogWarning($"Failed to flush untranslated text collector: {ex.Message}");
-            lock (SyncRoot)
-            {
-                if (_isInitialized && !string.IsNullOrEmpty(_outputPath))
+                WriteHeaderIfMissing(outputPath);
+                var builder = new StringBuilder();
+                foreach (var record in pending)
                 {
-                    PendingRecords.InsertRange(0, pending);
+                    builder.Append(Csv(record.FirstSeenUtc)).Append(',')
+                        .Append(Csv(record.Scene)).Append(',')
+                        .Append(Csv(record.Component)).Append(',')
+                        .Append(Csv(record.ObjectPath)).Append(',')
+                        .Append(Csv(record.FontName)).Append(',')
+                        .Append(Csv(record.Text)).AppendLine();
+                }
+
+                File.AppendAllText(outputPath, builder.ToString(), Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"Failed to flush untranslated text collector: {ex.Message}");
+                lock (SyncRoot)
+                {
+                    if (_isInitialized && !string.IsNullOrEmpty(_outputPath))
+                    {
+                        PendingRecords.InsertRange(0, pending);
+                    }
                 }
             }
         }
@@ -400,7 +437,7 @@ internal static class RuntimeTextCollector
     {
         try
         {
-            FlushPending();
+            QueueFlushPending();
         }
         catch (Exception ex)
         {

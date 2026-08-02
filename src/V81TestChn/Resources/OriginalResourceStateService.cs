@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace V81TestChn;
@@ -8,12 +9,12 @@ internal static class OriginalResourceStateService
     {
         public ItemState(Item item, string? itemName, string[]? toolTips)
         {
-            Item = item;
+            Item = new WeakReference<Item>(item);
             ItemName = itemName;
             ToolTips = Clone(toolTips);
         }
 
-        public Item Item { get; }
+        public WeakReference<Item> Item { get; }
         public string? ItemName { get; }
         public string[]? ToolTips { get; }
     }
@@ -22,12 +23,12 @@ internal static class OriginalResourceStateService
     {
         public TerminalNodeState(TerminalNode node)
         {
-            Node = node;
+            Node = new WeakReference<TerminalNode>(node);
             DisplayText = node.displayText;
             CreatureName = node.creatureName;
         }
 
-        public TerminalNode Node { get; }
+        public WeakReference<TerminalNode> Node { get; }
         public string? DisplayText { get; }
         public string? CreatureName { get; }
     }
@@ -36,14 +37,14 @@ internal static class OriginalResourceStateService
     {
         public SelectableLevelState(SelectableLevel level)
         {
-            Level = level;
+            Level = new WeakReference<SelectableLevel>(level);
             PlanetName = level.PlanetName;
             LevelDescription = level.LevelDescription;
             RiskLevel = level.riskLevel;
             LevelIconString = level.levelIconString;
         }
 
-        public SelectableLevel Level { get; }
+        public WeakReference<SelectableLevel> Level { get; }
         public string? PlanetName { get; }
         public string? LevelDescription { get; }
         public string? RiskLevel { get; }
@@ -54,11 +55,11 @@ internal static class OriginalResourceStateService
     {
         public EnemyTypeState(EnemyType enemy)
         {
-            Enemy = enemy;
+            Enemy = new WeakReference<EnemyType>(enemy);
             EnemyName = enemy.enemyName;
         }
 
-        public EnemyType Enemy { get; }
+        public WeakReference<EnemyType> Enemy { get; }
         public string? EnemyName { get; }
     }
 
@@ -75,7 +76,10 @@ internal static class OriginalResourceStateService
         }
 
         var id = item.GetInstanceID();
-        if (!Items.ContainsKey(id))
+        if (!Items.TryGetValue(id, out var existing) ||
+            !existing.Item.TryGetTarget(out var existingItem) ||
+            existingItem == null ||
+            existingItem != item)
         {
             Items[id] = new ItemState(item, item.itemName, item.toolTips);
         }
@@ -89,7 +93,10 @@ internal static class OriginalResourceStateService
         }
 
         CaptureItem(item);
-        return Items.TryGetValue(item.GetInstanceID(), out var state)
+        return Items.TryGetValue(item.GetInstanceID(), out var state) &&
+               state.Item.TryGetTarget(out var capturedItem) &&
+               capturedItem != null &&
+               capturedItem == item
             ? state.ItemName ?? string.Empty
             : item.itemName ?? string.Empty;
     }
@@ -102,7 +109,10 @@ internal static class OriginalResourceStateService
         }
 
         var id = node.GetInstanceID();
-        if (!TerminalNodes.ContainsKey(id))
+        if (!TerminalNodes.TryGetValue(id, out var existing) ||
+            !existing.Node.TryGetTarget(out var existingNode) ||
+            existingNode == null ||
+            existingNode != node)
         {
             TerminalNodes[id] = new TerminalNodeState(node);
         }
@@ -116,7 +126,10 @@ internal static class OriginalResourceStateService
         }
 
         var id = level.GetInstanceID();
-        if (!SelectableLevels.ContainsKey(id))
+        if (!SelectableLevels.TryGetValue(id, out var existing) ||
+            !existing.Level.TryGetTarget(out var existingLevel) ||
+            existingLevel == null ||
+            existingLevel != level)
         {
             SelectableLevels[id] = new SelectableLevelState(level);
         }
@@ -130,7 +143,10 @@ internal static class OriginalResourceStateService
         }
 
         var id = enemy.GetInstanceID();
-        if (!EnemyTypes.ContainsKey(id))
+        if (!EnemyTypes.TryGetValue(id, out var existing) ||
+            !existing.Enemy.TryGetTarget(out var existingEnemy) ||
+            existingEnemy == null ||
+            existingEnemy != enemy)
         {
             EnemyTypes[id] = new EnemyTypeState(enemy);
         }
@@ -144,13 +160,13 @@ internal static class OriginalResourceStateService
             {
                 try
                 {
-                    if (state.Item == null)
+                    if (!state.Item.TryGetTarget(out var item) || item == null)
                     {
                         continue;
                     }
 
-                    state.Item.itemName = state.ItemName;
-                    state.Item.toolTips = Clone(state.ToolTips);
+                    item.itemName = state.ItemName;
+                    item.toolTips = Clone(state.ToolTips);
                 }
                 catch
                 {
@@ -162,13 +178,13 @@ internal static class OriginalResourceStateService
             {
                 try
                 {
-                    if (state.Node == null)
+                    if (!state.Node.TryGetTarget(out var node) || node == null)
                     {
                         continue;
                     }
 
-                    state.Node.displayText = state.DisplayText;
-                    state.Node.creatureName = state.CreatureName;
+                    node.displayText = state.DisplayText;
+                    node.creatureName = state.CreatureName;
                 }
                 catch
                 {
@@ -180,15 +196,15 @@ internal static class OriginalResourceStateService
             {
                 try
                 {
-                    if (state.Level == null)
+                    if (!state.Level.TryGetTarget(out var level) || level == null)
                     {
                         continue;
                     }
 
-                    state.Level.PlanetName = state.PlanetName;
-                    state.Level.LevelDescription = state.LevelDescription;
-                    state.Level.riskLevel = state.RiskLevel;
-                    state.Level.levelIconString = state.LevelIconString;
+                    level.PlanetName = state.PlanetName;
+                    level.LevelDescription = state.LevelDescription;
+                    level.riskLevel = state.RiskLevel;
+                    level.levelIconString = state.LevelIconString;
                 }
                 catch
                 {
@@ -200,12 +216,12 @@ internal static class OriginalResourceStateService
             {
                 try
                 {
-                    if (state.Enemy == null)
+                    if (!state.Enemy.TryGetTarget(out var enemy) || enemy == null)
                     {
                         continue;
                     }
 
-                    state.Enemy.enemyName = state.EnemyName;
+                    enemy.enemyName = state.EnemyName;
                 }
                 catch
                 {
@@ -225,6 +241,39 @@ internal static class OriginalResourceStateService
         TerminalNodes.Clear();
         SelectableLevels.Clear();
         EnemyTypes.Clear();
+    }
+
+    public static void PruneDestroyed()
+    {
+        Prune(Items, static state => state.Item.TryGetTarget(out var item) && item != null);
+        Prune(TerminalNodes, static state => state.Node.TryGetTarget(out var node) && node != null);
+        Prune(SelectableLevels, static state => state.Level.TryGetTarget(out var level) && level != null);
+        Prune(EnemyTypes, static state => state.Enemy.TryGetTarget(out var enemy) && enemy != null);
+    }
+
+    private static void Prune<TState>(Dictionary<int, TState> states, Func<TState, bool> isAlive)
+    {
+        List<int>? staleIds = null;
+        foreach (var pair in states)
+        {
+            if (isAlive(pair.Value))
+            {
+                continue;
+            }
+
+            staleIds ??= new List<int>();
+            staleIds.Add(pair.Key);
+        }
+
+        if (staleIds == null)
+        {
+            return;
+        }
+
+        foreach (var id in staleIds)
+        {
+            states.Remove(id);
+        }
     }
 
     private static string[]? Clone(string[]? source)
