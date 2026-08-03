@@ -474,6 +474,11 @@ internal static class HudScannerLocalizationService
                TranslationService.TryTranslateFastExact(source, out translated);
     }
 
+    internal static bool TryTranslateHudScannerTextWrite(string source, out string translated)
+    {
+        return TryTranslateHudScannerSourceText(source, out translated);
+    }
+
     private static bool TryResolveUnknownHudScannerScrapValue(ScanNodeProperties node, out string resolved)
     {
         resolved = node.subText ?? string.Empty;

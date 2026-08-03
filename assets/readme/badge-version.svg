@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="118" height="22" role="img" aria-label="版本 3.2.1">
+<svg xmlns="http://www.w3.org/2000/svg" width="118" height="22" role="img" aria-label="版本 3.2.2">
   <rect width="118" height="22" rx="4" fill="#24282C"/>
   <path d="M66 0h48a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H66Z" fill="#E35B18"/>
   <g fill="#FFF" font-family="'Microsoft YaHei','Noto Sans SC',Arial,sans-serif" font-size="12" text-anchor="middle">
     <text x="33" y="15">版本</text>
-    <text x="92" y="15" font-weight="700">3.2.1</text>
+    <text x="92" y="15" font-weight="700">3.2.2</text>
   </g>
 </svg>

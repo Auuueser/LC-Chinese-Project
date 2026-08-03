@@ -61,7 +61,9 @@ internal static partial class TextPatches
         PatchPrefix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "UseSignalTranslatorClientRpc", nameof(HudManagerUseSignalTranslatorClientRpcPostfix), ref patched);
         PatchPrefix(harmony, typeof(HUDManager), "DisplaySignalTranslatorMessage", nameof(HudManagerDisplaySignalTranslatorMessagePrefix), ref patched, Priority.First);
-        PatchPostfix(harmony, typeof(HUDManager), "UpdateScanNodes", nameof(HudManagerUpdateScanNodesPostfix), ref patched);
+        PatchPrefix(harmony, typeof(HUDManager), "UpdateScanNodes", nameof(HudManagerUpdateScanNodesPrefix), ref patched, Priority.Last);
+        PatchPostfix(harmony, typeof(HUDManager), "UpdateScanNodes", nameof(HudManagerUpdateScanNodesPostfix), ref patched, Priority.First);
+        PatchFinalizer(harmony, typeof(HUDManager), "UpdateScanNodes", nameof(HudManagerUpdateScanNodesFinalizer), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(HUDManager), "DisplayCreditsEarning", nameof(HudManagerDisplayCreditsEarningPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "DisplayNewScrapFound", nameof(HudManagerDisplayNewScrapFoundPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "DisplayNewDeadline", nameof(HudManagerDisplayNewDeadlinePostfix), ref patched);
@@ -198,6 +200,7 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "OpenBodyCams.Overlay.OverlayManager", "UpdateText", nameof(OpenBodyCamsOverlayUpdateTextPostfix), ref patched);
         PatchOptionalPostfix(harmony, "LCBetterSaves.Plugin", "InitializeBetterSaves", nameof(BetterSavesInitializeBetterSavesPostfix), ref patched);
         PatchOptionalPostfix(harmony, "DeleteFileButton_BetterSaves", "UpdateFileToDelete", nameof(BetterSavesDeleteFileButtonUpdateFileToDeletePostfix), ref patched);
+        PatchOptionalPostfix(harmony, "LobbyImprovements.LANDiscovery.LANLobbyManager_InGame", "UpdatePlayerListHeader", nameof(LobbyImprovementsUpdatePlayerListHeaderPostfix), ref patched, Priority.Last);
         PatchOptionalPrefix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPrefix), ref patched, Priority.First);
         PatchOptionalPostfix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPostfix), ref patched);
         InstallTooManyEmotesCompatibilityPatches(harmony, ref patched);
@@ -236,6 +239,33 @@ internal static partial class TextPatches
     private static void PatchPostfix(Harmony harmony, MethodBase? original, string patchMethod, ref int patched, int priority = Priority.Normal)
     {
         Patch(harmony, original, prefixName: null, postfixName: patchMethod, ref patched, priority);
+    }
+
+    private static void PatchFinalizer(Harmony harmony, Type targetType, string targetMethod, string patchMethod, ref int patched, int priority = Priority.Normal)
+    {
+        var original = AccessTools.Method(targetType, targetMethod);
+        try
+        {
+            if (original == null)
+            {
+                Plugin.Log.LogWarning($"Manual finalizer skipped; target not found for {patchMethod}");
+                return;
+            }
+
+            var patch = AccessTools.Method(typeof(TextPatches), patchMethod);
+            if (patch == null)
+            {
+                Plugin.Log.LogWarning($"Manual finalizer skipped; patch method not found: {patchMethod}");
+                return;
+            }
+
+            harmony.Patch(original, finalizer: CreateHarmonyMethod(patch, priority));
+            patched++;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"Manual finalizer failed for {patchMethod}: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     private static void PatchOptionalPrefix(Harmony harmony, string targetTypeName, string targetMethod, string patchMethod, ref int patched, int priority = Priority.Normal)

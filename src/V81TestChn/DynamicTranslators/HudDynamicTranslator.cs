@@ -136,7 +136,7 @@ internal static partial class TranslationService
             translated = source;
             var match = SafeRegexMatch(
                 StripRichTextTags(source).Trim(),
-                @"^VALUE\s*:\s*(?<value>.+?)$",
+                @"^VALUE\s*:\s*(?<value>.*?)$",
                 RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             if (!match.Success)
             {

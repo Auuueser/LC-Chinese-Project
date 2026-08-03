@@ -85,7 +85,13 @@ internal static partial class TextPatches
     [HarmonyPostfix]
     private static void QuickMenuManagerOpenPostfix(QuickMenuManager __instance)
     {
+        ChatEmojiSpriteService.ApplyToQuickMenuLobbyHeader(__instance);
         MenuSceneLocalizationService.ApplyQuickMenu(__instance, "QuickMenuManager.OpenQuickMenu");
+    }
+
+    private static void LobbyImprovementsUpdatePlayerListHeaderPostfix(QuickMenuManager __instance)
+    {
+        ChatEmojiSpriteService.ApplyToQuickMenuLobbyHeader(__instance);
     }
 
     private static void StartOfRoundAutoSaveShipDataPrefix()

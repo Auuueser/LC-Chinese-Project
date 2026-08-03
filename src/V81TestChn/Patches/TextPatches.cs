@@ -44,6 +44,8 @@ internal static partial class TextPatches
     private static bool _restoringLateWriterCursorTipSource;
     [ThreadStatic]
     private static bool _restoringAdvancedFeaturesEndscreenSource;
+    [ThreadStatic]
+    private static bool _hudScannerUpdateTextWriteActive;
     private static ConfigEntry<bool>? _enableTmpHookPerfCounters;
     private static ConfigEntry<int>? _tmpHookPerfLogIntervalSeconds;
     private static ConfigEntry<bool>? _enableGlobalTmpColorHook;
@@ -345,6 +347,7 @@ internal static partial class TextPatches
         TmpColorHookCandidateTextIds.Clear();
         TmpHookSourceNoopCache.Clear();
         AdvancedFeaturesGradeTextIds.Clear();
+        _hudScannerUpdateTextWriteActive = false;
         _restoringAdvancedFeaturesEndscreenSource = false;
         ExternalEnglishCompatibilityService.ClearRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
@@ -479,10 +482,17 @@ internal static partial class TextPatches
         return !ChatEmojiPasteService.TryHandlePaste(__instance, input);
     }
 
+    private static void HudManagerUpdateScanNodesPrefix(out bool __state)
+    {
+        __state = _hudScannerUpdateTextWriteActive;
+        _hudScannerUpdateTextWriteActive = true;
+    }
+
     [HarmonyPatch(typeof(HUDManager), "UpdateScanNodes")]
     [HarmonyPostfix]
-    private static void HudManagerUpdateScanNodesPostfix(HUDManager __instance)
+    private static void HudManagerUpdateScanNodesPostfix(HUDManager __instance, bool __state)
     {
+        _hudScannerUpdateTextWriteActive = __state;
         if (Plugin.IsRuntimeShuttingDown)
         {
             return;
@@ -509,6 +519,12 @@ internal static partial class TextPatches
             "HUDManager.UpdateScanNodes",
             hasActiveScanner,
             immediatePass);
+    }
+
+    private static Exception? HudManagerUpdateScanNodesFinalizer(Exception? __exception, bool __state)
+    {
+        _hudScannerUpdateTextWriteActive = __state;
+        return __exception;
     }
 
     [HarmonyPatch(typeof(HUDManager), "DisplayCreditsEarning")]
@@ -931,6 +947,12 @@ internal static partial class TextPatches
             return;
         }
 
+        if (_hudScannerUpdateTextWriteActive &&
+            TryTranslateHudScannerUpdateTextWrite(__instance, ref value))
+        {
+            return;
+        }
+
         if (TryNormalizeHudEndGameGradeLetterText(__instance, ref value))
         {
             return;
@@ -980,6 +1002,24 @@ internal static partial class TextPatches
 
         HudEndGameLocalizationService.TryRewriteSpectateDeadValue(__instance, ref value, "TMP_Text.set_text");
         TranslateTmpText(__instance, ref value);
+    }
+
+    private static bool TryTranslateHudScannerUpdateTextWrite(TMP_Text text, ref string value)
+    {
+        if (string.IsNullOrEmpty(value) ||
+            !HudScannerLocalizationService.TryTranslateHudScannerTextWrite(value, out var translated) ||
+            string.Equals(value, translated, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var source = value;
+        value = translated;
+        CacheTmpHookTranslation(text, source, translated);
+        ApplyTmpHookFallback(text, translated);
+        MarkTmpSetTextPostfixSkipForTranslatedOutput(text, translated);
+        Plugin.ReportTranslationHit();
+        return true;
     }
 
     private static bool TryNormalizeHudEndGameGradeLetterText(TMP_Text text, ref string value)

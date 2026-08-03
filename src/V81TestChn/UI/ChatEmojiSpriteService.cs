@@ -14,7 +14,10 @@ internal static class ChatEmojiSpriteService
     private const int AtlasSize = 1024;
     private const int CellSize = 64;
     private const int BindingPruneInterval = 64;
-    private const uint TypewriterPrivateUseStart = 0xE000;
+    // TMP uses U+E000 plus the sprite index for its own internal placeholders.
+    // Keep the signal-translator aliases in the next private-use page so the
+    // first catalog entry cannot collide with TMP's U+E000 boundary value.
+    private const uint TypewriterPrivateUseStart = 0xE100;
 
     private static readonly Dictionary<int, TextBinding> TextBindings = new();
     private static readonly List<int> StaleBindingIds = new();
@@ -78,6 +81,20 @@ internal static class ChatEmojiSpriteService
         if (++_bindingsSinceLastPrune >= BindingPruneInterval)
         {
             PruneDestroyedBindings();
+        }
+    }
+
+    public static void ApplyToQuickMenuLobbyHeader(QuickMenuManager? quickMenu)
+    {
+        if (quickMenu?.menuContainer == null || Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        var header = quickMenu.menuContainer.transform.Find("PlayerList/Image/Header");
+        if (header != null)
+        {
+            ApplyToText(header.GetComponentInChildren<TMP_Text>(true));
         }
     }
 

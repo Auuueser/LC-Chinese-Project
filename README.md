@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://thunderstore.io/c/lethal-company/p/Aueser/LC_Chinese_Project/"><img alt="当前版本 3.2.1" src="assets/readme/badge-version.svg" height="22"></a>
+  <a href="https://thunderstore.io/c/lethal-company/p/Aueser/LC_Chinese_Project/"><img alt="当前版本 3.2.2" src="assets/readme/badge-version.svg" height="22"></a>
   <img alt="支持游戏版本 V81" src="assets/readme/badge-game.svg" height="22">
   <img alt="运行环境 BepInEx 5" src="assets/readme/badge-runtime.svg" height="22">
   <a href="LICENSE"><img alt="MIT 许可证" src="assets/readme/badge-license.svg" height="22"></a>
