@@ -91,7 +91,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\translations-clean\**\*" CopyToOutputDirectory="PreserveNewest" Link="translations-clean\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\translations-clean')" />
+    <None Include="..\..\translations-clean\**\*" Exclude="..\..\translations-clean\split\**\*" CopyToOutputDirectory="PreserveNewest" Link="translations-clean\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\translations-clean')" />
     <None Include="..\..\fonts\NotoSansSC-VF.ttf" CopyToOutputDirectory="PreserveNewest" Link="fonts\NotoSansSC-VF.ttf" Condition="Exists('..\..\fonts\NotoSansSC-VF.ttf')" />
     <None Include="..\..\fonts\zh-cn-tmp-font" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-tmp-font" Condition="Exists('..\..\fonts\zh-cn-tmp-font')" />
     <None Include="..\..\fonts\OFL-1.1.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\OFL-1.1.txt" Condition="Exists('..\..\fonts\OFL-1.1.txt')" />
