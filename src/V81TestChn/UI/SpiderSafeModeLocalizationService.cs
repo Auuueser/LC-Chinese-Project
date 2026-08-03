@@ -62,7 +62,16 @@ internal static class SpiderSafeModeLocalizationService
         text.outlineColor = Color.black;
         text.outlineWidth = 0.18f;
         text.rectTransform.sizeDelta = new Vector2(2.1f, 5.4f);
-        FontFallbackService.ApplyFallback(text, LocalizedLabel, candidateContainsEastAsianGlyph: true);
+        // A TMP fallback glyph is rendered by a separate TMP_SubMesh child whose
+        // MeshRenderer is not the one SandSpiderAI toggles. Use the managed Chinese
+        // font as this label's primary font so all glyphs remain on the root renderer.
+        if (!FontFallbackService.TryUseManagedFallbackAsPrimary(text, LocalizedLabel))
+        {
+            UnityEngine.Object.Destroy(localizedObject);
+            Plugin.Log.LogWarning("Spider safe-mode Chinese label could not bind a primary Chinese font.");
+            return;
+        }
+
         text.ForceMeshUpdate();
 
         var localizedRenderer = localizedObject.GetComponent<MeshRenderer>();
@@ -73,7 +82,13 @@ internal static class SpiderSafeModeLocalizationService
             return;
         }
 
-        localizedRenderer.enabled = originalRenderer.enabled;
+        // SandSpiderAI only updates the renderer when its cached flag differs from
+        // the setting. Both default to false, so the first Update can intentionally
+        // skip the toggle even when the prefab renderer starts enabled. Seed the
+        // localized renderer from the actual setting instead of inheriting that
+        // potentially stale prefab state; later setting changes still flow through
+        // the original SandSpiderAI.Update logic via spiderSafeModeMesh.
+        localizedRenderer.enabled = IsSpiderSafeModeEnabled();
         originalRenderer.enabled = false;
         spider.spiderSafeModeMesh = localizedRenderer;
         States[spiderId] = new SpiderState(spider, originalRenderer, localizedRenderer, localizedObject);
@@ -125,6 +140,13 @@ internal static class SpiderSafeModeLocalizationService
         {
             States.Remove(id);
         }
+    }
+
+    private static bool IsSpiderSafeModeEnabled()
+    {
+        return IngamePlayerSettings.Instance != null &&
+               IngamePlayerSettings.Instance.unsavedSettings != null &&
+               IngamePlayerSettings.Instance.unsavedSettings.spiderSafeMode;
     }
 
     private static void DestroyUnityObject(UnityEngine.Object? value)

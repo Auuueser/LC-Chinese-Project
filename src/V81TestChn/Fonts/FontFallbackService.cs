@@ -507,6 +507,46 @@ internal static class FontFallbackService
         CacheFallbackApplication(text, displayedText, cjkFallbackApplied: true);
     }
 
+    public static bool TryUseManagedFallbackAsPrimary(TMP_Text? text, string? candidateText)
+    {
+        if (text == null || string.IsNullOrWhiteSpace(candidateText))
+        {
+            return false;
+        }
+
+        foreach (var fontAsset in GetLoadedFallbackFonts())
+        {
+            if (fontAsset == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                if (!fontAsset.HasCharacters(candidateText) &&
+                    (!fontAsset.TryAddCharacters(candidateText, out var missingCharacters) ||
+                     !string.IsNullOrEmpty(missingCharacters)))
+                {
+                    continue;
+                }
+
+                text.font = fontAsset;
+                NormalizeFontMaterialForFallback(fontAsset);
+                TextPatches.RegisterTmpColorHookCandidate(text);
+                CaptureHealthyBaseline(text);
+                CacheFallbackApplication(text, candidateText, cjkFallbackApplied: true);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogDebug(
+                    $"Failed to use managed fallback font '{fontAsset.name}' as a primary TMP font: {ex.Message}");
+            }
+        }
+
+        return false;
+    }
+
     private static bool TrySkipCachedFallbackApplication(TMP_Text text, string? displayedText)
     {
         if (string.IsNullOrEmpty(displayedText) ||
