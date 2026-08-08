@@ -19,9 +19,8 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "cn.codex.v81testchn";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.2.3";
-    private const string ConfigFileName = "LC Chinese Project.cfg";
-    private const string LegacyConfigFileName = PluginGuid + ".cfg";
+    public const string PluginVersion = "3.2.4";
+    private const string LegacyConfigFileName = "LC Chinese Project.cfg";
 
     internal static ManualLogSource Log = null!;
 
@@ -54,6 +53,7 @@ public sealed class Plugin : BaseUnityPlugin
         Application.quitting += OnUnityQuitting;
 
         var pluginDir = Path.GetDirectoryName(typeof(Plugin).Assembly.Location) ?? Paths.PluginPath;
+        TryInitialize("StartupSplashLocalizationService", () => { StartupSplashLocalizationService.Initialize(this, pluginDir, runtimeConfig); });
         RuntimePerformanceSettings.Initialize(runtimeConfig);
         TranslationGuard.Initialize(runtimeConfig);
         TextPatches.Initialize(runtimeConfig);
@@ -74,7 +74,8 @@ public sealed class Plugin : BaseUnityPlugin
         TryInitialize("ClipboardManualLocalizationService", () => { ClipboardManualLocalizationService.Initialize(pluginDir); });
         TryInitialize("StickyNoteLocalizationService", () => { StickyNoteLocalizationService.Initialize(pluginDir); });
         TryInitialize("EnvironmentTextureLocalizationService", () => { EnvironmentTextureLocalizationService.Initialize(pluginDir); });
-        TryInitialize("ChatEmojiSpriteService", () => { ChatEmojiSpriteService.Initialize(pluginDir); });
+        TryInitialize("ChatEmojiSpriteService", () => { ChatEmojiSpriteService.Initialize(pluginDir, runtimeConfig); });
+        TryInitialize("CompanySubtitleService", () => { CompanySubtitleService.Initialize(runtimeConfig); });
 
         var existingPatchCount = CountOwnHarmonyPatches();
         var manualPatchCount = 0;
@@ -107,30 +108,80 @@ public sealed class Plugin : BaseUnityPlugin
 
     private ConfigFile CreateRuntimeConfig()
     {
-        var configPath = Path.Combine(Paths.ConfigPath, ConfigFileName);
         var legacyConfigPath = Path.Combine(Paths.ConfigPath, LegacyConfigFileName);
-        TryCopyLegacyConfig(legacyConfigPath, configPath);
-        _runtimeConfig = new ConfigFile(configPath, true);
+        TryMigrateLegacyConfig(legacyConfigPath, Config);
+        _runtimeConfig = Config;
         return _runtimeConfig;
     }
 
-    private static void TryCopyLegacyConfig(string legacyConfigPath, string configPath)
+    private static void TryMigrateLegacyConfig(string legacyConfigPath, ConfigFile runtimeConfig)
     {
         try
         {
-            if (File.Exists(configPath) || !File.Exists(legacyConfigPath))
+            var configPath = runtimeConfig.ConfigFilePath;
+            if (!File.Exists(legacyConfigPath) || PathsReferToSameFile(legacyConfigPath, configPath))
+            {
+                return;
+            }
+
+            var canonicalHasSettings = ConfigFileContainsSettings(configPath);
+            var legacyIsNewer = !File.Exists(configPath) ||
+                                File.GetLastWriteTimeUtc(legacyConfigPath) > File.GetLastWriteTimeUtc(configPath);
+            if (canonicalHasSettings && !legacyIsNewer)
             {
                 return;
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(configPath) ?? Paths.ConfigPath);
-            File.Copy(legacyConfigPath, configPath, overwrite: false);
-            Log.LogInfo($"Migrated config file to '{ConfigFileName}'.");
+            if (File.Exists(configPath))
+            {
+                var backupPath = configPath + ".pre-lethalconfig-migration.bak";
+                if (!File.Exists(backupPath))
+                {
+                    File.Copy(configPath, backupPath, overwrite: false);
+                }
+            }
+
+            File.Copy(legacyConfigPath, configPath, overwrite: true);
+            runtimeConfig.Reload();
+            Log.LogInfo($"Migrated legacy config '{LegacyConfigFileName}' to the BepInEx plugin config used by LethalConfig.");
         }
         catch (Exception ex)
         {
-            Log.LogWarning($"Failed to migrate config file to '{ConfigFileName}': {ex.GetType().Name}: {ex.Message}");
+            Log.LogWarning($"Failed to migrate legacy config '{LegacyConfigFileName}': {ex.GetType().Name}: {ex.Message}");
         }
+    }
+
+    private static bool ConfigFileContainsSettings(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
+        foreach (var line in File.ReadLines(path))
+        {
+            var trimmed = line.Trim();
+            if (trimmed.Length == 0 || trimmed[0] == '#' || trimmed[0] == '[')
+            {
+                continue;
+            }
+
+            if (trimmed.IndexOf('=') > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool PathsReferToSameFile(string left, string right)
+    {
+        return string.Equals(
+            Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private void OnApplicationQuit()
@@ -178,11 +229,13 @@ public sealed class Plugin : BaseUnityPlugin
         TryCleanup("TargetedUiTranslator.Shutdown", () => { TargetedUiTranslator.Shutdown(); });
         TryCleanup("TranslationService.ClearCaches", () => { TranslationService.ClearCaches(); });
         TryCleanup("CustomLocalizationExtensionService.Shutdown", () => { CustomLocalizationExtensionService.Shutdown(); });
+        TryCleanup("CompanySubtitleService.Shutdown", () => { CompanySubtitleService.Shutdown(); });
         TryCleanup("ChatEmojiSpriteService.Shutdown", () => { ChatEmojiSpriteService.Shutdown(); });
         TryCleanup("FontFallbackAuditService.Shutdown", () => { FontFallbackAuditService.Shutdown(); });
         TryCleanup("FontFallbackService.Shutdown", () => { FontFallbackService.Shutdown(); });
         TryCleanup("ClipboardManualLocalizationService.Shutdown", () => { ClipboardManualLocalizationService.Shutdown(); });
         TryCleanup("StickyNoteLocalizationService.Shutdown", () => { StickyNoteLocalizationService.Shutdown(); });
+        TryCleanup("StartupSplashLocalizationService.Shutdown", () => { StartupSplashLocalizationService.Shutdown(); });
         TryCleanup("EnvironmentTextureLocalizationService.Shutdown", () => { EnvironmentTextureLocalizationService.Shutdown(); });
         TryCleanup("SpiderSafeModeLocalizationService.Shutdown", () => { SpiderSafeModeLocalizationService.Shutdown(); });
         TryCleanup("AlertTextureReplacementService.Shutdown", () => { AlertTextureReplacementService.Shutdown(); });

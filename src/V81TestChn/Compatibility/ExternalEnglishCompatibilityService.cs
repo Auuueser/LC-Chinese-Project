@@ -43,6 +43,13 @@ internal static class ExternalEnglishCompatibilityService
         ["Delete"] = "\u5220\u9664",
         ["Go back"] = "\u8fd4\u56de",
         ["OK"] = "\u786e\u8ba4",
+        ["Some of the modified settings may require a restart to take effect."] = "\u90e8\u5206\u5df2\u4fee\u6539\u7684\u8bbe\u7f6e\u53ef\u80fd\u9700\u8981\u91cd\u542f\u6e38\u620f\u624d\u80fd\u751f\u6548\u3002",
+        ["This is a test notification"] = "\u8fd9\u662f\u4e00\u6761\u6d4b\u8bd5\u901a\u77e5",
+        ["Connection refused"] = "\u8fde\u63a5\u88ab\u62d2\u7edd",
+        ["Connection request"] = "\u8fde\u63a5\u8bf7\u6c42",
+        ["Connection Timeout"] = "\u8fde\u63a5\u8d85\u65f6",
+        ["Low Connection Timeout!"] = "\u8fde\u63a5\u8d85\u65f6\u8bbe\u7f6e\u8fc7\u4f4e\uff01",
+        ["If clients frequently fail to connect maybe consider increasing \"connection_timeout_ms\" in LobbyControl config"] = "\u5982\u679c\u5ba2\u6237\u7aef\u7ecf\u5e38\u8fde\u63a5\u5931\u8d25\uff0c\u8bf7\u8003\u8651\u8c03\u9ad8 LobbyControl \u914d\u7f6e\u4e2d\u7684 \"connection_timeout_ms\"\u3002",
         ["Server Password"] = "\u623f\u95f4\u5bc6\u7801",
         ["Validate Steam Sessions"] = "\u9a8c\u8bc1 Steam \u4f1a\u8bdd",
         ["Max Players"] = "\u6700\u5927\u4eba\u6570",
@@ -52,6 +59,8 @@ internal static class ExternalEnglishCompatibilityService
         ["Server Tag"] = "\u623f\u95f4\u6807\u7b7e",
         ["New File"] = "\u65b0\u5b58\u6863",
         ["Players"] = "\u73a9\u5bb6",
+        ["Connection resumed"] = "\u8fde\u63a5\u5df2\u6062\u590d",
+        ["GAME START CANCELLED"] = "\u6e38\u620f\u5f00\u59cb\u5df2\u53d6\u6d88",
         ["Today's discounts"] = "\u4eca\u65e5\u6298\u6263",
         ["AVAILABLE NOW!"] = "\u73b0\u5df2\u53d1\u552e\uff01",
         ["CURES CANCER!"] = "\u6cbb\u6108\u764c\u75c7\uff01",
@@ -306,6 +315,11 @@ internal static class ExternalEnglishCompatibilityService
 
     private static bool CanHandleCheapCore(string source)
     {
+        if (LooksLikeLobbyControlNotification(source))
+        {
+            return true;
+        }
+
         if (MightContainDeleteFilePrompt(source) &&
             LooksLikeDeleteFilePrompt(source))
         {
@@ -494,7 +508,8 @@ internal static class ExternalEnglishCompatibilityService
             return false;
         }
 
-        if (TryTranslateDiscountAlertNoDiscountText(source!, out translated) ||
+        if (TryTranslateLobbyControlNotification(source!, out translated) ||
+            TryTranslateDiscountAlertNoDiscountText(source!, out translated) ||
             TryTranslateDeleteFilePrompt(source!, out translated))
         {
             CacheTranslationResult(source, translated);
@@ -544,6 +559,84 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         return MightContainDiscountLine(source);
+    }
+
+    private static bool LooksLikeLobbyControlNotification(string source)
+    {
+        var trimmed = source.Trim();
+        return (trimmed.StartsWith("Client ", StringComparison.OrdinalIgnoreCase) &&
+                trimmed.EndsWith(" requested a connection but queue was full!", StringComparison.OrdinalIgnoreCase)) ||
+               (trimmed.StartsWith("Player ", StringComparison.OrdinalIgnoreCase) &&
+                (trimmed.EndsWith(" requested a connection", StringComparison.OrdinalIgnoreCase) ||
+                 trimmed.EndsWith("\n has been disconnected", StringComparison.OrdinalIgnoreCase))) ||
+               (trimmed.StartsWith("Lobby took ", StringComparison.OrdinalIgnoreCase) &&
+                trimmed.IndexOf("connectionTimeout is only ", StringComparison.OrdinalIgnoreCase) >= 0);
+    }
+
+    private static bool TryTranslateLobbyControlNotification(string source, out string translated)
+    {
+        translated = source;
+        var trimmed = source.Trim();
+
+        const string clientPrefix = "Client ";
+        const string queueFullSuffix = " requested a connection but queue was full!";
+        if (trimmed.StartsWith(clientPrefix, StringComparison.OrdinalIgnoreCase) &&
+            trimmed.EndsWith(queueFullSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            var client = trimmed.Substring(clientPrefix.Length, trimmed.Length - clientPrefix.Length - queueFullSuffix.Length).Trim();
+            if (client.Length > 0)
+            {
+                translated = $"客户端 {client} 请求连接，但加入队列已满！";
+                return true;
+            }
+        }
+
+        const string playerPrefix = "Player ";
+        const string requestSuffix = " requested a connection";
+        if (trimmed.StartsWith(playerPrefix, StringComparison.OrdinalIgnoreCase) &&
+            trimmed.EndsWith(requestSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            var player = trimmed.Substring(playerPrefix.Length, trimmed.Length - playerPrefix.Length - requestSuffix.Length).Trim();
+            if (player.Length > 0)
+            {
+                translated = $"玩家 {player} 请求连接";
+                return true;
+            }
+        }
+
+        const string disconnectedSuffix = "\n has been disconnected";
+        if (trimmed.StartsWith(playerPrefix, StringComparison.OrdinalIgnoreCase) &&
+            trimmed.EndsWith(disconnectedSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            var player = trimmed.Substring(playerPrefix.Length, trimmed.Length - playerPrefix.Length - disconnectedSuffix.Length).Trim();
+            if (player.Length > 0)
+            {
+                translated = $"玩家 {player}\n已断开连接";
+                return true;
+            }
+        }
+
+        const string lobbyPrefix = "Lobby took ";
+        const string lobbySeparator = "ms to load but the configured connectionTimeout is only ";
+        const string lobbySuffix = "ms";
+        if (trimmed.StartsWith(lobbyPrefix, StringComparison.OrdinalIgnoreCase) &&
+            trimmed.EndsWith(lobbySuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            var separatorIndex = trimmed.IndexOf(lobbySeparator, lobbyPrefix.Length, StringComparison.OrdinalIgnoreCase);
+            if (separatorIndex > lobbyPrefix.Length)
+            {
+                var elapsed = trimmed.Substring(lobbyPrefix.Length, separatorIndex - lobbyPrefix.Length).Trim();
+                var timeoutStart = separatorIndex + lobbySeparator.Length;
+                var timeout = trimmed.Substring(timeoutStart, trimmed.Length - timeoutStart - lobbySuffix.Length).Trim();
+                if (elapsed.Length > 0 && timeout.Length > 0)
+                {
+                    translated = $"房间加载耗时 {elapsed} 毫秒，但当前连接超时仅设置为 {timeout} 毫秒";
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static void CacheCanHandleResult(string source, bool result)
@@ -826,6 +919,7 @@ internal static class ExternalEnglishCompatibilityService
     {
         text = text.Trim();
         return text.EndsWith("/sec</size>", StringComparison.OrdinalIgnoreCase) ||
+               LooksLikePercentageUsesRemainingText(text) ||
                LooksLikePercentageTimeRemainingText(text) ||
                LooksLikeUsesRemainingText(text) ||
                LooksLikeTimeRemainingText(text);
@@ -845,6 +939,12 @@ internal static class ExternalEnglishCompatibilityService
         if (TryExtractPercentageTimeRemaining(trimmed, out var percent, out var remainingTime))
         {
             translated = $"{percent}%\uff08\u5269\u4f59 {remainingTime}\uff09";
+            return true;
+        }
+
+        if (TryExtractPercentageUsesRemaining(trimmed, out percent, out var remainingUses))
+        {
+            translated = $"{percent}%\uff08\u5269\u4f59 {remainingUses} \u6b21\uff09";
             return true;
         }
 
@@ -870,6 +970,40 @@ internal static class ExternalEnglishCompatibilityService
     private static bool LooksLikePercentageTimeRemainingText(string text)
     {
         return TryExtractPercentageTimeRemaining(text, out _, out _);
+    }
+
+    private static bool LooksLikePercentageUsesRemainingText(string text)
+    {
+        return TryExtractPercentageUsesRemaining(text, out _, out _);
+    }
+
+    private static bool TryExtractPercentageUsesRemaining(string text, out string percent, out string remainingUses)
+    {
+        percent = string.Empty;
+        remainingUses = string.Empty;
+        var trimmed = text.Trim();
+        var percentIndex = trimmed.IndexOf('%');
+        if (percentIndex <= 0 || percentIndex != trimmed.LastIndexOf('%'))
+        {
+            return false;
+        }
+
+        percent = trimmed[..percentIndex].Trim();
+        if (!LooksLikeSimpleNumber(percent))
+        {
+            return false;
+        }
+
+        var suffix = trimmed[(percentIndex + 1)..].TrimStart();
+        const string UsesSuffix = " uses remaining)";
+        if (!suffix.StartsWith("(", StringComparison.Ordinal) ||
+            !suffix.EndsWith(UsesSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        remainingUses = suffix.Substring(1, suffix.Length - 1 - UsesSuffix.Length).Trim();
+        return LooksLikeSimpleNumber(remainingUses);
     }
 
     private static bool TryExtractPercentageTimeRemaining(string text, out string percent, out string remainingTime)

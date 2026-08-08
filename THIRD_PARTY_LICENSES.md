@@ -37,7 +37,14 @@ The original TTF is loaded dynamically at runtime to avoid Unity AssetBundle ver
 - Publisher: Google / Noto project
 - License: Apache License 2.0 for the PNG image resources used by this project
 - Source: https://github.com/googlefonts/noto-emoji/tree/main/png/128
-- Notes: 256 128×128 PNG glyphs are combined without modification into `ChatEmojiAtlas.png` for supported TextMeshPro fields, including chat and terminal displays. The atlas is not used as a standalone image product and is loaded only for supported UI instances. The full Apache License 2.0 text is included at `licenses/Apache-2.0.txt`.
+- Notes: The pinned Noto sources for 3,943 supported fully-qualified Unicode Emoji 17.0 entries are reduced into `ChatEmojiAtlas.png` for supported TextMeshPro fields, including chat and terminal displays. The primary artwork is pinned to commit `8998f5dd683424a73e2314a8c1f1e359c19e8742`; twenty-five legacy gendered family sequences use colorful pre-2023 artwork pinned to commit `546287c772cd64dd2a7350a0727bd68c2e4cf759` instead of the later monochrome plaque redesign. Project-denied sequences are excluded before source download, catalog generation and atlas composition. The atlas is not used as a standalone image product and is loaded only for supported UI instances. The full Apache License 2.0 text is included at `licenses/Apache-2.0.txt`.
+
+### Noto Region Flags
+
+- Project: Noto Emoji third-party region flags
+- Source: https://github.com/googlefonts/noto-emoji/tree/main/third_party/region-flags
+- License status: Public Domain or otherwise copyright-exempt according to the upstream per-flag audit
+- Notes: Country and subdivision flag images used by the complete Emoji atlas come from this pinned upstream directory. The upstream notice and exceptions list are included at `licenses/Noto-region-flags-LICENSE.txt`.
 
 ## Generated Texture Assets
 

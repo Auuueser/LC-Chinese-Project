@@ -32,6 +32,14 @@ internal static partial class TranslationService
             ["Scratching"] = "\u6293\u4f24"
         };
 
+        private static readonly Dictionary<string, string> CruiserImprovedScanHeaders = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Company Cruiser"] = "\u516c\u53f8\u5de1\u822a\u8f66",
+            ["Damaged Cruiser"] = "\u5de1\u822a\u8f66\u5df2\u53d7\u635f",
+            ["Critical Cruiser"] = "\u5de1\u822a\u8f66\u4e25\u91cd\u53d7\u635f",
+            ["Destroyed Cruiser"] = "\u5de1\u822a\u8f66\u5df2\u635f\u6bc1"
+        };
+
         public static bool CanHandleCheap(string? source) =>
             LooksLikeLoadingInfoTextCheap(source) ||
             LooksLikeRandomSeedTextCheap(source) ||
@@ -176,6 +184,21 @@ internal static partial class TranslationService
                 return false;
             }
 
+            if (CruiserImprovedScanHeaders.TryGetValue(stripped, out translated))
+            {
+                return true;
+            }
+
+            var cruiserHealth = SafeRegexMatch(
+                stripped,
+                @"^Company\s+Cruiser\s*\((?<percent>[+-]?\d+(?:\.\d+)?)%\)$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (cruiserHealth.Success)
+            {
+                translated = $"\u516c\u53f8\u5de1\u822a\u8f66\uff08{cruiserHealth.Groups["percent"].Value}%\uff09";
+                return true;
+            }
+
             var localized = BuildTerminalLocalizedItemName(stripped);
             if (string.Equals(localized, stripped, StringComparison.Ordinal))
             {
@@ -190,6 +213,23 @@ internal static partial class TranslationService
         {
             translated = source;
             var stripped = StripRichTextTagsCheap(source).Trim();
+
+            if (stripped.Equals("Turbocharged", StringComparison.OrdinalIgnoreCase))
+            {
+                translated = "\u5df2\u6fc0\u6d3b\u6da1\u8f6e\u589e\u538b";
+                return true;
+            }
+
+            var turbo = SafeRegexMatch(
+                stripped,
+                @"^(?<percent>[+-]?\d+(?:\.\d+)?)%\s+Turbocharged$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (turbo.Success)
+            {
+                translated = $"\u6da1\u8f6e\u589e\u538b\uff1a{turbo.Groups["percent"].Value}%";
+                return true;
+            }
+
             var deathCauseMatch = SafeRegexMatch(
                 stripped,
                 @"^Cause\s+of\s+death\s*[:\uff1a]\s*(?<cause>.+?)$",
@@ -887,7 +927,14 @@ internal static partial class TranslationService
 
             var text = StripRichTextTagsCheap(source).TrimStart();
             return text.StartsWith("Found journal entry:", StringComparison.OrdinalIgnoreCase) ||
-                   text.StartsWith("New creature data sent to terminal", StringComparison.OrdinalIgnoreCase);
+                   text.StartsWith("New creature data sent to terminal", StringComparison.OrdinalIgnoreCase) ||
+                   (text.StartsWith("Player ", StringComparison.OrdinalIgnoreCase) &&
+                    text.IndexOf(" is now connecting", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                   (text.StartsWith("there are still ", StringComparison.OrdinalIgnoreCase) &&
+                    text.IndexOf(" Players connecting!!", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                   (text.Length > 0 &&
+                    char.IsDigit(text[0]) &&
+                    text.IndexOf(" Players Connecting!!", StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         private static string LocalizeClockPeriod(string value)

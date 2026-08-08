@@ -166,7 +166,8 @@ internal static partial class TranslationService
                       TryTranslateMapScreenDescription(source, out translated);
                 break;
             case DynamicTextDomain.MenuNotification:
-                matched = TryTranslateHostModWarning(source, out translated);
+                matched = TryTranslateHostModWarning(source, out translated) ||
+                          MenuNotificationDynamicTranslator.Translate(source, out translated);
                 break;
             case DynamicTextDomain.SpectateStatus:
                 matched = EndGameDynamicTranslator.TranslatePlayerStatus(source, out translated);

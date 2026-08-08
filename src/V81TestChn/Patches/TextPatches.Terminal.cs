@@ -109,4 +109,9 @@ internal static partial class TextPatches
         ChatEmojiSpriteService.ApplyToText(__instance?.screenText?.textComponent);
         TerminalScreenLocalizationService.ApplyFontFallback(__instance);
     }
+
+    private static bool TerminalTextChangedPrefix(Terminal __instance, string newText)
+    {
+        return !ChatEmojiPasteService.TryHandleTerminalTextChanged(__instance, newText);
+    }
 }

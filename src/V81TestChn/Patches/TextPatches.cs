@@ -373,6 +373,7 @@ internal static partial class TextPatches
         EnvironmentTextureLocalizationService.OnSceneUnloaded();
         OriginalResourceStateService.PruneDestroyed();
         ChatEmojiSpriteService.OnSceneUnloaded();
+        CompanySubtitleService.OnSceneUnloaded();
         FontFallbackService.ClearSceneComponentCaches();
     }
 
@@ -409,6 +410,7 @@ internal static partial class TextPatches
         TargetedUiTranslator.TranslateHudPlanetInfo(__instance, "HUDManager.Start.planet-info");
         TargetedUiTranslator.TranslateHudChatPrompts(__instance, "HUDManager.Start.chat-prompts");
         ChatEmojiSpriteService.ApplyToHud(__instance);
+        CompanySubtitleService.ResetForHudLifecycle(__instance);
         TranslateTooManyEmotesMenu(__instance);
         // Plugin.Log.LogInfo($"Patch entry HUDManager.Start loadingText={__instance.loadingText?.name ?? "<null>"} riskText={__instance.planetRiskLevelText?.name ?? "<null>"}");
     }
@@ -480,6 +482,14 @@ internal static partial class TextPatches
     private static bool TmpInputFieldAppendStringPrefix(TMP_InputField __instance, string input)
     {
         return !ChatEmojiPasteService.TryHandlePaste(__instance, input);
+    }
+
+    private static void TmpInputFieldGetSelectedStringPostfix(TMP_InputField __instance, ref string __result)
+    {
+        if (ChatEmojiPasteService.TryGetSelectedText(__instance, out var selectedText))
+        {
+            __result = selectedText;
+        }
     }
 
     private static void HudManagerUpdateScanNodesPrefix(out bool __state)
@@ -584,9 +594,29 @@ internal static partial class TextPatches
 
     [HarmonyPatch(typeof(HUDManager), "AddChatMessage")]
     [HarmonyPrefix]
-    private static void HudManagerAddChatMessagePrefix(HUDManager __instance)
+    private static void HudManagerAddChatMessagePrefix(HUDManager __instance, ref string chatMessage, string nameOfUserWhoTyped)
     {
+        TryTranslateHudSystemChatMessage(nameOfUserWhoTyped, ref chatMessage);
         TargetedUiTranslator.MarkHudChatOutputTranslationPending(__instance);
+    }
+
+    private static bool TryTranslateHudSystemChatMessage(string? nameOfUserWhoTyped, ref string chatMessage)
+    {
+        if (!string.IsNullOrEmpty(nameOfUserWhoTyped) || string.IsNullOrWhiteSpace(chatMessage))
+        {
+            return false;
+        }
+
+        var contentLength = chatMessage.TrimEnd('\r', '\n').Length;
+        var content = chatMessage[..contentLength];
+        if (!TranslationService.TryTranslateKnownDynamicTextFast(content, out var translated) ||
+            string.Equals(content, translated, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        chatMessage = translated + chatMessage[contentLength..];
+        return true;
     }
 
     [HarmonyPatch(typeof(HUDManager), "AddChatMessage")]
@@ -793,8 +823,19 @@ internal static partial class TextPatches
         }
 
         HudInteractionLocalizationService.ApplyGrabbableItem(__instance);
+        EnvironmentTextureLocalizationService.ApplyGrabbableObject(__instance);
         ClipboardManualLocalizationService.Apply(__instance);
         StickyNoteLocalizationService.Apply(__instance);
+    }
+
+    private static void AutoParentToShipAwakePostfix(AutoParentToShip __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        EnvironmentTextureLocalizationService.ApplyShipDecoration(__instance);
     }
 
     [HarmonyPatch(typeof(GrabbableObject), "SetControlTipsForItem")]
@@ -934,6 +975,12 @@ internal static partial class TextPatches
             return;
         }
 
+        if (InputUtilsKeybindLocalizationService.ShouldPreservePhysicalKeyLabel(__instance, value))
+        {
+            MarkTmpSetTextPostfixSkip(__instance, value);
+            return;
+        }
+
         if (SignalTranslatorLocalizationService.IsPlayerMessageText(__instance))
         {
             SignalTranslatorLocalizationService.PreservePlayerMessageText(__instance, value);
@@ -949,6 +996,11 @@ internal static partial class TextPatches
 
         if (_hudScannerUpdateTextWriteActive &&
             TryTranslateHudScannerUpdateTextWrite(__instance, ref value))
+        {
+            return;
+        }
+
+        if (TryTranslateHudLoadingTextWrite(__instance, ref value))
         {
             return;
         }
@@ -1020,6 +1072,31 @@ internal static partial class TextPatches
         MarkTmpSetTextPostfixSkipForTranslatedOutput(text, translated);
         Plugin.ReportTranslationHit();
         return true;
+    }
+
+    private static bool TryTranslateHudLoadingTextWrite(TMP_Text text, ref string value)
+    {
+        if (!ReferenceEquals(text, HUDManager.Instance?.loadingText) ||
+            !TryTranslateHudLoadingTextValue(value, out var translated) ||
+            string.Equals(value, translated, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var source = value;
+        value = translated;
+        CacheTmpHookTranslation(text, source, translated);
+        ApplyTmpHookFallback(text, translated);
+        MarkTmpSetTextPostfixSkipForTranslatedOutput(text, translated);
+        Plugin.ReportTranslationHit();
+        return true;
+    }
+
+    private static bool TryTranslateHudLoadingTextValue(string? source, out string translated)
+    {
+        translated = source ?? string.Empty;
+        return !string.IsNullOrWhiteSpace(source) &&
+               TranslationService.TryTranslateKnownDynamicTextFast(source, out translated);
     }
 
     private static bool TryNormalizeHudEndGameGradeLetterText(TMP_Text text, ref string value)

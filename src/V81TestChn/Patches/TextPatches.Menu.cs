@@ -94,6 +94,17 @@ internal static partial class TextPatches
         ChatEmojiSpriteService.ApplyToQuickMenuLobbyHeader(__instance);
     }
 
+    private static void LobbyImprovementsParsePlayerNamePostfix(ref string __result)
+    {
+        // LobbyImprovements appends a literal zero to every sanitized LAN name
+        // whose UTF-16 length is one or two. Remove only that synthetic suffix;
+        // its later duplicate-name numbering remains untouched.
+        if (__result is { Length: >= 2 and <= 3 } && __result[^1] == '0')
+        {
+            __result = __result.Substring(0, __result.Length - 1);
+        }
+    }
+
     private static void StartOfRoundAutoSaveShipDataPrefix()
     {
         MenuSceneLocalizationService.ApplyAutosaveText("StartOfRound.AutoSaveShipData.autosave");

@@ -77,6 +77,22 @@ internal static class EnvironmentTextureLocalizationService
     {
         ["posters"] = new TextureSpec("posters", "ShipPostersLocalized.png", 1024, 1024),
         ["TipsPoster2"] = new TextureSpec("TipsPoster2", "ShipTipsPosterLocalized.png", 796, 1024),
+        ["ToiletPaperTex"] = new TextureSpec("ToiletPaperTex", "ToiletPaperTexLocalized.png", 1024, 1024),
+        ["CashRegisterTex"] = new TextureSpec("CashRegisterTex", "CashRegisterTexLocalized.png", 1024, 1024),
+        ["FlashbangBottleTexture"] = new TextureSpec(
+            "FlashbangBottleTexture",
+            "FlashbangBottleTextureLocalized.png",
+            1024,
+            1024),
+        ["WelcomeMatTex"] = new TextureSpec("WelcomeMatTex", "WelcomeMatTexLocalized.png", 1024, 1024),
+        ["AirhornTex"] = new TextureSpec("AirhornTex", "AirhornTexLocalized.png", 512, 512),
+        ["TetraChemicalTex"] = new TextureSpec("TetraChemicalTex", "TetraChemicalTexLocalized.png", 2048, 2048),
+        ["StopSignTex"] = new TextureSpec("StopSignTex", "StopSignTexLocalized.png", 1024, 1024),
+        ["YieldSignTex"] = new TextureSpec("YieldSignTex", "YieldSignTexLocalized.png", 512, 512),
+        ["SodaCanTex1"] = new TextureSpec("SodaCanTex1", "SodaCanTex1Localized.png", 1024, 1024),
+        ["ToothpasteTex"] = new TextureSpec("ToothpasteTex", "ToothpasteTexLocalized.png", 1024, 1024),
+        ["WeedKillerBottleTex"] = new TextureSpec("WeedKillerBottleTex", "WeedKillerBottleTexLocalized.png", 1024, 1024),
+        ["ChemicalBottle1"] = new TextureSpec("ChemicalBottle1", "ChemicalBottle1Localized.png", 1024, 1024),
         ["CompanyCruiserCombined4Diffuse 1"] = new TextureSpec(
             "CompanyCruiserCombined4Diffuse 1",
             "CompanyCruiserDiffuseLocalized.bc3",
@@ -156,6 +172,45 @@ internal static class EnvironmentTextureLocalizationService
         RendererScanBuffer.Clear();
     }
 
+    public static void ApplyGrabbableObject(GrabbableObject? grabbableObject)
+    {
+        if (!CanApply() || grabbableObject == null || !IsLocalizedScrap(grabbableObject.gameObject.name))
+        {
+            return;
+        }
+
+        PruneDestroyedRendererStates();
+        PruneUnusedMaterialStates();
+        RendererScanBuffer.Clear();
+        grabbableObject.GetComponentsInChildren(true, RendererScanBuffer);
+        foreach (var renderer in RendererScanBuffer)
+        {
+            ApplyToRenderer(renderer);
+        }
+
+        RendererScanBuffer.Clear();
+    }
+
+    public static void ApplyShipDecoration(AutoParentToShip? shipDecoration)
+    {
+        if (!CanApply() || shipDecoration == null ||
+            !IsLocalizedShipDecoration(shipDecoration.gameObject.name))
+        {
+            return;
+        }
+
+        PruneDestroyedRendererStates();
+        PruneUnusedMaterialStates();
+        RendererScanBuffer.Clear();
+        shipDecoration.GetComponentsInChildren(true, RendererScanBuffer);
+        foreach (var renderer in RendererScanBuffer)
+        {
+            ApplyToRenderer(renderer);
+        }
+
+        RendererScanBuffer.Clear();
+    }
+
     public static void Shutdown()
     {
         foreach (var state in RendererStates.Values)
@@ -202,6 +257,32 @@ internal static class EnvironmentTextureLocalizationService
     private static bool CanApply()
     {
         return _initialized && !Plugin.IsRuntimeShuttingDown;
+    }
+
+    private static bool IsLocalizedScrap(string? objectName)
+    {
+        if (string.IsNullOrWhiteSpace(objectName))
+        {
+            return false;
+        }
+
+        return objectName.StartsWith("ToiletPaperRolls", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("CashRegisterItem", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("DiyFlashbang", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("Airhorn", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("TZPChemical", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("StopSign", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("YieldSign", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("RedSodaCan", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("Toothpaste", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("WeedKillerItem", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("ChemicalJug", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsLocalizedShipDecoration(string? objectName)
+    {
+        return !string.IsNullOrWhiteSpace(objectName) &&
+               objectName.StartsWith("WelcomeMatContainer", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void ApplyToRenderer(Renderer? renderer)

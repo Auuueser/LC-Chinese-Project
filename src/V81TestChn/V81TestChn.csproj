@@ -60,6 +60,10 @@
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>false</Private>
@@ -96,6 +100,7 @@
     <None Include="..\..\fonts\zh-cn-tmp-font" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-tmp-font" Condition="Exists('..\..\fonts\zh-cn-tmp-font')" />
     <None Include="..\..\fonts\OFL-1.1.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\OFL-1.1.txt" Condition="Exists('..\..\fonts\OFL-1.1.txt')" />
     <None Include="..\..\licenses\Apache-2.0.txt" CopyToOutputDirectory="PreserveNewest" Link="licenses\Apache-2.0.txt" Condition="Exists('..\..\licenses\Apache-2.0.txt')" />
+    <None Include="..\..\licenses\Noto-region-flags-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" Link="licenses\Noto-region-flags-LICENSE.txt" Condition="Exists('..\..\licenses\Noto-region-flags-LICENSE.txt')" />
     <None Include="..\..\fonts\zh-cn-charset.txt" CopyToOutputDirectory="PreserveNewest" Link="fonts\zh-cn-charset.txt" Condition="Exists('..\..\fonts\zh-cn-charset.txt')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png" CopyToOutputDirectory="PreserveNewest" Link="textures\AlertText [52CF932FDE-AB216CEFD9].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\AlertText [52CF932FDE-AB216CEFD9].png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png" CopyToOutputDirectory="Always" Link="textures\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\RedUIPanelGlitchB [C864CEDFD2-470F6C25C6].png')" />
@@ -117,6 +122,19 @@
     <None Include="..\..\assets\textures\zh-CN\Texture\CruiserManualPage3.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CruiserManualPage3.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CruiserManualPage3.bc3')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\CruiserManualPage4.bc3" CopyToOutputDirectory="PreserveNewest" Link="textures\CruiserManualPage4.bc3" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CruiserManualPage4.bc3')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\StickyNoteLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\StickyNoteLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\StickyNoteLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ToiletPaperTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ToiletPaperTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ToiletPaperTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\CashRegisterTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\CashRegisterTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\CashRegisterTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\FlashbangBottleTextureLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\FlashbangBottleTextureLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\FlashbangBottleTextureLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\WelcomeMatTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\WelcomeMatTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\WelcomeMatTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\AirhornTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\AirhornTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\AirhornTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\TetraChemicalTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\TetraChemicalTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\TetraChemicalTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\StopSignTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\StopSignTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\StopSignTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\YieldSignTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\YieldSignTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\YieldSignTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\SodaCanTex1Localized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\SodaCanTex1Localized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\SodaCanTex1Localized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ToothpasteTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ToothpasteTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ToothpasteTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\WeedKillerBottleTexLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\WeedKillerBottleTexLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\WeedKillerBottleTexLocalized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\ChemicalBottle1Localized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ChemicalBottle1Localized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ChemicalBottle1Localized.png')" />
+    <None Include="..\..\assets\textures\zh-CN\Texture\StartupFlashingLightsWarningLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\StartupFlashingLightsWarningLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\StartupFlashingLightsWarningLocalized.png')" />
     <None Include="..\..\assets\emoji\noto\ChatEmojiAtlas.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ChatEmojiAtlas.png" Condition="Exists('..\..\assets\emoji\noto\ChatEmojiAtlas.png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\ShipPostersLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ShipPostersLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ShipPostersLocalized.png')" />
     <None Include="..\..\assets\textures\zh-CN\Texture\ShipTipsPosterLocalized.png" CopyToOutputDirectory="PreserveNewest" Link="textures\ShipTipsPosterLocalized.png" Condition="Exists('..\..\assets\textures\zh-CN\Texture\ShipTipsPosterLocalized.png')" />
