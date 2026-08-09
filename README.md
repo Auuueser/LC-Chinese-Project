@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.4" src="assets/readme/badge-version.svg" height="22"></a>
+  <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.5" src="assets/readme/badge-version.svg" height="22"></a>
   <a href="https://store.steampowered.com/app/1966720/Lethal_Company/"><img alt="支持游戏版本 V81" src="assets/readme/badge-game.svg" height="22"></a>
   <a href="https://bepinex.org/"><img alt="运行环境 BepInEx 5" src="assets/readme/badge-runtime.svg" height="22"></a>
   <a href="https://github.com/Auuueser/LC-Chinese-Project/blob/main/LICENSE"><img alt="MIT 许可证" src="assets/readme/badge-license.svg" height="22"></a>
@@ -11,7 +11,7 @@
 
 <p align="center">
   面向 <strong>Lethal Company V81</strong> 的完整简体中文体验<br>
-  文本、字体、字幕与烘焙贴图统一维护，尽量保留原版气质
+  文本、字体、字幕与烘焙贴图统一维护
 </p>
 
 <p align="center">
@@ -25,8 +25,6 @@
 | 原版内容 | 视觉本地化 | 字幕与显示 | 模组兼容 |
 |:--|:--|:--|:--|
 | 菜单、HUD、终端、扫描、商店、星球信息、设置与结算 | 船内设施、载具、手册、告示牌与废料包装 | 中文字体、公司音频字幕与 3943 个受支持 Emoji | 保护玩家输入与内部标识，补全常见动态界面 |
-
-默认配置即可使用。所有显示层处理均以不改变游戏状态、网络文本和模组内部数据为边界。
 
 ## 视觉预览
 

@@ -114,6 +114,7 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(ShipBuildModeManager), "CreateGhostObjectAndHighlight", nameof(ShipBuildModeManagerCreateGhostObjectAndHighlightPostfix), ref patched, Priority.Last);
 
         PatchPostfix(harmony, typeof(GrabbableObject), "Start", nameof(GrabbableObjectStartPostfix), ref patched);
+        PatchPostfix(harmony, typeof(LungProp), nameof(LungProp.EquipItem), nameof(LungPropEquipItemPostfix), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(AutoParentToShip), "Awake", nameof(AutoParentToShipAwakePostfix), ref patched);
         PatchPrefix(harmony, typeof(GrabbableObject), "SetControlTipsForItem", nameof(GrabbableObjectSetControlTipsPrefix), ref patched);
         PatchPostfix(harmony, typeof(GrabbableObject), "SetControlTipsForItem", nameof(GrabbableObjectSetControlTipsPostfix), ref patched);

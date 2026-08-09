@@ -15,6 +15,7 @@ internal static class HudScannerLocalizationService
     private const float HudScannerRootLocalizationIntervalSeconds = 2.0f;
     private const float HudScannerBindingSignatureProbeIntervalSeconds = 1.0f;
     private const int HudScannerTextCacheLimit = 16384;
+    private const int RevealedHudScannerScrapValueLimit = 16;
     private const int DefaultHudScannerMaxTextsPerUpdate = 4;
     private const int HudScannerActiveProbeFallbackElementBudget = 4;
     private static ConfigEntry<int>? _hudScannerMaxTextsPerUpdate;
@@ -44,6 +45,7 @@ internal static class HudScannerLocalizationService
     private static string? _lastImmediateHudScannerTotalText;
     private static readonly BoundedCache<int, TMP_Text[]> HudScannerElementTextCache = new(HudScannerTextCacheLimit);
     private static readonly BoundedCache<int, CachedHudScannerText> HudScannerTextStateCache = new(HudScannerTextCacheLimit);
+    private static readonly BoundedCache<int, string> RevealedHudScannerScrapValues = new(RevealedHudScannerScrapValueLimit);
 
     private sealed class CachedHudScannerText
     {
@@ -93,6 +95,7 @@ internal static class HudScannerLocalizationService
     {
         HudScannerElementTextCache.Clear();
         HudScannerTextStateCache.Clear();
+        RevealedHudScannerScrapValues.Clear();
         _hudScannerBoundNodeSnapshotSource = null;
         HudScannerBoundNodeSnapshot.Clear();
         _hudScannerBoundNodeCursor = 0;
@@ -479,6 +482,20 @@ internal static class HudScannerLocalizationService
         return TryTranslateHudScannerSourceText(source, out translated);
     }
 
+    internal static bool TryTranslateHudScannerTextWrite(TMP_Text? text, string source, out string translated)
+    {
+        if (text != null &&
+            RevealedHudScannerScrapValues.Count > 0 &&
+            LooksLikeUnknownHudScannerValueText(source) &&
+            TryGetHudScannerBoundNode(text, out var node) &&
+            RevealedHudScannerScrapValues.TryGetValue(node.GetInstanceID(), out var revealedSource))
+        {
+            return TryTranslateHudScannerSourceText(revealedSource, out translated);
+        }
+
+        return TryTranslateHudScannerSourceText(source, out translated);
+    }
+
     private static bool TryResolveUnknownHudScannerScrapValue(ScanNodeProperties node, out string resolved)
     {
         resolved = node.subText ?? string.Empty;
@@ -495,6 +512,66 @@ internal static class HudScannerLocalizationService
 
         var scrapValue = grabbable.scrapValue > 0 ? grabbable.scrapValue : node.scrapValue;
         return TryBuildResolvedHudScannerScrapValueText(node.subText, scrapValue, out resolved);
+    }
+
+    internal static bool MarkHudScannerScrapValueRevealed(GrabbableObject? grabbable)
+    {
+        if (!CanRevealHudScannerScrapValue(grabbable))
+        {
+            return false;
+        }
+
+        var scrapValue = grabbable!.scrapValue;
+        if (scrapValue <= 0)
+        {
+            return false;
+        }
+
+        var node = grabbable.GetComponentInChildren<ScanNodeProperties>(includeInactive: true);
+        if (node == null ||
+            node.nodeType != 2 ||
+            !TryBuildResolvedHudScannerScrapValueText(node.subText, scrapValue, out var resolved))
+        {
+            return false;
+        }
+
+        // Keep ScanNodeProperties unchanged for scanner-mod compatibility. The write-time
+        // hook uses this one-time marker to render the revealed value for late writers.
+        RevealedHudScannerScrapValues.Set(node.GetInstanceID(), resolved, RevealedHudScannerScrapValueLimit);
+        return true;
+    }
+
+    private static bool TryGetHudScannerBoundNode(TMP_Text text, out ScanNodeProperties node)
+    {
+        node = null!;
+        Dictionary<RectTransform, ScanNodeProperties>? scanNodes;
+        try
+        {
+            scanNodes = HUDManager.Instance?.scanNodes;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+
+        if (scanNodes == null || scanNodes.Count == 0)
+        {
+            return false;
+        }
+
+        var current = text.transform;
+        for (var depth = 0; depth < 6 && current != null; depth++, current = current.parent)
+        {
+            if (current is RectTransform rect &&
+                scanNodes.TryGetValue(rect, out var boundNode) &&
+                boundNode != null)
+            {
+                node = boundNode;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool CanRevealHudScannerScrapValue(GrabbableObject? grabbable)

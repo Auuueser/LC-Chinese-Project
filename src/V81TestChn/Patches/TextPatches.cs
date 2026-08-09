@@ -500,9 +500,8 @@ internal static partial class TextPatches
 
     [HarmonyPatch(typeof(HUDManager), "UpdateScanNodes")]
     [HarmonyPostfix]
-    private static void HudManagerUpdateScanNodesPostfix(HUDManager __instance, bool __state)
+    private static void HudManagerUpdateScanNodesPostfix(HUDManager __instance)
     {
-        _hudScannerUpdateTextWriteActive = __state;
         if (Plugin.IsRuntimeShuttingDown)
         {
             return;
@@ -828,6 +827,18 @@ internal static partial class TextPatches
         StickyNoteLocalizationService.Apply(__instance);
     }
 
+    [HarmonyPatch(typeof(LungProp), nameof(LungProp.EquipItem))]
+    [HarmonyPostfix]
+    private static void LungPropEquipItemPostfix(LungProp __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        HudScannerLocalizationService.MarkHudScannerScrapValueRevealed(__instance);
+    }
+
     private static void AutoParentToShipAwakePostfix(AutoParentToShip __instance)
     {
         if (Plugin.IsRuntimeShuttingDown)
@@ -1059,7 +1070,7 @@ internal static partial class TextPatches
     private static bool TryTranslateHudScannerUpdateTextWrite(TMP_Text text, ref string value)
     {
         if (string.IsNullOrEmpty(value) ||
-            !HudScannerLocalizationService.TryTranslateHudScannerTextWrite(value, out var translated) ||
+            !HudScannerLocalizationService.TryTranslateHudScannerTextWrite(text, value, out var translated) ||
             string.Equals(value, translated, StringComparison.Ordinal))
         {
             return false;
