@@ -17,10 +17,9 @@ namespace V81TestChn;
 [BepInDependency("FlipMods.TooManyEmotes", BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BaseUnityPlugin
 {
-    public const string PluginGuid = "cn.codex.v81testchn";
+    public const string PluginGuid = "Aueser.LCChineseProject";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.2.5";
-    private const string LegacyConfigFileName = "LC Chinese Project.cfg";
+    public const string PluginVersion = "3.2.6";
 
     internal static ManualLogSource Log = null!;
 
@@ -108,80 +107,8 @@ public sealed class Plugin : BaseUnityPlugin
 
     private ConfigFile CreateRuntimeConfig()
     {
-        var legacyConfigPath = Path.Combine(Paths.ConfigPath, LegacyConfigFileName);
-        TryMigrateLegacyConfig(legacyConfigPath, Config);
         _runtimeConfig = Config;
         return _runtimeConfig;
-    }
-
-    private static void TryMigrateLegacyConfig(string legacyConfigPath, ConfigFile runtimeConfig)
-    {
-        try
-        {
-            var configPath = runtimeConfig.ConfigFilePath;
-            if (!File.Exists(legacyConfigPath) || PathsReferToSameFile(legacyConfigPath, configPath))
-            {
-                return;
-            }
-
-            var canonicalHasSettings = ConfigFileContainsSettings(configPath);
-            var legacyIsNewer = !File.Exists(configPath) ||
-                                File.GetLastWriteTimeUtc(legacyConfigPath) > File.GetLastWriteTimeUtc(configPath);
-            if (canonicalHasSettings && !legacyIsNewer)
-            {
-                return;
-            }
-
-            Directory.CreateDirectory(Path.GetDirectoryName(configPath) ?? Paths.ConfigPath);
-            if (File.Exists(configPath))
-            {
-                var backupPath = configPath + ".pre-lethalconfig-migration.bak";
-                if (!File.Exists(backupPath))
-                {
-                    File.Copy(configPath, backupPath, overwrite: false);
-                }
-            }
-
-            File.Copy(legacyConfigPath, configPath, overwrite: true);
-            runtimeConfig.Reload();
-            Log.LogInfo($"Migrated legacy config '{LegacyConfigFileName}' to the BepInEx plugin config used by LethalConfig.");
-        }
-        catch (Exception ex)
-        {
-            Log.LogWarning($"Failed to migrate legacy config '{LegacyConfigFileName}': {ex.GetType().Name}: {ex.Message}");
-        }
-    }
-
-    private static bool ConfigFileContainsSettings(string path)
-    {
-        if (!File.Exists(path))
-        {
-            return false;
-        }
-
-        foreach (var line in File.ReadLines(path))
-        {
-            var trimmed = line.Trim();
-            if (trimmed.Length == 0 || trimmed[0] == '#' || trimmed[0] == '[')
-            {
-                continue;
-            }
-
-            if (trimmed.IndexOf('=') > 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static bool PathsReferToSameFile(string left, string right)
-    {
-        return string.Equals(
-            Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
-            Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
-            StringComparison.OrdinalIgnoreCase);
     }
 
     private void OnApplicationQuit()

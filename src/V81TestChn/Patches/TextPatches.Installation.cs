@@ -31,6 +31,9 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(QuickMenuManager), "OpenQuickMenu", nameof(QuickMenuManagerOpenPostfix), ref patched);
         PatchPostfix(harmony, typeof(QuickMenuManager), "EnableUIPanel", nameof(QuickMenuManagerEnableUIPanelPostfix), ref patched);
         PatchPostfix(harmony, typeof(QuickMenuManager), "LeaveGame", nameof(QuickMenuManagerLeaveGamePostfix), ref patched);
+        PatchPrefix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPrefix), ref patched, Priority.First);
+        PatchTranspiler(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcTranspiler), ref patched);
+        PatchPostfix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPostfix), ref patched, Priority.Last);
         PatchPrefix(harmony, typeof(IngamePlayerSettings), "SetSettingsOptionsText", nameof(IngamePlayerSettingsSetSettingsOptionsTextPrefix), ref patched);
         PatchPostfix(harmony, typeof(IngamePlayerSettings), "DisplayConfirmChangesScreen", nameof(IngamePlayerSettingsDisplayConfirmChangesScreenPostfix), ref patched);
         PatchPostfix(harmony, typeof(SandSpiderAI), "Start", nameof(SandSpiderAIStartPostfix), ref patched);
@@ -273,6 +276,7 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "DeleteFileButton_BetterSaves", "UpdateFileToDelete", nameof(BetterSavesDeleteFileButtonUpdateFileToDeletePostfix), ref patched);
         PatchOptionalPostfix(harmony, "LobbyImprovements.LANDiscovery.LANLobbyManager_InGame", "UpdatePlayerListHeader", nameof(LobbyImprovementsUpdatePlayerListHeaderPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LobbyImprovements.SessionTickets_Client", "ParsePlayerName", nameof(LobbyImprovementsParsePlayerNamePostfix), ref patched, Priority.Last);
+        PatchOptionalPostfix(harmony, "LobbyImprovements.SessionTickets_Client", "AddUserToPlayerList", nameof(LobbyImprovementsAddUserToPlayerListPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LethalCompanyInputUtils.LcInputActionApi", "LoadIntoUI", nameof(InputUtilsLoadIntoUiPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LethalCompanyInputUtils.Localization.LocaleManager", "LoadLocaleData", nameof(InputUtilsLocaleDataLoadedPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LethalCompanyInputUtils.Components.PopOvers.PopOverTextContainer", "SetText", nameof(InputUtilsPopOverTextSetPostfix), ref patched, Priority.Last);

@@ -66,6 +66,16 @@ internal static partial class TranslationService
                 return true;
             }
 
+            var lockPickingMatch = SafeRegexMatch(
+                trimmed,
+                @"^Picking\s+lock\s*:\s*(?<seconds>\d+(?:\.\d+)?)\s+sec(?:ond)?s?\.?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (lockPickingMatch.Success)
+            {
+                translated = $"\u6b63\u5728\u5f00\u9501\uff1a{lockPickingMatch.Groups["seconds"].Value} \u79d2";
+                return true;
+            }
+
             if (TryTranslateBracketedControlStatus(trimmed, out translated))
             {
                 return true;

@@ -5,6 +5,8 @@ namespace V81TestChn;
 
 internal static partial class TextPatches
 {
+    private static QuickMenuManager? _cachedPlayerNameQuickMenuManager;
+
     [HarmonyPatch(typeof(MenuManager), "OnEnable")]
     [HarmonyPostfix]
     private static void MenuManagerOnEnablePostfix(MenuManager __instance)
@@ -29,6 +31,7 @@ internal static partial class TextPatches
     private static void QuickMenuManagerEnableUIPanelPostfix(QuickMenuManager __instance, GameObject enablePanel)
     {
         MenuSceneLocalizationService.ApplyQuickMenuPanel(__instance, enablePanel, "QuickMenuManager.EnableUIPanel");
+        PlayerNameDiagnosticService.LogQuickMenu(__instance, $"QuickMenuManager.EnableUIPanel:{enablePanel?.name ?? "<null>"}");
     }
 
     private static void QuickMenuManagerLeaveGamePostfix(QuickMenuManager __instance)
@@ -87,22 +90,121 @@ internal static partial class TextPatches
     {
         ChatEmojiSpriteService.ApplyToQuickMenuLobbyHeader(__instance);
         MenuSceneLocalizationService.ApplyQuickMenu(__instance, "QuickMenuManager.OpenQuickMenu");
+        PlayerNameDiagnosticService.LogQuickMenu(__instance, "QuickMenuManager.OpenQuickMenu");
     }
 
     private static void LobbyImprovementsUpdatePlayerListHeaderPostfix(QuickMenuManager __instance)
     {
         ChatEmojiSpriteService.ApplyToQuickMenuLobbyHeader(__instance);
+        PlayerNameDiagnosticService.LogQuickMenu(__instance, "LobbyImprovements.UpdatePlayerListHeader");
     }
 
-    private static void LobbyImprovementsParsePlayerNamePostfix(ref string __result)
+    private static void LobbyImprovementsAddUserToPlayerListPostfix(object __instance, object[] __args)
     {
-        // LobbyImprovements appends a literal zero to every sanitized LAN name
-        // whose UTF-16 length is one or two. Remove only that synthetic suffix;
-        // its later duplicate-name numbering remains untouched.
-        if (__result is { Length: >= 2 and <= 3 } && __result[^1] == '0')
+        if (__args.Length >= 2 && __args[1] is int playerObjectId)
         {
-            __result = __result.Substring(0, __result.Length - 1);
+            RestoreLobbyImprovementsPlayerNameFromRadar(playerObjectId);
         }
+
+        PlayerNameDiagnosticService.LogLobbyImprovementsPlayerList(
+            __instance,
+            __args,
+            "LobbyImprovements.AddUserToPlayerList");
+    }
+
+    private static void RestoreLobbyImprovementsPlayerNameFromRadar(int playerObjectId)
+    {
+        var round = StartOfRound.Instance;
+        var players = round?.allPlayerScripts;
+        var radarTargets = round?.mapScreen?.radarTargets;
+        if (players == null ||
+            radarTargets == null ||
+            playerObjectId < 0 ||
+            playerObjectId >= players.Length ||
+            playerObjectId >= radarTargets.Count)
+        {
+            return;
+        }
+
+        var player = players[playerObjectId];
+        var radarName = radarTargets[playerObjectId]?.name;
+        if (player == null ||
+            string.IsNullOrWhiteSpace(radarName) ||
+            radarName.StartsWith("Player #", System.StringComparison.Ordinal) ||
+            !HasSyntheticNumericSuffix(player.playerUsername, radarName))
+        {
+            return;
+        }
+
+        player.playerUsername = radarName;
+        if (player.usernameBillboardText != null)
+        {
+            player.usernameBillboardText.text = radarName;
+        }
+
+        var quickMenu = ResolvePlayerNameQuickMenuManager();
+        var playerListSlots = quickMenu?.playerListSlots;
+        if (playerListSlots != null && playerObjectId < playerListSlots.Length)
+        {
+            var usernameHeader = playerListSlots[playerObjectId]?.usernameHeader;
+            if (usernameHeader != null)
+            {
+                usernameHeader.text = radarName;
+            }
+        }
+    }
+
+    private static QuickMenuManager? ResolvePlayerNameQuickMenuManager()
+    {
+        var cached = _cachedPlayerNameQuickMenuManager;
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        cached = UnityEngine.Object.FindFirstObjectByType<QuickMenuManager>();
+        _cachedPlayerNameQuickMenuManager = cached;
+        return cached;
+    }
+
+    private static bool HasSyntheticNumericSuffix(string? displayedName, string authoritativeName)
+    {
+        if (string.IsNullOrEmpty(displayedName) ||
+            displayedName.Length <= authoritativeName.Length ||
+            !displayedName.StartsWith(authoritativeName, System.StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        for (var index = authoritativeName.Length; index < displayedName.Length; index++)
+        {
+            if (!char.IsDigit(displayedName[index]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void LobbyImprovementsParsePlayerNamePostfix(
+        string? playerName,
+        int playerClientId,
+        ref string __result)
+    {
+        // Rebuild from the original LAN name because LobbyImprovements calls
+        // the vanilla letter-only sanitizer before appending its synthetic 0.
+        // Looking only at the result cannot distinguish "小杰0" from "小杰".
+        var sanitized = SanitizePlayerNamePreservingDigits(playerName);
+        if (sanitized.Length == 0)
+        {
+            __result = $"Player #{playerClientId}";
+            return;
+        }
+
+        __result = sanitized.Length > 32
+            ? sanitized.Substring(0, 32)
+            : sanitized;
     }
 
     private static void StartOfRoundAutoSaveShipDataPrefix()

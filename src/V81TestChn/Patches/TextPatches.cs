@@ -300,6 +300,7 @@ internal static partial class TextPatches
     public static void Initialize(ConfigFile config)
     {
         HudScannerLocalizationService.Initialize(config);
+        PlayerNameDiagnosticService.Initialize(config);
         _enableTmpHookPerfCounters = config.Bind(
             ConfigSections.DiagnosticsGeneral,
             "EnableTmpHookPerfCounters",
@@ -334,6 +335,7 @@ internal static partial class TextPatches
     public static void Clear()
     {
         HudScannerLocalizationService.Clear();
+        PlayerNameDiagnosticService.Clear();
         SignalTranslatorLocalizationService.Clear();
         TerminalScreenLocalizationService.ClearRuntimeCache();
         ChatEmojiPasteService.Clear();
@@ -349,6 +351,7 @@ internal static partial class TextPatches
         AdvancedFeaturesGradeTextIds.Clear();
         _hudScannerUpdateTextWriteActive = false;
         _restoringAdvancedFeaturesEndscreenSource = false;
+        _cachedPlayerNameQuickMenuManager = null;
         ExternalEnglishCompatibilityService.ClearRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
         ResetTmpHookPerfCounters();
@@ -366,6 +369,7 @@ internal static partial class TextPatches
         TmpColorHookEligibilityCache.Clear();
         TmpColorHookCandidateTextIds.Clear();
         AdvancedFeaturesGradeTextIds.Clear();
+        _cachedPlayerNameQuickMenuManager = null;
         TerminalScreenLocalizationService.ClearRuntimeCache();
         ClearHudRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();

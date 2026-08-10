@@ -539,6 +539,16 @@ internal static partial class TranslationService
                 return true;
             }
 
+            match = SafeRegexMatch(
+                trimmed,
+                @"^Picking\s+lock\s*:\s*(?<seconds>\d+(?:\.\d+)?)\s+sec(?:ond)?s?\.?$",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (match.Success)
+            {
+                translated = $"\u6b63\u5728\u5f00\u9501\uff1a{match.Groups["seconds"].Value} \u79d2";
+                return true;
+            }
+
             match = SafeRegexMatch(trimmed, @"^(?<volume>\d+)%\s+volume$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             if (match.Success)
             {
@@ -915,6 +925,7 @@ internal static partial class TranslationService
                    text.StartsWith("SCRAP IN SHIP:", StringComparison.OrdinalIgnoreCase) ||
                    text.StartsWith("Total Scanned:", StringComparison.OrdinalIgnoreCase) ||
                    text.StartsWith("Found ", StringComparison.OrdinalIgnoreCase) ||
+                   text.StartsWith("Picking lock:", StringComparison.OrdinalIgnoreCase) ||
                    text.IndexOf("Battery Life", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
