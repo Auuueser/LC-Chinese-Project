@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.6" src="assets/readme/badge-version.svg" height="22"></a>
+  <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.7" src="assets/readme/badge-version.svg" height="22"></a>
   <a href="https://store.steampowered.com/app/1966720/Lethal_Company/"><img alt="支持游戏版本 V81" src="assets/readme/badge-game.svg" height="22"></a>
   <a href="https://bepinex.org/"><img alt="运行环境 BepInEx 5" src="assets/readme/badge-runtime.svg" height="22"></a>
   <a href="https://github.com/Auuueser/LC-Chinese-Project/blob/main/LICENSE"><img alt="MIT 许可证" src="assets/readme/badge-license.svg" height="22"></a>
@@ -33,34 +33,29 @@
   <br><sub>公司巡航车 · 干净与脏污版本</sub>
 </p>
 
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <img src="assets/textures/zh-CN/Texture/ShipPostersLocalized.png" alt="船内海报中文贴图" width="86%"><br>
-      <sub>船内海报</sub>
-    </td>
-    <td width="50%" align="center">
-      <img src="assets/readme/cruiser-manual-preview.png" alt="巡航车车载手册中文贴图" width="86%"><br>
-      <sub>巡航车车载手册</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <img src="assets/textures/zh-CN/Texture/ClipboardManualPage4.png" alt="文件夹板中文贴图" width="86%"><br>
-      <sub>手持文件夹板</sub>
-    </td>
-    <td width="50%" align="center">
-      <img src="assets/textures/zh-CN/Texture/StickyNoteLocalized.png" alt="船内便签中文贴图" width="86%"><br>
-      <sub>船内便签</sub>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="assets/readme/primary-visual-localization-preview.png" alt="船内海报、巡航车车载手册、手持文件夹板与船内便签中文视觉预览" width="100%">
+</p>
 
-### 环境、告示牌与废料包装
+### 环境、工具与废料包装
 
 <p align="center">
-  <img src="assets/readme/localized-assets-showcase.png" alt="欢迎地垫、土制闪光弹、告示牌与多种废料的汉化成品" width="100%">
-  <br><sub>欢迎地垫 · 土制闪光弹 · 告示牌与多种废料包装</sub>
+  <img src="assets/readme/localized-assets-showcase.png" alt="欢迎地垫、厕纸、土制闪光弹、气喇叭、TZP、喷漆罐、告示牌与多种废料的模型包装汉化成品" width="100%">
+  <br><sub>全部采用原版模型组装展示</sub>
+</p>
+
+### 员工徽章
+
+<p align="center">
+  <img src="assets/readme/player-badges-localization-preview.png" alt="原版玩家模型上的 VIP 员工与五档中文员工等级徽章" width="100%">
+  <br><sub>VIP 员工 · 实习生 · 兼职员工 · 正式员工 · 领队 · 领导</sub>
+</p>
+
+### 船内配电箱
+
+<p align="center">
+  <img src="assets/readme/powerbox-localization-preview.png" alt="配电箱关门、开门与完整中文 UV 贴图预览" width="100%">
+  <br><sub>关门高压警示 · 开门铭牌与警告标签</sub>
 </p>
 
 ### 公司音频中文字幕

@@ -30,6 +30,8 @@ internal static partial class TextPatches
     private const int TmpHookComponentBypassTextLengthLimit = 160;
     private const int TmpNumericFormatTextLengthLimit = 96;
     private const float LobbyNameFallbackGlyphMinFontScale = 0.82f;
+    private const float LoadAllLobbyLoadingTextTopMargin = -6f;
+    private const float LoadAllLobbyLoadingTextBottomMargin = -10f;
     private static readonly BoundedCache<int, CachedTextClassification> InputFieldTextCache = new(TextClassificationCacheLimit);
     private static readonly BoundedCache<int, CachedTextClassification> LobbySlotTextCache = new(TextClassificationCacheLimit);
     private static readonly BoundedCache<int, CachedLobbyNameTypography> LobbyNameTypographyCache = new(TextClassificationCacheLimit);
@@ -338,6 +340,7 @@ internal static partial class TextPatches
         PlayerNameDiagnosticService.Clear();
         SignalTranslatorLocalizationService.Clear();
         TerminalScreenLocalizationService.ClearRuntimeCache();
+        TerminalCatalogueLocalizationService.ClearRuntimeCache();
         ChatEmojiPasteService.Clear();
         ClearHudRuntimeCaches();
         InputFieldTextCache.Clear();
@@ -693,9 +696,45 @@ internal static partial class TextPatches
         NormalizeHudEndGameGradeLetterSource(__instance.statsUIElements?.gradeLetter);
     }
 
+    private static void HudManagerFillChallengeResultsStatsPostfix(HUDManager __instance)
+    {
+        EndGameLocalizationService.ApplyChallengeResultsLocalization(
+            __instance,
+            "HUDManager.FillChallengeResultsStats");
+    }
+
+    private static void TimeOfDayUpdateProfitQuotaCurrentTimePostfix()
+    {
+        var startOfRound = StartOfRound.Instance;
+        if (startOfRound == null || !startOfRound.isChallengeFile)
+        {
+            return;
+        }
+
+        var moonName = GameNetworkManager.Instance?.GetNameForWeekNumber();
+        if (!string.IsNullOrWhiteSpace(moonName) && startOfRound.profitQuotaMonitorText != null)
+        {
+            var localized = $"\u6b22\u8fce\u62b5\u8fbe\n{moonName}";
+            startOfRound.profitQuotaMonitorText.text = localized;
+            FontFallbackService.ApplyFallback(startOfRound.profitQuotaMonitorText, localized);
+        }
+
+        if (startOfRound.deadlineMonitorText != null)
+        {
+            const string localized = "\u5c3d\u91cf\u8d5a\u5230\u6700\u9ad8\u5229\u6da6";
+            startOfRound.deadlineMonitorText.text = localized;
+            FontFallbackService.ApplyFallback(startOfRound.deadlineMonitorText, localized);
+        }
+    }
+
     private static void HudManagerSetPlayerLevelPrefix()
     {
         EndGameScrapValueGuard.EnsureSafeScrapDenominator("HUDManager.SetPlayerLevel");
+    }
+
+    private static void PlayerControllerBStartPostfix(PlayerControllerB __instance)
+    {
+        EnvironmentTextureLocalizationService.ApplyPlayerBadges(__instance);
     }
 
     [HarmonyPatch(typeof(HUDManager), "ApplyPenalty")]
@@ -942,8 +981,9 @@ internal static partial class TextPatches
             "RoundManager.GenerateNewLevelClientRpc");
     }
 
-    private static void RoundManagerFinishGeneratingNewLevelClientRpcPostfix()
+    private static void RoundManagerFinishGeneratingNewLevelClientRpcPostfix(RoundManager __instance)
     {
+        EnvironmentTextureLocalizationService.ApplyLevelEnvironment(__instance);
         AlertTextureReplacementService.HideEnteringAtmosphereOverlayForHud(
             HUDManager.Instance,
             "RoundManager.FinishGeneratingNewLevelClientRpc");
@@ -1016,6 +1056,11 @@ internal static partial class TextPatches
         }
 
         if (TryTranslateHudLoadingTextWrite(__instance, ref value))
+        {
+            return;
+        }
+
+        if (TryTranslateHudPlayerLevelTextWrite(__instance, ref value))
         {
             return;
         }
@@ -1093,6 +1138,24 @@ internal static partial class TextPatches
     {
         if (!ReferenceEquals(text, HUDManager.Instance?.loadingText) ||
             !TryTranslateHudLoadingTextValue(value, out var translated) ||
+            string.Equals(value, translated, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var source = value;
+        value = translated;
+        CacheTmpHookTranslation(text, source, translated);
+        ApplyTmpHookFallback(text, translated);
+        MarkTmpSetTextPostfixSkipForTranslatedOutput(text, translated);
+        Plugin.ReportTranslationHit();
+        return true;
+    }
+
+    private static bool TryTranslateHudPlayerLevelTextWrite(TMP_Text text, ref string value)
+    {
+        if (!ReferenceEquals(text, HUDManager.Instance?.playerLevelText) ||
+            !PlayerLevelLocalizationService.TryTranslateRankName(value, out var translated) ||
             string.Equals(value, translated, StringComparison.Ordinal))
         {
             return false;
@@ -1634,6 +1697,7 @@ internal static partial class TextPatches
             CacheTmpHookTranslation(__instance, source, translated);
             ApplyTmpHookFallback(__instance, translated);
             ApplyBootSplashTypography(__instance, translated);
+            TryRepairLoadAllLobbyLoadingTextLayout(__instance, source);
             MarkTmpSetTextPostfixSkipForTranslatedOutput(__instance, translated);
             Plugin.ReportTranslationHit();
             return true;
@@ -1659,6 +1723,39 @@ internal static partial class TextPatches
         }
 
         return false;
+    }
+
+    private static void TryRepairLoadAllLobbyLoadingTextLayout(TMP_Text text, string source)
+    {
+        const string Prefix = "Loading ";
+        const string Suffix = " server list...";
+        if (text == null ||
+            string.IsNullOrEmpty(source) ||
+            !source.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) ||
+            !source.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase) ||
+            source.Length <= Prefix.Length + Suffix.Length)
+        {
+            return;
+        }
+
+        // LoadAllLobby reuses the vanilla one-line status box. CJK fallback
+        // ascenders extend beyond that English-only line box and are clipped by
+        // its mask, so give only this dynamically-written status a small vertical
+        // glyph margin without moving or resizing the surrounding lobby list.
+        var margin = text.margin;
+        if (margin.y > LoadAllLobbyLoadingTextTopMargin)
+        {
+            margin.y = LoadAllLobbyLoadingTextTopMargin;
+        }
+
+        if (margin.w > LoadAllLobbyLoadingTextBottomMargin)
+        {
+            margin.w = LoadAllLobbyLoadingTextBottomMargin;
+        }
+
+        text.margin = margin;
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
     }
 
     [HarmonyPatch(typeof(Text), "set_text")]

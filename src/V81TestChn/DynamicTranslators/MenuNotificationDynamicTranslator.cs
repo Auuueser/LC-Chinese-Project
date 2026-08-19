@@ -16,7 +16,10 @@ internal static class MenuNotificationDynamicTranslator
         ["Host has disconnected!"] = "主机已断开连接！",
         ["Ship has already landed!"] = "飞船已经着陆！",
         ["Lobby has been closed!"] = "房间已经关闭！",
-        ["This lobby requires steam authentication."] = "此房间要求进行 Steam 身份验证。"
+        ["This lobby requires steam authentication."] = "此房间要求进行 Steam 身份验证。",
+        ["You have been kicked."] = "你已被踢出房间",
+        ["The server host has already landed their ship, or they are still loading in."] = "房主的飞船已经着陆，或房主仍在加载中",
+        ["The host has not loaded or has already landed their ship."] = "房主尚未加载完成，或飞船已经着陆"
     };
 
     private static readonly (string English, string Localized)[] KnownPhraseEntries =

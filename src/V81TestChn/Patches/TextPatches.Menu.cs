@@ -5,6 +5,31 @@ namespace V81TestChn;
 
 internal static partial class TextPatches
 {
+    private static void LobbyImprovementsConfirmHostButtonPostfix(object[] __args)
+    {
+        if (__args.Length == 0 || __args[0] is not MenuManager menuManager)
+        {
+            return;
+        }
+
+        ExternalEnglishCompatibilityUiService.TranslateTmpTextKnownNonInput(
+            menuManager.tipTextHostSettings,
+            "LobbyImprovements.HostingUI.MM_ConfirmHostButton");
+    }
+
+    private static void LobbyImprovementsAddTextToChatOnServerPostfix(ref string __0)
+    {
+        LobbyImprovementsKickMessageCompatibilityService.CorrectMisclassifiedKickMessage(ref __0);
+    }
+
+    private static void MoreCompanyCreateCrewCountInputPostfix()
+    {
+        var crewCountRoot = GameObject.Find("MC_CrewCount");
+        ExternalEnglishCompatibilityUiService.TranslateRoot(
+            crewCountRoot,
+            includeInactive: true,
+            "MoreCompany.MenuManagerHost.CreateCrewCountInput");
+    }
     private static QuickMenuManager? _cachedPlayerNameQuickMenuManager;
 
     [HarmonyPatch(typeof(MenuManager), "OnEnable")]
@@ -37,6 +62,19 @@ internal static partial class TextPatches
     private static void QuickMenuManagerLeaveGamePostfix(QuickMenuManager __instance)
     {
         MenuSceneLocalizationService.ApplyQuickMenuLeaveGamePanel(__instance.leaveGameConfirmPanel, "QuickMenuManager.LeaveGame");
+    }
+
+    private static void MenuManagerEnableLeaderboardDisplayPostfix(MenuManager __instance, bool enable)
+    {
+        if (enable)
+        {
+            ChallengeLeaderboardLocalizationService.Apply(__instance, "MenuManager.EnableLeaderboardDisplay");
+        }
+    }
+
+    private static void MenuManagerSetLeaderboardFilterPostfix(MenuManager __instance)
+    {
+        ChallengeLeaderboardLocalizationService.Apply(__instance, "MenuManager.SetLeaderboardFilter");
     }
 
     private static void IngamePlayerSettingsSetSettingsOptionsTextPrefix(
@@ -91,6 +129,16 @@ internal static partial class TextPatches
         ChatEmojiSpriteService.ApplyToQuickMenuLobbyHeader(__instance);
         MenuSceneLocalizationService.ApplyQuickMenu(__instance, "QuickMenuManager.OpenQuickMenu");
         PlayerNameDiagnosticService.LogQuickMenu(__instance, "QuickMenuManager.OpenQuickMenu");
+    }
+
+    private static void QuickMenuManagerStartPostfix(QuickMenuManager __instance)
+    {
+        MenuSceneLocalizationService.ApplyQuickMenuStartup(__instance, "QuickMenuManager.Start");
+    }
+
+    private static void QuickMenuManagerKickUserFromServerPostfix(QuickMenuManager __instance, int playerObjId)
+    {
+        MenuSceneLocalizationService.ApplyKickConfirmationPanel(__instance, playerObjId, "QuickMenuManager.KickUserFromServer");
     }
 
     private static void LobbyImprovementsUpdatePlayerListHeaderPostfix(QuickMenuManager __instance)

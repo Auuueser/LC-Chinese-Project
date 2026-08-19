@@ -4,6 +4,18 @@ namespace V81TestChn;
 
 internal static partial class TextPatches
 {
+    private static void TerminalStartPostfix(Terminal __instance)
+    {
+        if (Plugin.IsRuntimeShuttingDown)
+        {
+            return;
+        }
+
+        // Process the serialized vanilla catalogue after Terminal.Start and
+        // other Start postfixes, before the player can interact with it.
+        TerminalCatalogueLocalizationService.Apply(__instance);
+    }
+
     [HarmonyPatch(typeof(Terminal), "SetItemSales")]
     [HarmonyPrefix]
     private static void TerminalSetItemSalesPrefix(Terminal __instance)
@@ -105,6 +117,9 @@ internal static partial class TextPatches
     [HarmonyPostfix]
     private static void TerminalBeginUsingPostfix(Terminal __instance)
     {
+        // Normally a cache-only pass. It remains as a compatibility fallback
+        // for terminal nodes appended by another mod after Terminal.Start.
+        TerminalCatalogueLocalizationService.Apply(__instance);
         ChatEmojiPasteService.RegisterTerminalInput(__instance);
         ChatEmojiSpriteService.ApplyToText(__instance?.screenText?.textComponent);
         TerminalScreenLocalizationService.ApplyFontFallback(__instance);

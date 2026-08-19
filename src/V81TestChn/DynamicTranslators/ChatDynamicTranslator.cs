@@ -16,11 +16,26 @@ internal static partial class TranslationService
             (" died.", " \u6b7b\u4ea1\u4e86\u3002")
         };
 
+        private static readonly (string Marker, string Replacement)[] ReasonTranslations =
+        {
+            (" was kicked for ", "\u88ab\u8e22\u51fa"),
+            (" was banned for ", "\u88ab\u5c01\u7981"),
+            (" was baned for ", "\u88ab\u5c01\u7981")
+        };
+
         public static bool CanHandleCheap(string? source)
         {
             if (string.IsNullOrWhiteSpace(source))
             {
                 return false;
+            }
+
+            foreach (var (marker, _) in ReasonTranslations)
+            {
+                if (source.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
             }
 
             foreach (var (suffix, _) in SystemSuffixTranslations)
@@ -42,6 +57,11 @@ internal static partial class TranslationService
                 return false;
             }
 
+            if (TryTranslateReasonMessage(source, out translated))
+            {
+                return true;
+            }
+
             foreach (var (suffix, replacement) in SystemSuffixTranslations)
             {
                 if (!TryFindRenderedSuffixSpan(source, suffix, out var suffixStart, out var suffixEnd) ||
@@ -55,6 +75,81 @@ internal static partial class TranslationService
             }
 
             return false;
+        }
+
+        private static bool TryTranslateReasonMessage(string source, out string translated)
+        {
+            translated = source;
+            GetOuterColorContentBounds(source, out var contentStart, out var contentEnd);
+            var content = source.Substring(contentStart, contentEnd - contentStart);
+
+            foreach (var (marker, replacement) in ReasonTranslations)
+            {
+                var markerIndex = content.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+                if (markerIndex <= 0)
+                {
+                    continue;
+                }
+
+                var playerName = content[..markerIndex].TrimEnd();
+                var reason = content[(markerIndex + marker.Length)..].TrimStart();
+                if (string.IsNullOrWhiteSpace(playerName) || string.IsNullOrWhiteSpace(reason))
+                {
+                    continue;
+                }
+
+                translated = source[..contentStart] +
+                             playerName +
+                             " \u56e0 " +
+                             reason +
+                             " " +
+                             replacement +
+                             source[contentEnd..];
+                return true;
+            }
+
+            return false;
+        }
+
+        private static void GetOuterColorContentBounds(string source, out int contentStart, out int contentEnd)
+        {
+            contentStart = 0;
+            contentEnd = source.Length;
+
+            var first = 0;
+            while (first < source.Length && char.IsWhiteSpace(source[first]))
+            {
+                first++;
+            }
+
+            if (first >= source.Length ||
+                source.IndexOf("<color", first, StringComparison.OrdinalIgnoreCase) != first)
+            {
+                return;
+            }
+
+            var openingEnd = source.IndexOf('>', first);
+            if (openingEnd < 0)
+            {
+                return;
+            }
+
+            var last = source.Length - 1;
+            while (last >= 0 && char.IsWhiteSpace(source[last]))
+            {
+                last--;
+            }
+
+            const string closingTag = "</color>";
+            var closingStart = last - closingTag.Length + 1;
+            if (closingStart <= openingEnd ||
+                string.Compare(source, closingStart, closingTag, 0, closingTag.Length, StringComparison.OrdinalIgnoreCase) != 0)
+            {
+                return;
+            }
+
+            contentStart = openingEnd + 1;
+            contentEnd = closingStart;
         }
 
         private static bool TryFindRenderedSuffixSpan(string source, string suffix, out int suffixStart, out int suffixEnd)

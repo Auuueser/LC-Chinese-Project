@@ -61,7 +61,7 @@ internal static class AlertTextureReplacementService
     {
         if (Plugin.RuntimeLocalizationLogsEnabled)
         {
-            Plugin.Log.LogInfo("Native relay title translation enabled; SYSTEMS ONLINE uses original TMP object only.");
+            Plugin.LogRuntimeLocalizationEvent("Native relay title translation enabled; SYSTEMS ONLINE uses original TMP object only.");
         }
     }
 
@@ -366,7 +366,7 @@ internal static class AlertTextureReplacementService
         ApplyLocalizedText(text, localized, stage, "FixedSceneLabel");
         if (Plugin.RuntimeLocalizationLogsEnabled)
         {
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=FixedSceneLabel action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=FixedSceneLabel action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
         }
 
         return true;
@@ -434,7 +434,7 @@ internal static class AlertTextureReplacementService
         ApplyLocalizedText(text, ResolveLocalizedText(text.text, SystemOnlineLocalizedText), stage, "SystemOnline");
         if (Plugin.RuntimeLocalizationLogsEnabled)
         {
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SystemOnline action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=SystemOnline action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
         }
     }
 
@@ -749,7 +749,7 @@ internal static class AlertTextureReplacementService
                 seen++;
                 if (Plugin.RuntimeLocalizationLogsEnabled)
                 {
-                    Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SystemOnline action=audit exact={IsExactSystemOnlineTitle(text)} name={text.name} path={BuildPath(text.transform)} text={text.text}");
+                    Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=SystemOnline action=audit exact={IsExactSystemOnlineTitle(text)} name={text.name} path={BuildPath(text.transform)} text={text.text}");
                 }
             }
         }
@@ -783,7 +783,7 @@ internal static class AlertTextureReplacementService
         FontFallbackService.ApplyFallback(text, translated);
         if (Plugin.RuntimeLocalizationLogsEnabled)
         {
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target={target} action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target={target} action=applied name={text.name} path={BuildPath(text.transform)} text={text.text}");
         }
     }
 

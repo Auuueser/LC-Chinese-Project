@@ -6,20 +6,47 @@ namespace V81TestChn;
 
 internal static class PrecompressedTextureLoader
 {
+    public static Texture2D? LoadBc1(
+        string path,
+        int width,
+        int height,
+        bool mipChain,
+        out string? error) =>
+        LoadCompressed(path, width, height, mipChain, TextureFormat.DXT1, 8, "DXT1/BC1", out error);
+
     public static Texture2D? LoadBc3(
         string path,
         int width,
         int height,
         bool mipChain,
         out string? error)
+        => LoadCompressed(path, width, height, mipChain, TextureFormat.DXT5, 16, "DXT5/BC3", out error);
+
+    public static Texture2D? LoadBc7(
+        string path,
+        int width,
+        int height,
+        bool mipChain,
+        out string? error)
+        => LoadCompressed(path, width, height, mipChain, TextureFormat.BC7, 16, "BC7", out error);
+
+    private static Texture2D? LoadCompressed(
+        string path,
+        int width,
+        int height,
+        bool mipChain,
+        TextureFormat format,
+        int bytesPerBlock,
+        string formatName,
+        out string? error)
     {
         error = null;
         Texture2D? texture = null;
         try
         {
-            if (!SystemInfo.SupportsTextureFormat(TextureFormat.DXT5))
+            if (!SystemInfo.SupportsTextureFormat(format))
             {
-                error = "DXT5/BC3 is not supported by this graphics device";
+                error = $"{formatName} is not supported by this graphics device";
                 return null;
             }
 
@@ -30,7 +57,7 @@ internal static class PrecompressedTextureLoader
                 return null;
             }
 
-            var expectedBytes = CalculateBc3ByteCount(width, height, mipChain);
+            var expectedBytes = CalculateCompressedByteCount(width, height, mipChain, bytesPerBlock);
             if (file.Length != expectedBytes)
             {
                 error = $"expected {expectedBytes} bytes, got {file.Length}";
@@ -38,7 +65,7 @@ internal static class PrecompressedTextureLoader
             }
 
             var data = File.ReadAllBytes(path);
-            texture = new Texture2D(width, height, TextureFormat.DXT5, mipChain);
+            texture = new Texture2D(width, height, format, mipChain);
             texture.LoadRawTextureData(data);
             texture.Apply(updateMipmaps: false, makeNoLongerReadable: true);
             return texture;
@@ -52,11 +79,24 @@ internal static class PrecompressedTextureLoader
     }
 
     public static long CalculateBc3ByteCount(int width, int height, bool mipChain)
+        => CalculateCompressedByteCount(width, height, mipChain, 16);
+
+    public static long CalculateBc7ByteCount(int width, int height, bool mipChain)
+        => CalculateCompressedByteCount(width, height, mipChain, 16);
+
+    public static long CalculateBc1ByteCount(int width, int height, bool mipChain)
+        => CalculateCompressedByteCount(width, height, mipChain, 8);
+
+    private static long CalculateCompressedByteCount(
+        int width,
+        int height,
+        bool mipChain,
+        int bytesPerBlock)
     {
         long total = 0;
         while (true)
         {
-            total += (long)Math.Max(1, (width + 3) / 4) * Math.Max(1, (height + 3) / 4) * 16;
+            total += (long)Math.Max(1, (width + 3) / 4) * Math.Max(1, (height + 3) / 4) * bytesPerBlock;
             if (!mipChain || (width == 1 && height == 1))
             {
                 return total;

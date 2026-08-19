@@ -20,6 +20,15 @@ internal static class GameResourceTranslator
             translated += Translate(ref node.creatureName);
         }
 
+        // Terminal.TextPostProcess builds the bestiary and log catalogues from
+        // creatureName. Apply the bilingual presentation only after all nodes
+        // have been captured and translated, preserving the original English
+        // names for the gray aliases and leaving command keywords untouched.
+        foreach (var terminal in Resources.FindObjectsOfTypeAll<Terminal>())
+        {
+            translated += TerminalCatalogueLocalizationService.Apply(terminal);
+        }
+
         foreach (var item in Resources.FindObjectsOfTypeAll<Item>())
         {
             if (item == null)

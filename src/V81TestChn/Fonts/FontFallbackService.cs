@@ -14,7 +14,9 @@ internal static class FontFallbackService
     private const int FallbackApplicationCacheLimit = 16384;
     private const int FallbackSmallCacheInitialCapacity = 512;
     private const int UnreadableDynamicAtlasOverrideLimit = 256;
+    private const int MaxSupplementalFallbackFonts = 3;
     private const string RequiredSimplifiedChineseProbe = "\u4e2d\u6587\u6c49\u5316\u6d4b\u8bd5\u7ec8\u7aef\u7269\u54c1\u611f\u67d3\u8b66\u544a";
+    private const string RequiredLobbySymbolProbe = "\U0001D53B\u2115";
     private static readonly Dictionary<int, Color> BaselineColorByInstance = new(FallbackSmallCacheInitialCapacity);
     private static readonly BoundedCache<int, CachedFallbackApplication> FallbackApplicationCache = new(FallbackApplicationCacheLimit);
     private static readonly HashSet<int> FinalRenderSubscribedIds = new(FallbackSmallCacheInitialCapacity);
@@ -402,11 +404,13 @@ internal static class FontFallbackService
                 TryLoadSupplementalSystemFont("Yu Gothic") ||
                 TryLoadSupplementalSystemFont("MS Gothic");
         }
+
+        _ = TryLoadSupplementalSystemFont("Cambria Math", RequiredLobbySymbolProbe);
     }
 
     private static bool TryLoadSupplementalFontFile(string fontPath)
     {
-        if (SupplementalFallbackFonts.Count >= 2 || !File.Exists(fontPath))
+        if (SupplementalFallbackFonts.Count >= MaxSupplementalFallbackFonts || !File.Exists(fontPath))
         {
             return false;
         }
@@ -428,21 +432,24 @@ internal static class FontFallbackService
         }
     }
 
-    private static bool TryLoadSupplementalSystemFont(string fontName)
+    private static bool TryLoadSupplementalSystemFont(string fontName, string? requiredCharacters = null)
     {
-        if (SupplementalFallbackFonts.Count >= 2)
+        if (SupplementalFallbackFonts.Count >= MaxSupplementalFallbackFonts)
         {
             return false;
         }
 
         try
         {
-            if (!TryCreateSupplementalTmpFontAsset(Font.CreateDynamicFontFromOSFont(fontName, 18), fontName))
+            if (!TryCreateSupplementalTmpFontAsset(
+                    Font.CreateDynamicFontFromOSFont(fontName, 18),
+                    fontName,
+                    requiredCharacters))
             {
                 return false;
             }
 
-            Plugin.Log.LogInfo($"Loaded supplemental East Asian fallback font from system font: {fontName}");
+            Plugin.Log.LogInfo($"Loaded supplemental fallback font from system font: {fontName}");
             return true;
         }
         catch (Exception ex)
@@ -452,7 +459,10 @@ internal static class FontFallbackService
         }
     }
 
-    private static bool TryCreateSupplementalTmpFontAsset(Font? font, string label)
+    private static bool TryCreateSupplementalTmpFontAsset(
+        Font? font,
+        string label,
+        string? requiredCharacters = null)
     {
         if (font == null)
         {
@@ -471,11 +481,21 @@ internal static class FontFallbackService
 
         if (fontAsset == null)
         {
+            UnityEngine.Object.Destroy(font);
             return false;
         }
 
         fontAsset.name = $"V81TestChn_SupplementalFallback_{label}";
         fontAsset.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+        if (!string.IsNullOrEmpty(requiredCharacters) &&
+            (!fontAsset.TryAddCharacters(requiredCharacters, out var missingCharacters) ||
+             !string.IsNullOrEmpty(missingCharacters)))
+        {
+            UnityEngine.Object.Destroy(fontAsset);
+            UnityEngine.Object.Destroy(font);
+            return false;
+        }
+
         NormalizeMaterial(fontAsset.material);
         SupplementalFallbackFonts.Add(fontAsset);
         OwnedSupplementalFallbackFontIds.Add(fontAsset.GetInstanceID());

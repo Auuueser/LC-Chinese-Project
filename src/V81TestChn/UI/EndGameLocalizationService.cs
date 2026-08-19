@@ -95,6 +95,49 @@ internal static class EndGameLocalizationService
         NormalizePlayersFiredScreenLayout(hudManager, stage);
     }
 
+    public static void ApplyChallengeResultsLocalization(HUDManager? hudManager, string stage)
+    {
+        var elements = hudManager?.statsUIElements;
+        var collected = elements?.challengeCollectedText;
+        if (elements == null || collected == null)
+        {
+            return;
+        }
+
+        var source = collected.text?.Trim() ?? string.Empty;
+        const string suffix = " Collected";
+        if (source.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            var amount = source.Substring(0, source.Length - suffix.Length).Trim();
+            if (amount.Length > 0)
+            {
+                ApplyLocalizedText(collected, $"\u5df2\u6536\u96c6\uff1a{amount}", stage, "ChallengeCollected");
+            }
+        }
+
+        var root = collected.canvas != null ? collected.canvas.transform : collected.transform.parent;
+        if (root == null)
+        {
+            return;
+        }
+
+        foreach (var text in root.GetComponentsInChildren<TMP_Text>(true))
+        {
+            var trimmed = text.text?.Trim() ?? string.Empty;
+            var localized = trimmed switch
+            {
+                "CHALLENGE RESULTS:" => "\u6311\u6218\u7ed3\u7b97\uff1a",
+                "Your rank:" => "\u4f60\u7684\u6392\u540d\uff1a",
+                "(See how you compare to friends in the main menu leaderboard!)" => "\uff08\u53ef\u5728\u4e3b\u83dc\u5355\u6392\u884c\u699c\u4e2d\u67e5\u770b\u4f60\u4e0e\u597d\u53cb\u7684\u6392\u540d\u5bf9\u6bd4\uff09",
+                _ => string.Empty
+            };
+            if (localized.Length > 0)
+            {
+                ApplyLocalizedText(text, localized, stage, "ChallengeFixedLabel");
+            }
+        }
+    }
+
     public static void TryNormalizePlayersFiredText(TMP_Text? text, string stage)
     {
         if (text == null)
@@ -120,13 +163,54 @@ internal static class EndGameLocalizationService
             return;
         }
 
-        var trimmed = slot.scrapCollectedText.text?.Trim();
-        if (string.Equals(trimmed, "Deceased", StringComparison.OrdinalIgnoreCase))
+        var text = slot.scrapCollectedText;
+        var trimmed = text.text?.Trim() ?? string.Empty;
+        var localized = string.Empty;
+        const string collectedSuffix = " Collected";
+        if (trimmed.EndsWith(collectedSuffix, StringComparison.OrdinalIgnoreCase))
         {
-            slot.scrapCollectedText.text = DeceasedLocalizedText;
-            FontFallbackService.ApplyFallback(slot.scrapCollectedText, DeceasedLocalizedText);
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=ChallengeLeaderboard action=applied value={slot.scrapCollectedText.text}");
+            var amount = trimmed.Substring(0, trimmed.Length - collectedSuffix.Length).Trim();
+            if (amount.Length > 0)
+            {
+                localized = $"{amount} \u5df2\u6536\u96c6";
+            }
         }
+        else if (string.Equals(trimmed, "Deceased", StringComparison.OrdinalIgnoreCase))
+        {
+            localized = DeceasedLocalizedText;
+        }
+        else if (string.Equals(trimmed, "(Removed score)", StringComparison.OrdinalIgnoreCase))
+        {
+            localized = "\uff08\u6210\u7ee9\u5df2\u79fb\u9664\uff09";
+        }
+
+        if (localized.Length > 0)
+        {
+            text.text = localized;
+            FontFallbackService.ApplyFallback(text, localized);
+            ApplySingleLineCompactLayout(text, 0.62f);
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=ChallengeLeaderboard action=applied value={text.text}");
+        }
+    }
+
+    internal static void ApplySingleLineCompactLayout(TMP_Text? text, float minimumScale = 0.62f)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        text.enableWordWrapping = false;
+        text.overflowMode = TextOverflowModes.Overflow;
+        var maximum = text.fontSize > 0f ? text.fontSize : text.fontSizeMax;
+        if (maximum <= 0f)
+        {
+            return;
+        }
+
+        text.enableAutoSizing = true;
+        text.fontSizeMax = maximum;
+        text.fontSizeMin = Math.Max(6f, maximum * minimumScale);
     }
 
     private static void LocalizeRuntimeDeadTexts(HUDManager hudManager, string stage)
@@ -206,7 +290,7 @@ internal static class EndGameLocalizationService
             }
 
             FontFallbackService.ApplyFallback(text, EndGameHeaderLocalizedText);
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=EndGameHeader action=applied path={BuildPath(text.transform)} text={text.text}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=EndGameHeader action=applied path={BuildPath(text.transform)} text={text.text}");
             return;
         }
     }
@@ -312,7 +396,7 @@ internal static class EndGameLocalizationService
         }
 
         FontFallbackService.ApplyFallback(text, localized);
-        Plugin.Log.LogInfo(
+        Plugin.LogRuntimeLocalizationEvent(
             $"NativeRelay[{stage}] target={target} action=layout-applied path={BuildPath(text.transform)} " +
             $"font={text.fontSize:0.#}/{text.fontSizeMin:0.#}-{text.fontSizeMax:0.#} text={text.text}");
     }
@@ -366,17 +450,17 @@ internal static class EndGameLocalizationService
         if (TranslationService.TryTranslateKnownDynamicTextTargeted(DynamicTextDomain.SpectateStatus, value, out var rewritten))
         {
             value = rewritten;
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SpectateStatusLabel action=rewrite path={BuildPath(text.transform)} value={value}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=SpectateStatusLabel action=rewrite path={BuildPath(text.transform)} value={value}");
         }
         else if (string.Equals(trimmed, "(Dead)", StringComparison.Ordinal))
         {
             value = DeadLocalizedText;
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SpectateDeadLabel action=rewrite path={BuildPath(text.transform)} value={value}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=SpectateDeadLabel action=rewrite path={BuildPath(text.transform)} value={value}");
         }
         else if (string.Equals(trimmed, "Deceased", StringComparison.OrdinalIgnoreCase))
         {
             value = DeceasedLocalizedText;
-            Plugin.Log.LogInfo($"NativeRelay[{stage}] target=SpectateDeceasedLabel action=rewrite path={BuildPath(text.transform)} value={value}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=SpectateDeceasedLabel action=rewrite path={BuildPath(text.transform)} value={value}");
         }
     }
 
@@ -489,7 +573,7 @@ internal static class EndGameLocalizationService
                     new Color(1f, 0.22f, 0.22f, 1f),
                     TextAlignmentOptions.Center);
                 label.gameObject.SetActive(true);
-                Plugin.Log.LogInfo($"NativeRelay[{stage}] target=EndGameState action=fallback-label state=deceased path={BuildPath(stateImage.transform)}");
+                Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=EndGameState action=fallback-label state=deceased path={BuildPath(stateImage.transform)}");
                 continue;
             }
 
@@ -512,7 +596,7 @@ internal static class EndGameLocalizationService
                     new Color(1f, 0.22f, 0.22f, 1f),
                     TextAlignmentOptions.Center);
                 label.gameObject.SetActive(true);
-                Plugin.Log.LogInfo($"NativeRelay[{stage}] target=EndGameState action=fallback-label state=missing path={BuildPath(stateImage.transform)}");
+                Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target=EndGameState action=fallback-label state=missing path={BuildPath(stateImage.transform)}");
                 continue;
             }
 
@@ -554,7 +638,7 @@ internal static class EndGameLocalizationService
         overlay.type = originalType;
         overlay.color = Color.white;
 
-        Plugin.Log.LogInfo(
+        Plugin.LogRuntimeLocalizationEvent(
             $"NativeRelay[{stage}] target=EndGameOverlay action=applied path={BuildPath(overlay.transform)} " +
             $"type={overlay.type} preserveAspect={overlay.preserveAspect} imageRect={DescribeRect(overlay.rectTransform.rect)} " +
             $"templateSprite={DescribeSprite(originalSprite)} localizedSprite={DescribeSprite(sprite)}");
@@ -586,7 +670,7 @@ internal static class EndGameLocalizationService
         image.preserveAspect = originalPreserveAspect;
         image.type = originalType;
         image.color = Color.white;
-        Plugin.Log.LogInfo(
+        Plugin.LogRuntimeLocalizationEvent(
             $"NativeRelay[{stage}] target=EndGameStatsBoxes action=applied path={BuildPath(image.transform)} " +
             $"type={image.type} preserveAspect={image.preserveAspect} imageRect={DescribeRect(image.rectTransform.rect)} " +
             $"templateSprite={DescribeSprite(originalSprite)} localizedSprite={DescribeSprite(sprite)}");
@@ -626,7 +710,7 @@ internal static class EndGameLocalizationService
 
             if (bestCandidate != null)
             {
-                Plugin.Log.LogInfo($"NativeRelay[EndGameStatsBoxes] action=fallback-candidate path={BuildPath(bestCandidate.transform)} score={bestScore} sprite={bestCandidate.sprite?.name ?? "<null>"}");
+                Plugin.LogRuntimeLocalizationEvent($"NativeRelay[EndGameStatsBoxes] action=fallback-candidate path={BuildPath(bestCandidate.transform)} score={bestScore} sprite={bestCandidate.sprite?.name ?? "<null>"}");
                 return bestCandidate;
             }
         }
@@ -648,7 +732,7 @@ internal static class EndGameLocalizationService
                 image.sprite != null)
             {
                 var score = ScoreStatsBoxesCandidate(image, elements);
-                Plugin.Log.LogInfo($"NativeRelay[EndGameStatsBoxes] action=ancestor-candidate path={BuildPath(image.transform)} sprite={image.sprite.name} score={score}");
+                Plugin.LogRuntimeLocalizationEvent($"NativeRelay[EndGameStatsBoxes] action=ancestor-candidate path={BuildPath(image.transform)} sprite={image.sprite.name} score={score}");
                 if (score > bestScore)
                 {
                     bestScore = score;
@@ -850,7 +934,7 @@ internal static class EndGameLocalizationService
         }
 
         FontFallbackService.ApplyFallback(text, localized);
-        Plugin.Log.LogInfo($"NativeRelay[{stage}] target={target} action=applied path={BuildPath(text.transform)} text={text.text}");
+        Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{stage}] target={target} action=applied path={BuildPath(text.transform)} text={text.text}");
     }
 
     private static bool TryApplyLocalizedStateSprite(Image stateImage, string textureFileName, string stage, string state)
@@ -871,7 +955,7 @@ internal static class EndGameLocalizationService
         stateImage.preserveAspect = originalPreserveAspect;
         stateImage.color = Color.white;
         SetOverlayActive(stateImage.transform, "__V81_EndgameStateOverlay", false);
-        Plugin.Log.LogInfo(
+        Plugin.LogRuntimeLocalizationEvent(
             $"NativeRelay[{stage}] target=EndGameState action=applied-sprite state={state} path={BuildPath(stateImage.transform)} " +
             $"type={stateImage.type} preserveAspect={stateImage.preserveAspect} imageRect={DescribeRect(stateImage.rectTransform.rect)} " +
             $"templateSprite={DescribeSprite(originalSprite)} localizedSprite={DescribeSprite(sprite)}");

@@ -21,6 +21,8 @@ internal static partial class TextPatches
 
         PatchPostfix(harmony, typeof(MenuManager), "OnEnable", nameof(MenuManagerOnEnablePostfix), ref patched);
         PatchPostfix(harmony, typeof(MenuManager), "EnableUIPanel", nameof(MenuManagerEnableUIPanelPostfix), ref patched);
+        PatchPostfix(harmony, typeof(MenuManager), "EnableLeaderboardDisplay", nameof(MenuManagerEnableLeaderboardDisplayPostfix), ref patched, Priority.Last);
+        PatchPostfix(harmony, typeof(MenuManager), "SetLeaderboardFilter", nameof(MenuManagerSetLeaderboardFilterPostfix), ref patched, Priority.Last);
         PatchPrefix(harmony, typeof(MenuManager), "DisplayMenuNotification", nameof(MenuManagerDisplayMenuNotificationPrefix), ref patched);
         PatchPostfix(harmony, typeof(DeleteFileButton), "SetFileToDelete", nameof(DeleteFileButtonSetFileToDeletePostfix), ref patched);
         PatchPostfix(harmony, typeof(SaveFileUISlot), "OnEnable", nameof(SaveFileUISlotOnEnablePostfix), ref patched);
@@ -29,8 +31,11 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(PreInitSceneScript), "Start", nameof(PreInitSceneScriptStartPostfix), ref patched);
         PatchPostfix(harmony, typeof(PreInitSceneScript), "SetLaunchPanelsEnabled", nameof(PreInitSceneScriptSetLaunchPanelsEnabledPostfix), ref patched);
         PatchPostfix(harmony, typeof(QuickMenuManager), "OpenQuickMenu", nameof(QuickMenuManagerOpenPostfix), ref patched);
+        PatchPostfix(harmony, typeof(QuickMenuManager), "Start", nameof(QuickMenuManagerStartPostfix), ref patched, Priority.Last);
+        PatchPostfix(harmony, typeof(QuickMenuManager), "KickUserFromServer", nameof(QuickMenuManagerKickUserFromServerPostfix), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(QuickMenuManager), "EnableUIPanel", nameof(QuickMenuManagerEnableUIPanelPostfix), ref patched);
         PatchPostfix(harmony, typeof(QuickMenuManager), "LeaveGame", nameof(QuickMenuManagerLeaveGamePostfix), ref patched);
+        PatchPostfix(harmony, typeof(PlayerControllerB), "Start", nameof(PlayerControllerBStartPostfix), ref patched, Priority.Last);
         PatchPrefix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPrefix), ref patched, Priority.First);
         PatchTranspiler(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcTranspiler), ref patched);
         PatchPostfix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPostfix), ref patched, Priority.Last);
@@ -96,6 +101,8 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(HUDManager), "SetSpectatingTextToPlayer", nameof(HudManagerSetSpectatingTextToPlayerPostfix), ref patched);
         PatchPrefix(harmony, typeof(HUDManager), "FillEndGameStats", nameof(HudManagerFillEndGameStatsPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "FillEndGameStats", nameof(HudManagerFillEndGameStatsPostfix), ref patched);
+        PatchPostfix(harmony, typeof(HUDManager), "FillChallengeResultsStats", nameof(HudManagerFillChallengeResultsStatsPostfix), ref patched, Priority.Last);
+        PatchPostfix(harmony, typeof(TimeOfDay), "UpdateProfitQuotaCurrentTime", nameof(TimeOfDayUpdateProfitQuotaCurrentTimePostfix), ref patched, Priority.Last);
         PatchPrefix(harmony, typeof(HUDManager), "SetPlayerLevel", nameof(HudManagerSetPlayerLevelPrefix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "ApplyPenalty", nameof(HudManagerApplyPenaltyPostfix), ref patched);
         PatchPostfix(harmony, typeof(HUDManager), "ShowPlayersFiredScreen", nameof(HudManagerShowPlayersFiredScreenPostfix), ref patched);
@@ -107,6 +114,7 @@ internal static partial class TextPatches
         PatchPostfix(harmony, typeof(ChallengeLeaderboardSlot), "SetSlotValues", nameof(ChallengeLeaderboardSlotSetSlotValuesPostfix), ref patched);
         PatchPostfix(harmony, typeof(LobbySlot), "SetModdedIcon", nameof(LobbySlotSetModdedIconPostfix), ref patched);
         PatchPostfix(harmony, typeof(HangarShipDoor), "Start", nameof(HangarShipDoorStartPostfix), ref patched);
+        PatchPostfix(harmony, typeof(Terminal), "Start", nameof(TerminalStartPostfix), ref patched, Priority.Last);
 
         PatchPrefix(harmony, typeof(HUDManager), "DisplayTip", nameof(HudManagerDisplayTipPrefix), ref patched);
         PatchPrefix(harmony, typeof(HUDManager), "DisplayStatusEffect", nameof(HudManagerDisplayStatusEffectPrefix), ref patched);
@@ -277,6 +285,9 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "LobbyImprovements.LANDiscovery.LANLobbyManager_InGame", "UpdatePlayerListHeader", nameof(LobbyImprovementsUpdatePlayerListHeaderPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LobbyImprovements.SessionTickets_Client", "ParsePlayerName", nameof(LobbyImprovementsParsePlayerNamePostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LobbyImprovements.SessionTickets_Client", "AddUserToPlayerList", nameof(LobbyImprovementsAddUserToPlayerListPostfix), ref patched, Priority.Last);
+        PatchOptionalPostfix(harmony, "LobbyImprovements.HostingUI", "MM_ConfirmHostButton", nameof(LobbyImprovementsConfirmHostButtonPostfix), ref patched, Priority.Last);
+        PatchOptionalPostfix(harmony, "LobbyImprovements.LANDiscovery.LANLobbyManager_InGame", "AddTextToChatOnServer", nameof(LobbyImprovementsAddTextToChatOnServerPostfix), ref patched, Priority.Last);
+        PatchOptionalPostfix(harmony, "MoreCompany.MenuManagerHost", "CreateCrewCountInput", nameof(MoreCompanyCreateCrewCountInputPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LethalCompanyInputUtils.LcInputActionApi", "LoadIntoUI", nameof(InputUtilsLoadIntoUiPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LethalCompanyInputUtils.Localization.LocaleManager", "LoadLocaleData", nameof(InputUtilsLocaleDataLoadedPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LethalCompanyInputUtils.Components.PopOvers.PopOverTextContainer", "SetText", nameof(InputUtilsPopOverTextSetPostfix), ref patched, Priority.Last);

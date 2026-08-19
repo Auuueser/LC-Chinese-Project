@@ -105,7 +105,7 @@ internal static class HudEndGameLocalizationService
             text.text = translated;
             FontFallbackService.ApplyFallback(text, translated);
             Plugin.ReportTranslationHit();
-            Plugin.Log.LogInfo($"NativeRelay[{reason}] target=DialogueBox action=applied name={text.name} text={translated}");
+            Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{reason}] target=DialogueBox action=applied name={text.name} text={translated}");
         }
     }
 
@@ -136,7 +136,7 @@ internal static class HudEndGameLocalizationService
         header.enableWordWrapping = false;
         header.overflowMode = TextOverflowModes.Overflow;
         FontFallbackService.ApplyFallback(header, PilotComputerLocalizedText);
-        Plugin.Log.LogInfo($"NativeRelay[{reason}] target=DialogueBoxHeader action=pilot-computer text={header.text}");
+        Plugin.LogRuntimeLocalizationEvent($"NativeRelay[{reason}] target=DialogueBoxHeader action=pilot-computer text={header.text}");
     }
 
     private static bool LooksLikePilotComputerBody(string? value)
@@ -161,7 +161,11 @@ internal static class HudEndGameLocalizationService
                (text.IndexOf("\u6295\u7968", StringComparison.Ordinal) >= 0 &&
                 text.IndexOf("\u81ea\u52a8\u9a7e\u9a76", StringComparison.Ordinal) >= 0 &&
                 (text.IndexOf("\u63d0\u524d\u79bb\u5f00", StringComparison.Ordinal) >= 0 ||
-                 text.IndexOf("\u63d0\u65e9\u79bb\u5f00", StringComparison.Ordinal) >= 0));
+                 text.IndexOf("\u63d0\u65e9\u79bb\u5f00", StringComparison.Ordinal) >= 0)) ||
+               (text.IndexOf("autopilot ship will leave at midnight", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                text.IndexOf("return quickly", StringComparison.OrdinalIgnoreCase) >= 0) ||
+               (text.IndexOf("\u81ea\u52a8\u9a7e\u9a76\u98de\u8239\u5c06\u5728\u5348\u591c\u79bb\u5f00", StringComparison.Ordinal) >= 0 &&
+                text.IndexOf("\u8bf7\u5c3d\u5feb\u8fd4\u56de", StringComparison.Ordinal) >= 0);
     }
 
     public static bool TranslateShipLeaveEarlyWarning(string? source, out string translated)

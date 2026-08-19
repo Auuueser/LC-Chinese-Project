@@ -16,6 +16,7 @@ internal static class TargetedUiTranslator
     private static int _dropdownRefreshDepth;
 
     private static readonly HashSet<int> QuickMenuTranslated = new();
+    private static readonly HashSet<int> QuickMenuDebugTranslated = new();
     private static readonly HashSet<int> MenuPanelTranslated = new();
     private static readonly HashSet<int> QuickMenuTranslationRunning = new();
     private static readonly HashSet<int> MenuPanelTranslationRunning = new();
@@ -28,6 +29,7 @@ internal static class TargetedUiTranslator
     private static readonly Dictionary<int, ChatOutputState> ChatOutputStates = new();
     private static readonly Dictionary<int, CursorTipState> CursorTipStates = new();
     private static readonly Dictionary<int, PlanetRiskTextPair> PlanetRiskTextPairCache = new();
+    private static readonly Dictionary<int, TMP_Text[]> DebugMenuStateTextCache = new();
     private static readonly List<TMP_Dropdown> TmpDropdownScanBuffer = new();
     private static readonly List<Dropdown> DropdownScanBuffer = new();
     private static readonly List<TMP_Text> TmpTextScanBuffer = new();
@@ -44,6 +46,10 @@ internal static class TargetedUiTranslator
     private const string PlanetRiskTitleLocalizedText = "\u98ce\u9669\u7ea7\u522b\uff1a";
     private const string PlanetRiskValueObjectName = "HazardLevelLetter";
     private const int PlanetRiskMergeLogLimit = 6;
+    private const string ChallengeSaveCollectedLabelObjectName = "V81TestChn_ChallengeCollectedLabel";
+    private const float ChallengeSaveAmountBandMin = 0.50f;
+    private const float ChallengeSaveLabelBandMin = 0.12f;
+    private const float ChallengeSaveLabelBandMax = 0.52f;
     private static bool _sceneUnloadSubscribed;
     private static bool _hudChatOutputDeferredByRoundTransition;
     private static int _planetRiskMergeLogRemaining = PlanetRiskMergeLogLimit;
@@ -123,6 +129,7 @@ internal static class TargetedUiTranslator
     public static void ClearCaches()
     {
         QuickMenuTranslated.Clear();
+        QuickMenuDebugTranslated.Clear();
         MenuPanelTranslated.Clear();
         QuickMenuTranslationRunning.Clear();
         MenuPanelTranslationRunning.Clear();
@@ -136,6 +143,7 @@ internal static class TargetedUiTranslator
         ChatOutputStates.Clear();
         CursorTipStates.Clear();
         PlanetRiskTextPairCache.Clear();
+        DebugMenuStateTextCache.Clear();
         HudEventSeenObjects.Clear();
         RoundTransitionTextThrottle.Reset();
         ClearScanBuffers();
@@ -215,8 +223,6 @@ internal static class TargetedUiTranslator
         {
             return false;
         }
-
-        TranslateGameObjectOpenFrameFast(root, includeInactive: false);
 
         try
         {
@@ -329,6 +335,9 @@ internal static class TargetedUiTranslator
     public static (int translated, int seen) TranslateQuickMenu(QuickMenuManager menu, string reason)
     {
         var firstPass = QuickMenuTranslated.Add(menu.GetInstanceID());
+        var debugMenu = menu.debugMenuUI;
+        var debugMenuAvailable = debugMenu != null;
+        var debugFirstPass = debugMenuAvailable && QuickMenuDebugTranslated.Add(debugMenu!.GetInstanceID());
         var seen = new HashSet<int>();
         var translated = 0;
         var totalSeen = 0;
@@ -341,18 +350,29 @@ internal static class TargetedUiTranslator
                 Add(TranslateRootOnly(menu.playerListPanel, seen));
             }
 
-            if (menu.debugMenuUI != null && menu.debugMenuUI.activeInHierarchy)
+        }
+
+        // LethalDevMode can expose this root after QuickMenuManager.Start. Scan
+        // its hierarchy once, then only revisit the cached Enabled/Disabled
+        // labels when ESC is opened again.
+        if (debugMenuAvailable)
+        {
+            Add(TranslateDebugMenuStateLabels(debugMenu));
+            if (debugFirstPass)
             {
-                Add(TranslateRootOnly(menu.debugMenuUI, seen));
+                Add(TranslateRootOnly(debugMenu, seen));
             }
         }
 
-        TranslateTmp(menu.interactTipText, seen, ref translated, ref totalSeen);
-        TranslateTmp(menu.leaveGameClarificationText, seen, ref translated, ref totalSeen);
-        TranslateTmp(menu.ConfirmKickPlayerText, seen, ref translated, ref totalSeen);
-        TranslateTmp(menu.currentMicrophoneText, seen, ref translated, ref totalSeen);
-        TranslateTmp(menu.changesNotAppliedText, seen, ref translated, ref totalSeen);
-        TranslateTmp(menu.settingsBackButton, seen, ref translated, ref totalSeen);
+        if (firstPass)
+        {
+            TranslateTmp(menu.interactTipText, seen, ref translated, ref totalSeen);
+            TranslateTmp(menu.leaveGameClarificationText, seen, ref translated, ref totalSeen);
+            TranslateTmp(menu.ConfirmKickPlayerText, seen, ref translated, ref totalSeen);
+            TranslateTmp(menu.currentMicrophoneText, seen, ref translated, ref totalSeen);
+            TranslateTmp(menu.changesNotAppliedText, seen, ref translated, ref totalSeen);
+            TranslateTmp(menu.settingsBackButton, seen, ref translated, ref totalSeen);
+        }
 
         Plugin.LogTargetedTranslation(reason, translated, totalSeen);
         return (translated, totalSeen);
@@ -383,19 +403,23 @@ internal static class TargetedUiTranslator
         }
 
         var firstPass = QuickMenuTranslated.Add(instanceId);
-        if (firstPass)
+        var debugMenu = menu.debugMenuUI;
+        var debugMenuActive = debugMenu != null && debugMenu.activeInHierarchy;
+        var debugFirstPass = debugMenuActive && QuickMenuDebugTranslated.Add(debugMenu!.GetInstanceID());
+        if (debugMenuActive && !debugFirstPass)
         {
-            TranslateGameObjectOpenFrameFast(menu.mainButtonsPanel, includeInactive: true);
-            if (menu.debugMenuUI != null && menu.debugMenuUI.activeInHierarchy)
-            {
-                TranslateGameObjectOpenFrameFast(menu.debugMenuUI, includeInactive: true);
-            }
+            TranslateDebugMenuStateLabels(debugMenu);
+        }
+
+        if (!firstPass && !debugFirstPass)
+        {
+            return true;
         }
 
         try
         {
             QuickMenuTranslationRunning.Add(instanceId);
-            menu.StartCoroutine(TranslateQuickMenuBudgeted(menu, reason, instanceId, firstPass));
+            menu.StartCoroutine(TranslateQuickMenuBudgeted(menu, reason, instanceId, firstPass, debugFirstPass));
             return true;
         }
         catch (Exception ex)
@@ -466,6 +490,48 @@ internal static class TargetedUiTranslator
 
         Plugin.LogTargetedTranslation(reason, translated, totalSeen);
         return (translated, totalSeen);
+    }
+
+    public static (int translated, int seen) TranslateDebugMenuBeforeFirstRender(
+        QuickMenuManager? menu,
+        string reason)
+    {
+        var root = menu?.debugMenuUI;
+        if (root == null || !Application.isEditor)
+        {
+            return (0, 0);
+        }
+
+        var instanceId = root.GetInstanceID();
+        if (DebugMenuStateTextCache.ContainsKey(instanceId))
+        {
+            return TranslateDebugMenuStateLabels(root);
+        }
+
+        // LethalDevMode exposes the game's original developer panel during
+        // QuickMenuManager.Start. Translate only its small TMP set before the
+        // first frame is rendered; the rest of QuickMenu remains budgeted.
+        var texts = root.GetComponentsInChildren<TMP_Text>(includeInactive: true);
+        var seenObjects = new HashSet<int>();
+        var stateTexts = new List<TMP_Text>(4);
+        var translated = 0;
+        var seen = 0;
+        foreach (var text in texts)
+        {
+            TranslateTmp(text, seenObjects, ref translated, ref seen);
+            if (text != null && TryTranslateDebugMenuStateLabel(text, out var stateChanged))
+            {
+                stateTexts.Add(text);
+                if (stateChanged)
+                {
+                    translated++;
+                }
+            }
+        }
+
+        DebugMenuStateTextCache[instanceId] = stateTexts.ToArray();
+        Plugin.LogTargetedTranslation(reason, translated, seen);
+        return (translated, seen);
     }
 
     private static void ApplyPlanetInfoPresentation(HUDManager hud)
@@ -1896,11 +1962,124 @@ internal static class TargetedUiTranslator
         var seen = new HashSet<int>();
         var translated = 0;
         var totalSeen = 0;
-        TranslateTmpTargeted(slot.fileStatsText, DynamicTextDomain.GeneralFast, seen, ref translated, ref totalSeen);
+        TranslateTmpTargeted(slot.fileStatsText, DynamicTextDomain.HudRewards, seen, ref translated, ref totalSeen);
+        ApplyChallengeSaveCollectedLayout(slot);
         TranslateTmp(slot.fileNotCompatibleAlert, seen, ref translated, ref totalSeen);
         TranslateTmp(slot.specialTipText, seen, ref translated, ref totalSeen);
         Plugin.LogTargetedTranslation(reason, translated, totalSeen);
         return (translated, totalSeen);
+    }
+
+    private static void ApplyChallengeSaveCollectedLayout(SaveFileUISlot slot)
+    {
+        var text = slot.fileStatsText;
+        if (text == null)
+        {
+            return;
+        }
+
+        var existingLabel = FindChallengeSaveCollectedLabel(text);
+        if (slot.fileNum != -1 || !text.enabled)
+        {
+            if (existingLabel != null)
+            {
+                existingLabel.enabled = false;
+            }
+
+            return;
+        }
+
+        var amount = string.Empty;
+        if (!TryParseChallengeSaveCollectedAmount(text.text, out amount))
+        {
+            // Re-applying the targeted translator must be idempotent after the original
+            // combined string has already been split into the amount and label objects.
+            if (existingLabel == null || string.IsNullOrWhiteSpace(text.text))
+            {
+                return;
+            }
+
+            amount = text.text.Trim();
+        }
+
+        var label = existingLabel ?? CreateChallengeSaveCollectedLabel(text);
+        if (label == null)
+        {
+            return;
+        }
+
+        text.text = amount;
+        text.richText = false;
+        text.enableWordWrapping = false;
+        text.enableAutoSizing = false;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.alignment = TextAlignmentOptions.MidlineRight;
+        ApplyChallengeSaveVerticalBand(text.rectTransform, ChallengeSaveAmountBandMin, 1f);
+        FontFallbackService.ApplyFallback(text, amount);
+
+        const string collected = "\u5df2\u6536\u96c6";
+        label.text = collected;
+        label.enabled = true;
+        label.richText = false;
+        label.enableWordWrapping = false;
+        label.enableAutoSizing = false;
+        label.overflowMode = TextOverflowModes.Overflow;
+        label.alignment = TextAlignmentOptions.MidlineRight;
+        label.raycastTarget = false;
+        ApplyChallengeSaveVerticalBand(label.rectTransform, ChallengeSaveLabelBandMin, ChallengeSaveLabelBandMax);
+        FontFallbackService.ApplyFallback(label, collected);
+    }
+
+    private static TMP_Text? FindChallengeSaveCollectedLabel(TMP_Text source)
+    {
+        var parent = source.transform.parent;
+        return parent?.Find(ChallengeSaveCollectedLabelObjectName)?.GetComponent<TMP_Text>();
+    }
+
+    private static TMP_Text? CreateChallengeSaveCollectedLabel(TMP_Text source)
+    {
+        var parent = source.transform.parent;
+        if (parent == null)
+        {
+            return null;
+        }
+
+        var label = UnityEngine.Object.Instantiate(source, parent, false);
+        label.gameObject.name = ChallengeSaveCollectedLabelObjectName;
+        label.transform.SetAsLastSibling();
+        return label;
+    }
+
+    private static void ApplyChallengeSaveVerticalBand(RectTransform rectTransform, float minY, float maxY)
+    {
+        rectTransform.anchorMin = new Vector2(rectTransform.anchorMin.x, minY);
+        rectTransform.anchorMax = new Vector2(rectTransform.anchorMax.x, maxY);
+        rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, 0f);
+        rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, 0f);
+    }
+
+    internal static bool TryParseChallengeSaveCollectedAmount(string? source, out string amount)
+    {
+        amount = string.Empty;
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return false;
+        }
+
+        var trimmed = source.Trim();
+        const string suffix = " \u5df2\u6536\u96c6";
+        if (!trimmed.EndsWith(suffix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        amount = trimmed.Substring(0, trimmed.Length - suffix.Length).Trim();
+        if (amount.Length == 0)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public static (int translated, int seen) TranslateAutosaveTextInLoadedScenes(string reason)
@@ -2158,7 +2337,8 @@ internal static class TargetedUiTranslator
         QuickMenuManager menu,
         string reason,
         int instanceId,
-        bool firstPass)
+        bool firstPass,
+        bool debugFirstPass)
     {
         var counts = new TranslationCounts();
         try
@@ -2166,46 +2346,32 @@ internal static class TargetedUiTranslator
             var seen = new HashSet<int>();
             if (firstPass)
             {
+                yield return TranslateRootOnlyBudgeted(menu.mainButtonsPanel, seen, counts);
                 if (menu.playerListPanel != null && menu.playerListPanel.activeInHierarchy)
                 {
                     yield return TranslateRootOnlyBudgeted(menu.playerListPanel, seen, counts);
                 }
             }
 
-            TranslateTmp(menu.interactTipText, seen, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
+            if (debugFirstPass && menu.debugMenuUI != null && menu.debugMenuUI.activeInHierarchy)
             {
-                yield return null;
+                var debugMenu = menu.debugMenuUI;
+                yield return TranslateGameObjectBudgeted(
+                    debugMenu,
+                    seen,
+                    includeInactive: true,
+                    counts,
+                    debugMenu.GetInstanceID());
             }
 
-            TranslateTmp(menu.leaveGameClarificationText, seen, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
+            if (firstPass)
             {
-                yield return null;
-            }
-
-            TranslateTmp(menu.ConfirmKickPlayerText, seen, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
-            {
-                yield return null;
-            }
-
-            TranslateTmp(menu.currentMicrophoneText, seen, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
-            {
-                yield return null;
-            }
-
-            TranslateTmp(menu.changesNotAppliedText, seen, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
-            {
-                yield return null;
-            }
-
-            TranslateTmp(menu.settingsBackButton, seen, ref counts.Translated, ref counts.Seen);
-            if (AdvanceMenuBudget(counts))
-            {
-                yield return null;
+                TranslateTmp(menu.interactTipText, seen, ref counts.Translated, ref counts.Seen);
+                TranslateTmp(menu.leaveGameClarificationText, seen, ref counts.Translated, ref counts.Seen);
+                TranslateTmp(menu.ConfirmKickPlayerText, seen, ref counts.Translated, ref counts.Seen);
+                TranslateTmp(menu.currentMicrophoneText, seen, ref counts.Translated, ref counts.Seen);
+                TranslateTmp(menu.changesNotAppliedText, seen, ref counts.Translated, ref counts.Seen);
+                TranslateTmp(menu.settingsBackButton, seen, ref counts.Translated, ref counts.Seen);
             }
 
             Plugin.LogTargetedTranslation(reason, counts.Translated, counts.Seen);
@@ -2226,12 +2392,66 @@ internal static class TargetedUiTranslator
         yield return TranslateGameObjectBudgeted(root, seenObjects, includeInactive: true, counts);
     }
 
+    private static (int translated, int seen) TranslateDebugMenuStateLabels(
+        GameObject? root)
+    {
+        if (root == null)
+        {
+            return (0, 0);
+        }
+
+        var translated = 0;
+        var seen = 0;
+        var instanceId = root.GetInstanceID();
+        if (!DebugMenuStateTextCache.TryGetValue(instanceId, out var stateTexts))
+        {
+            stateTexts = root.GetComponentsInChildren<TMP_Text>(includeInactive: true);
+            DebugMenuStateTextCache[instanceId] = stateTexts;
+        }
+
+        foreach (var text in stateTexts)
+        {
+            if (text == null)
+            {
+                continue;
+            }
+
+            var localized = text.text switch
+            {
+                "Enabled" => "\u5df2\u542f\u7528",
+                "Disabled" => "\u5df2\u7981\u7528",
+                _ => null
+            };
+
+            if (localized == null)
+            {
+                continue;
+            }
+
+            seen++;
+            if (string.Equals(text.text, localized, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            text.text = localized;
+            FontFallbackService.ApplyFallback(text, localized);
+            MarkTranslationProcessed(text, localized);
+            Plugin.ReportTranslationHit();
+            translated++;
+        }
+
+        return (translated, seen);
+    }
+
     private static IEnumerator TranslateGameObjectBudgeted(
         GameObject root,
         HashSet<int> seenObjects,
         bool includeInactive,
-        TranslationCounts counts)
+        TranslationCounts counts,
+        int debugMenuRootId = 0)
     {
+        var debugStateTexts = debugMenuRootId != 0 ? new List<TMP_Text>(4) : null;
         var pending = new Stack<Transform>(64);
         pending.Push(root.transform);
         var traversedThisFrame = 0;
@@ -2271,6 +2491,15 @@ internal static class TargetedUiTranslator
             if (current.TryGetComponent<TMP_Text>(out var tmpText))
             {
                 TranslateTmp(tmpText, seenObjects, ref counts.Translated, ref counts.Seen);
+                if (debugStateTexts != null && TryTranslateDebugMenuStateLabel(tmpText, out var stateChanged))
+                {
+                    debugStateTexts.Add(tmpText);
+                    if (stateChanged)
+                    {
+                        counts.Translated++;
+                    }
+                }
+
                 if (AdvanceMenuBudget(counts))
                 {
                     traversedThisFrame = 0;
@@ -2305,6 +2534,41 @@ internal static class TargetedUiTranslator
                 yield return null;
             }
         }
+
+        if (debugStateTexts != null)
+        {
+            DebugMenuStateTextCache[debugMenuRootId] = debugStateTexts.ToArray();
+        }
+    }
+
+    private static bool TryTranslateDebugMenuStateLabel(TMP_Text text, out bool changed)
+    {
+        changed = false;
+        var localized = text.text switch
+        {
+            "Enabled" => "\u5df2\u542f\u7528",
+            "Disabled" => "\u5df2\u7981\u7528",
+            "\u5df2\u542f\u7528" => "\u5df2\u542f\u7528",
+            "\u5df2\u7981\u7528" => "\u5df2\u7981\u7528",
+            _ => null
+        };
+
+        if (localized == null)
+        {
+            return false;
+        }
+
+        if (string.Equals(text.text, localized, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        text.text = localized;
+        FontFallbackService.ApplyFallback(text, localized);
+        MarkTranslationProcessed(text, localized);
+        Plugin.ReportTranslationHit();
+        changed = true;
+        return true;
     }
 
     private static bool AdvanceMenuBudget(TranslationCounts counts)

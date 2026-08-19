@@ -15,11 +15,14 @@ namespace V81TestChn;
 [BepInDependency("LCBetterSaves", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("com.example.Advancedfeatures", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("FlipMods.TooManyEmotes", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("me.swipez.melonloader.morecompany", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("uk.1a3.lobbyimprovements", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("PXC.ShipLootPlus", BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "Aueser.LCChineseProject";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.2.6";
+    public const string PluginVersion = "3.2.7";
 
     internal static ManualLogSource Log = null!;
 
@@ -46,7 +49,7 @@ public sealed class Plugin : BaseUnityPlugin
             ConfigSections.DiagnosticsGeneral,
             "LogRuntimeLocalizationEvents",
             false,
-            "Enable verbose runtime localization event logs. Default off to avoid IO spikes during gameplay.");
+            "启用运行时汉化事件的详细汇报日志。默认关闭，避免游戏过程中产生大量日志和 IO。");
         _logRuntimeLocalizationEventsFast = _logRuntimeLocalizationEvents.Value;
         DontDestroyOnLoad(gameObject);
         Application.quitting += OnUnityQuitting;
@@ -201,6 +204,14 @@ public sealed class Plugin : BaseUnityPlugin
     internal static void ReportTranslationHit()
     {
         _translationHits++;
+    }
+
+    internal static void LogRuntimeLocalizationEvent(string message)
+    {
+        if (_logRuntimeLocalizationEventsFast && !string.IsNullOrWhiteSpace(message))
+        {
+            Log.LogInfo(message);
+        }
     }
 
     internal static void LogTargetedTranslation(string reason, int translated, int seen)

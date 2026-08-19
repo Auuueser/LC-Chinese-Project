@@ -52,6 +52,16 @@ internal static class ExternalEnglishCompatibilityService
         ["If clients frequently fail to connect maybe consider increasing \"connection_timeout_ms\" in LobbyControl config"] = "\u5982\u679c\u5ba2\u6237\u7aef\u7ecf\u5e38\u8fde\u63a5\u5931\u8d25\uff0c\u8bf7\u8003\u8651\u8c03\u9ad8 LobbyControl \u914d\u7f6e\u4e2d\u7684 \"connection_timeout_ms\"\u3002",
         ["Server Password"] = "\u623f\u95f4\u5bc6\u7801",
         ["Validate Steam Sessions"] = "\u9a8c\u8bc1 Steam \u4f1a\u8bdd",
+        ["Validate Steam Sessions is not currently usable in 'public' lobbies unless you set a custom lobby tag!"] = "\u9a8c\u8bc1 Steam \u4f1a\u8bdd\u5f53\u524d\u65e0\u6cd5\u7528\u4e8e\u201c\u516c\u5f00\u201d\u623f\u95f4\uff0c\u9664\u975e\u8bbe\u7f6e\u81ea\u5b9a\u4e49\u623f\u95f4\u6807\u7b7e\uff01",
+        ["Password Protection is not currently usable in 'public' lobbies unless you set a custom lobby tag!"] = "\u5bc6\u7801\u4fdd\u62a4\u5f53\u524d\u65e0\u6cd5\u7528\u4e8e\u201c\u516c\u5f00\u201d\u623f\u95f4\uff0c\u9664\u975e\u8bbe\u7f6e\u81ea\u5b9a\u4e49\u623f\u95f4\u6807\u7b7e\uff01",
+        ["Loading server list..."] = "\u6b63\u5728\u52a0\u8f7d\u670d\u52a1\u5668\u5217\u8868...",
+        ["No available servers to join."] = "\u6ca1\u6709\u53ef\u52a0\u5165\u7684\u670d\u52a1\u5668\u3002",
+        ["Crew Size:"] = "\u8239\u5458\u4eba\u6570\uff1a",
+        ["Sort: Friends"] = "\u6392\u5e8f\uff1a\u4ec5\u597d\u53cb",
+        ["Sort: Similar rank"] = "\u6392\u5e8f\uff1a\u76f8\u8fd1\u6392\u540d",
+        ["Sort: Top 20"] = "\u6392\u5e8f\uff1a\u524d 20 \u540d",
+        ["Loading ranking..."] = "\u6b63\u5728\u52a0\u8f7d\u6392\u540d...",
+        ["No entries to display!"] = "\u6ca1\u6709\u53ef\u663e\u793a\u7684\u6761\u76ee\uff01",
         ["Max Players"] = "\u6700\u5927\u4eba\u6570",
         ["Server Access"] = "\u623f\u95f4\u6743\u9650",
         ["Invite-only"] = "\u4ec5\u9650\u9080\u8bf7",
@@ -229,6 +239,19 @@ internal static class ExternalEnglishCompatibilityService
         " item(s) with a total value of ",
         " items with a total value of ",
         " item with a total value of "
+    };
+
+    private static readonly Dictionary<string, string> ShipLootPlusWeatherEntries = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["None"] = "\u65e0",
+        ["Clear"] = "\u6674\u6717",
+        ["DustClouds"] = "\u6c99\u5c18",
+        ["Rainy"] = "\u591a\u96e8",
+        ["Stormy"] = "\u66b4\u98ce\u96e8",
+        ["Foggy"] = "\u96fe\u5929",
+        ["Flooded"] = "\u6d2a\u6c34",
+        ["Eclipsed"] = "\u65e5\u98df",
+        ["Hell"] = "\u5730\u72f1"
     };
 
     private static readonly BoundedCache<string, bool> CanHandleCache = new(RuntimeCacheLimit, StringComparer.Ordinal);
@@ -443,6 +466,9 @@ internal static class ExternalEnglishCompatibilityService
 
         var content = StripMenuSelectionPrefix(text);
         if (ExactEntries.ContainsKey(content) ||
+            LooksLikeShipLootPlusHudText(content) ||
+            LooksLikeVersionedServerListLoadingText(content) ||
+            LooksLikeChallengeLeaderboardHeader(content) ||
             LooksLikeAdvertisementSaleText(content) ||
             LooksLikeEladsHudMetricText(content) ||
             LooksLikeInfectionPercentageText(content) ||
@@ -829,6 +855,9 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         if (TryTranslateBracketedCommand(text, out translated) ||
+            TryTranslateShipLootPlusHudText(text, out translated) ||
+            TryTranslateVersionedServerListLoadingText(text, out translated) ||
+            TryTranslateChallengeLeaderboardHeader(text, out translated) ||
             TryTranslateAdvertisementSaleText(text, out translated) ||
             TryTranslateEladsHudMetricText(text, out translated) ||
             TryTranslateInfectionPercentageText(text, out translated) ||
@@ -847,6 +876,193 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         return false;
+    }
+
+    private static bool LooksLikeShipLootPlusHudText(string text)
+    {
+        return (text.StartsWith("Ship: $", StringComparison.OrdinalIgnoreCase) &&
+                text.IndexOf(" / $", StringComparison.Ordinal) > "Ship: ".Length) ||
+               (text.StartsWith("Quota: $", StringComparison.OrdinalIgnoreCase) &&
+                text.IndexOf(" - Profit: $", StringComparison.OrdinalIgnoreCase) > "Quota: ".Length) ||
+               (text.StartsWith("Deadline: ", StringComparison.OrdinalIgnoreCase) &&
+                text.IndexOf(" - ", StringComparison.Ordinal) > "Deadline: ".Length);
+    }
+
+    private static bool TryTranslateShipLootPlusHudText(string text, out string translated)
+    {
+        translated = text;
+
+        const string shipPrefix = "Ship: ";
+        const string shipSeparator = " / ";
+        if (text.StartsWith(shipPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var separatorIndex = text.IndexOf(shipSeparator, shipPrefix.Length, StringComparison.Ordinal);
+            if (separatorIndex > shipPrefix.Length)
+            {
+                var shipValue = text.Substring(shipPrefix.Length, separatorIndex - shipPrefix.Length);
+                var moonValue = text.Substring(separatorIndex + shipSeparator.Length);
+                if (shipValue.StartsWith("$", StringComparison.Ordinal) &&
+                    moonValue.StartsWith("$", StringComparison.Ordinal))
+                {
+                    translated = $"\u98de\u8239\uff1a{shipValue} / \u6708\u7403\uff1a{TranslateShipLootPlusWeather(moonValue)}";
+                    return true;
+                }
+            }
+        }
+
+        const string quotaPrefix = "Quota: ";
+        const string quotaSeparator = " - Profit: ";
+        if (text.StartsWith(quotaPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var separatorIndex = text.IndexOf(quotaSeparator, quotaPrefix.Length, StringComparison.OrdinalIgnoreCase);
+            if (separatorIndex > quotaPrefix.Length)
+            {
+                var quotaValue = text.Substring(quotaPrefix.Length, separatorIndex - quotaPrefix.Length);
+                var profitValue = text.Substring(separatorIndex + quotaSeparator.Length);
+                if (quotaValue.StartsWith("$", StringComparison.Ordinal) &&
+                    profitValue.StartsWith("$", StringComparison.Ordinal))
+                {
+                    translated = $"\u914d\u989d\uff1a{quotaValue} / \u5229\u6da6\uff1a{profitValue}";
+                    return true;
+                }
+            }
+        }
+
+        const string deadlinePrefix = "Deadline: ";
+        const string deadlineSeparator = " - ";
+        if (text.StartsWith(deadlinePrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var separatorIndex = text.IndexOf(deadlineSeparator, deadlinePrefix.Length, StringComparison.Ordinal);
+            if (separatorIndex > deadlinePrefix.Length)
+            {
+                var deadlineValue = text.Substring(deadlinePrefix.Length, separatorIndex - deadlinePrefix.Length).Trim();
+                var dayValue = text.Substring(separatorIndex + deadlineSeparator.Length).Trim();
+                if (deadlineValue.Length > 0 && TryParseShipLootPlusOrdinalDay(dayValue, out var dayNumber))
+                {
+                    translated = $"\u671f\u9650\uff1a{deadlineValue} - \u7b2c {dayNumber} \u5929";
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static string TranslateShipLootPlusWeather(string source)
+    {
+        var closeBracket = source.LastIndexOf(']');
+        if (closeBracket < 0)
+        {
+            return source;
+        }
+
+        var openBracket = source.LastIndexOf('[', closeBracket);
+        var separator = source.LastIndexOf(':', closeBracket);
+        if (openBracket < 0 || separator <= openBracket || separator >= closeBracket)
+        {
+            return source;
+        }
+
+        var weather = source.Substring(separator + 1, closeBracket - separator - 1).Trim();
+        if (!ShipLootPlusWeatherEntries.TryGetValue(weather, out var localizedWeather))
+        {
+            return source;
+        }
+
+        return source.Substring(0, separator + 1) + localizedWeather + source.Substring(closeBracket);
+    }
+
+    private static bool TryParseShipLootPlusOrdinalDay(string source, out string dayNumber)
+    {
+        dayNumber = string.Empty;
+        const string daySuffix = " day";
+        if (!source.EndsWith(daySuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var ordinal = source[..^daySuffix.Length].Trim();
+        if (ordinal.EndsWith("st", StringComparison.OrdinalIgnoreCase) ||
+            ordinal.EndsWith("nd", StringComparison.OrdinalIgnoreCase) ||
+            ordinal.EndsWith("rd", StringComparison.OrdinalIgnoreCase) ||
+            ordinal.EndsWith("th", StringComparison.OrdinalIgnoreCase))
+        {
+            ordinal = ordinal[..^2];
+        }
+
+        if (ordinal.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (var ch in ordinal)
+        {
+            if (!char.IsDigit(ch))
+            {
+                return false;
+            }
+        }
+
+        dayNumber = ordinal;
+        return true;
+    }
+
+    private static bool LooksLikeVersionedServerListLoadingText(string text)
+    {
+        const string Prefix = "Loading ";
+        const string Suffix = " server list...";
+        return text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) &&
+               text.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase) &&
+               text.Length > Prefix.Length + Suffix.Length;
+    }
+
+    private static bool LooksLikeChallengeLeaderboardHeader(string text)
+    {
+        const string Prefix = "Challenge Moon ";
+        const string Suffix = " Results";
+        return text.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) &&
+               text.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase) &&
+               text.Length > Prefix.Length + Suffix.Length;
+    }
+
+    private static bool TryTranslateChallengeLeaderboardHeader(string text, out string translated)
+    {
+        translated = text;
+        if (!LooksLikeChallengeLeaderboardHeader(text))
+        {
+            return false;
+        }
+
+        const string Prefix = "Challenge Moon ";
+        const string Suffix = " Results";
+        var moon = text.Substring(Prefix.Length, text.Length - Prefix.Length - Suffix.Length).Trim();
+        if (moon.Length == 0)
+        {
+            return false;
+        }
+
+        translated = $"\u6311\u6218\u536b\u661f {moon} \u7ed3\u679c";
+        return true;
+    }
+
+    private static bool TryTranslateVersionedServerListLoadingText(string text, out string translated)
+    {
+        translated = text;
+        if (!LooksLikeVersionedServerListLoadingText(text))
+        {
+            return false;
+        }
+
+        const string Prefix = "Loading ";
+        const string Suffix = " server list...";
+        var label = text.Substring(Prefix.Length, text.Length - Prefix.Length - Suffix.Length).Trim();
+        if (label.Length == 0)
+        {
+            return false;
+        }
+
+        translated = $"\u6b63\u5728\u52a0\u8f7d {label} \u670d\u52a1\u5668\u5217\u8868...";
+        return true;
     }
 
     private static bool LooksLikeEladsHudConfigToken(string text)

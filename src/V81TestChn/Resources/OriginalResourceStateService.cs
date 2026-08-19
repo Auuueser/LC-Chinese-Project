@@ -276,6 +276,38 @@ internal static class OriginalResourceStateService
         }
     }
 
+    public static string GetOriginalTerminalNodeCreatureName(TerminalNode? node)
+    {
+        if (node == null)
+        {
+            return string.Empty;
+        }
+
+        CaptureTerminalNode(node);
+        return TerminalNodes.TryGetValue(node.GetInstanceID(), out var state) &&
+               state.Node.TryGetTarget(out var capturedNode) &&
+               capturedNode != null &&
+               capturedNode == node
+            ? state.CreatureName ?? string.Empty
+            : node.creatureName ?? string.Empty;
+    }
+
+    public static string GetOriginalTerminalNodeDisplayText(TerminalNode? node)
+    {
+        if (node == null)
+        {
+            return string.Empty;
+        }
+
+        CaptureTerminalNode(node);
+        return TerminalNodes.TryGetValue(node.GetInstanceID(), out var state) &&
+               state.Node.TryGetTarget(out var capturedNode) &&
+               capturedNode != null &&
+               capturedNode == node
+            ? state.DisplayText ?? string.Empty
+            : node.displayText ?? string.Empty;
+    }
+
     private static string[]? Clone(string[]? source)
     {
         return source == null ? null : (string[])source.Clone();
