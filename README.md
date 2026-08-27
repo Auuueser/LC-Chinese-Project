@@ -1,17 +1,15 @@
+<h1 align="center">LC Chinese Project</h1>
+
 <p align="center">
-  <img src="assets/readme/hero.svg" alt="LC Chinese Project — Lethal Company V81 中文汉化" width="100%">
+  <strong>面向 Lethal Company V81 的完整简体中文体验</strong><br>
+  文本、字体、字幕与烘焙贴图统一维护
 </p>
 
 <p align="center">
-  <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.7" src="assets/readme/badge-version.svg" height="22"></a>
+  <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.8" src="assets/readme/badge-version.svg" height="22"></a>
   <a href="https://store.steampowered.com/app/1966720/Lethal_Company/"><img alt="支持游戏版本 V81" src="assets/readme/badge-game.svg" height="22"></a>
   <a href="https://bepinex.org/"><img alt="运行环境 BepInEx 5" src="assets/readme/badge-runtime.svg" height="22"></a>
   <a href="https://github.com/Auuueser/LC-Chinese-Project/blob/main/LICENSE"><img alt="MIT 许可证" src="assets/readme/badge-license.svg" height="22"></a>
-</p>
-
-<p align="center">
-  面向 <strong>Lethal Company V81</strong> 的完整简体中文体验<br>
-  文本、字体、字幕与烘焙贴图统一维护
 </p>
 
 <p align="center">
@@ -24,13 +22,12 @@
 
 | 原版内容 | 视觉本地化 | 字幕与显示 | 模组兼容 |
 |:--|:--|:--|:--|
-| 菜单、HUD、终端、扫描、商店、星球信息、设置与结算 | 船内设施、载具、手册、告示牌与废料包装 | 中文字体、公司音频字幕与 3943 个受支持 Emoji | 保护玩家输入与内部标识，补全常见动态界面 |
+| 菜单、HUD、终端、扫描、商店、星球信息、设置与结算 | 船内设施、载具、手册、工具与废料包装 | 中文字体、公司音频字幕与 3943 个受支持 Emoji | 保护玩家输入与内部标识，补全常见动态界面 |
 
 ## 视觉预览
 
 <p align="center">
   <img src="assets/readme/cruiser-localization-preview.png" alt="公司巡航车干净与脏污版本中文车标" width="100%">
-  <br><sub>公司巡航车 · 干净与脏污版本</sub>
 </p>
 
 <p align="center">
@@ -41,28 +38,30 @@
 
 <p align="center">
   <img src="assets/readme/localized-assets-showcase.png" alt="欢迎地垫、厕纸、土制闪光弹、气喇叭、TZP、喷漆罐、告示牌与多种废料的模型包装汉化成品" width="100%">
-  <br><sub>全部采用原版模型组装展示</sub>
 </p>
 
 ### 员工徽章
 
 <p align="center">
   <img src="assets/readme/player-badges-localization-preview.png" alt="原版玩家模型上的 VIP 员工与五档中文员工等级徽章" width="100%">
-  <br><sub>VIP 员工 · 实习生 · 兼职员工 · 正式员工 · 领队 · 领导</sub>
 </p>
 
-### 船内配电箱
+### 配电箱
 
 <p align="center">
   <img src="assets/readme/powerbox-localization-preview.png" alt="配电箱关门、开门与完整中文 UV 贴图预览" width="100%">
-  <br><sub>关门高压警示 · 开门铭牌与警告标签</sub>
+</p>
+
+### 设施门
+
+<p align="center">
+  <img src="assets/readme/facility-doors-localization-preview.png" alt="消防出口与矿坑设施门中文烘焙贴图预览" width="100%">
 </p>
 
 ### 公司音频中文字幕
 
 <p align="center">
   <img src="assets/readme/chinese-subtitles-preview.jpg" alt="飞船广播、电视节目与公司柜台语音的中文字幕实机预览" width="100%">
-  <br><sub>飞船广播 · 电视节目 · 公司柜台语音</sub>
 </p>
 
 <details>

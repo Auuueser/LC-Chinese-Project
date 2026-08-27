@@ -97,6 +97,7 @@ internal static class EnvironmentTextureLocalizationService
     private static readonly string[] TexturePropertyNames = { "_BaseColorMap", "_MainTex" };
     private static readonly List<Renderer> RendererScanBuffer = new();
     private static readonly HashSet<int> ActiveLocalizedMaterialIds = new();
+    private static readonly HashSet<int> UnchangedMaterialIdsThisPass = new();
     private static readonly Dictionary<string, TextureSpec> TextureSpecs = new(StringComparer.OrdinalIgnoreCase)
     {
         ["posters"] = new TextureSpec("posters", "ShipPostersLocalized.png", 1024, 1024),
@@ -117,6 +118,8 @@ internal static class EnvironmentTextureLocalizationService
         ["SodaCanTex1"] = new TextureSpec("SodaCanTex1", "SodaCanTex1Localized.png", 1024, 1024),
         ["ToothpasteTex"] = new TextureSpec("ToothpasteTex", "ToothpasteTexLocalized.png", 1024, 1024),
         ["WeedKillerBottleTex"] = new TextureSpec("WeedKillerBottleTex", "WeedKillerBottleTexLocalized.png", 1024, 1024),
+        ["WhoopieCushionTex"] = new TextureSpec("WhoopieCushionTex", "WhoopieCushionTexLocalized.png", 1024, 1024),
+        ["YellowMineDoorTex"] = new TextureSpec("YellowMineDoorTex", "YellowMineDoorTexLocalized.png", 1024, 1024),
         ["ChemicalBottle1"] = new TextureSpec("ChemicalBottle1", "ChemicalBottle1Localized.png", 1024, 1024),
         ["powerBoxTextures"] = new TextureSpec("powerBoxTextures", "powerBoxTexturesLocalized.png", 1024, 820),
         ["PlayerLevelStickers"] = new TextureSpec(
@@ -223,32 +226,39 @@ internal static class EnvironmentTextureLocalizationService
         PruneDestroyedRendererStates();
         PruneDestroyedFireExitStates();
         PruneUnusedMaterialStates();
-        for (var sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+        UnchangedMaterialIdsThisPass.Clear();
+        try
         {
-            var scene = SceneManager.GetSceneAt(sceneIndex);
-            if (!scene.IsValid() || !scene.isLoaded)
+            for (var sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
             {
-                continue;
-            }
-
-            foreach (var root in scene.GetRootGameObjects())
-            {
-                if (root == null)
+                var scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.IsValid() || !scene.isLoaded)
                 {
                     continue;
                 }
 
-                RendererScanBuffer.Clear();
-                root.GetComponentsInChildren(true, RendererScanBuffer);
-                foreach (var renderer in RendererScanBuffer)
+                foreach (var root in scene.GetRootGameObjects())
                 {
-                    ApplyToRenderer(renderer);
-                    TryApplyFireExitDoor(renderer);
+                    if (root == null)
+                    {
+                        continue;
+                    }
+
+                    RendererScanBuffer.Clear();
+                    root.GetComponentsInChildren(true, RendererScanBuffer);
+                    foreach (var renderer in RendererScanBuffer)
+                    {
+                        ApplyToRenderer(renderer, cacheUnchangedMaterials: true);
+                        TryApplyFireExitDoor(renderer);
+                    }
                 }
             }
         }
-
-        RendererScanBuffer.Clear();
+        finally
+        {
+            RendererScanBuffer.Clear();
+            UnchangedMaterialIdsThisPass.Clear();
+        }
     }
 
     public static void ApplyGrabbableObject(GrabbableObject? grabbableObject)
@@ -351,6 +361,7 @@ internal static class EnvironmentTextureLocalizationService
         MaterialStates.Clear();
         RendererScanBuffer.Clear();
         ActiveLocalizedMaterialIds.Clear();
+        UnchangedMaterialIdsThisPass.Clear();
         foreach (var texture in LocalizedTextures.Values)
         {
             DestroyUnityObject(texture);
@@ -400,6 +411,7 @@ internal static class EnvironmentTextureLocalizationService
                objectName.StartsWith("RedSodaCan", StringComparison.OrdinalIgnoreCase) ||
                objectName.StartsWith("Toothpaste", StringComparison.OrdinalIgnoreCase) ||
                objectName.StartsWith("WeedKillerItem", StringComparison.OrdinalIgnoreCase) ||
+               objectName.StartsWith("WhoopieCushion", StringComparison.OrdinalIgnoreCase) ||
                objectName.StartsWith("ChemicalJug", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -586,7 +598,7 @@ internal static class EnvironmentTextureLocalizationService
         return mesh;
     }
 
-    private static void ApplyToRenderer(Renderer? renderer)
+    private static void ApplyToRenderer(Renderer? renderer, bool cacheUnchangedMaterials = false)
     {
         if (renderer == null || RendererStates.ContainsKey(renderer.GetInstanceID()))
         {
@@ -605,7 +617,7 @@ internal static class EnvironmentTextureLocalizationService
         for (var index = 0; index < originalMaterials.Length; index++)
         {
             var original = originalMaterials[index];
-            var localized = GetOrCreateLocalizedMaterial(original);
+            var localized = GetOrCreateLocalizedMaterial(original, cacheUnchangedMaterials);
             if (localized == null || ReferenceEquals(localized, original))
             {
                 continue;
@@ -633,7 +645,7 @@ internal static class EnvironmentTextureLocalizationService
             localizedMaterialIds ?? new List<int>());
     }
 
-    private static Material? GetOrCreateLocalizedMaterial(Material? original)
+    private static Material? GetOrCreateLocalizedMaterial(Material? original, bool cacheUnchangedMaterials)
     {
         if (original == null)
         {
@@ -641,6 +653,11 @@ internal static class EnvironmentTextureLocalizationService
         }
 
         var materialId = original.GetInstanceID();
+        if (cacheUnchangedMaterials && UnchangedMaterialIdsThisPass.Contains(materialId))
+        {
+            return original;
+        }
+
         if (MaterialStates.TryGetValue(materialId, out var existing))
         {
             if (existing.HasOriginal(original))
@@ -690,9 +707,15 @@ internal static class EnvironmentTextureLocalizationService
         if (!changed || localized == null)
         {
             DestroyUnityObject(localized);
+            if (cacheUnchangedMaterials)
+            {
+                UnchangedMaterialIdsThisPass.Add(materialId);
+            }
+
             return original;
         }
 
+        UnchangedMaterialIdsThisPass.Remove(materialId);
         localized.name = $"{NormalizeName(original.name)} (zh-CN)";
         if (MaterialStates.TryGetValue(materialId, out var stale))
         {

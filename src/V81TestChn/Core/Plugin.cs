@@ -22,7 +22,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "Aueser.LCChineseProject";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.2.7";
+    public const string PluginVersion = "3.2.8";
 
     internal static ManualLogSource Log = null!;
 
