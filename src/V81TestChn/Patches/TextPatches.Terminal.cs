@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace V81TestChn;
 
@@ -14,6 +14,7 @@ internal static partial class TextPatches
         // Process the serialized vanilla catalogue after Terminal.Start and
         // other Start postfixes, before the player can interact with it.
         TerminalCatalogueLocalizationService.Apply(__instance);
+        TerminalCommandLocalizationService.Register(__instance);
     }
 
     [HarmonyPatch(typeof(Terminal), "SetItemSales")]
@@ -120,9 +121,49 @@ internal static partial class TextPatches
         // Normally a cache-only pass. It remains as a compatibility fallback
         // for terminal nodes appended by another mod after Terminal.Start.
         TerminalCatalogueLocalizationService.Apply(__instance);
+        TerminalCommandLocalizationService.Register(__instance);
         ChatEmojiPasteService.RegisterTerminalInput(__instance);
         ChatEmojiSpriteService.ApplyToText(__instance?.screenText?.textComponent);
         TerminalScreenLocalizationService.ApplyFontFallback(__instance);
+    }
+
+    private static System.Collections.Generic.IEnumerable<CodeInstruction> TerminalStaticDescriptionTranspiler(System.Collections.Generic.IEnumerable<CodeInstruction> instructions)
+    {
+        var textField = typeof(TerminalNode).GetField(nameof(TerminalNode.displayText));
+        var translate = typeof(TranslationService).GetMethod(nameof(TranslationService.TranslateStaticTerminalDescription),
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+        foreach (var instruction in instructions)
+        {
+            yield return instruction;
+            // Translate the local string before vanilla appends history and truncates
+            // it to 250 characters. The shared TerminalNode asset is never modified.
+            if (instruction.LoadsField(textField)) yield return new CodeInstruction(System.Reflection.Emit.OpCodes.Call, translate);
+        }
+    }
+
+    private static bool TerminalParseInputPrefix(Terminal __instance, ref TerminalNode __result)
+    {
+        return Plugin.IsRuntimeShuttingDown || TerminalCommandLocalizationService.Prepare(__instance, ref __result);
+    }
+
+    private static void TerminalRemovePunctuationPrefix(Terminal __instance, ref string __0)
+        => TerminalCommandLocalizationService.RewriteParserInput(__instance, ref __0);
+
+    private static System.Exception? TerminalParseInputFinalizer(System.Exception? __exception)
+    {
+        TerminalCommandLocalizationService.ClearParse();
+        return __exception;
+    }
+
+    private static System.Collections.Generic.IEnumerable<CodeInstruction> TerminalInputLimitTranspiler(System.Collections.Generic.IEnumerable<CodeInstruction> instructions)
+    {
+        var limit = AccessTools.Field(typeof(TerminalNode), nameof(TerminalNode.maxCharactersToType));
+        var adjust = AccessTools.Method(typeof(TerminalCommandLocalizationService), nameof(TerminalCommandLocalizationService.GetInputLimit));
+        foreach (var instruction in instructions)
+        {
+            yield return instruction;
+            if (instruction.LoadsField(limit)) yield return new CodeInstruction(System.Reflection.Emit.OpCodes.Call, adjust);
+        }
     }
 
     private static bool TerminalTextChangedPrefix(Terminal __instance, string newText)

@@ -10,6 +10,7 @@ using UnityEngine;
 namespace V81TestChn;
 
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+[BepInDependency("gafoneo.quicksell", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("ainavt.lc.lethalconfig", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("Zaggy1024.OpenBodyCams", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("LCBetterSaves", BepInDependency.DependencyFlags.SoftDependency)]
@@ -22,7 +23,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "Aueser.LCChineseProject";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.2.8";
+    public const string PluginVersion = "3.2.9";
 
     internal static ManualLogSource Log = null!;
 
@@ -95,6 +96,8 @@ public sealed class Plugin : BaseUnityPlugin
             Logger.LogWarning("Manual patch count is 0; global text hooks are not installed.");
         }
 
+        TryInitialize("TerminalCommandLocalizationService", () => { TerminalCommandLocalizationService.Initialize(runtimeConfig); });
+        TryInitialize("FontSelectionService", () => { FontSelectionService.Initialize(pluginDir, runtimeConfig); });
         TryInitialize("FontFallbackService", () => { FontFallbackService.TryLoadFontAsset(pluginDir); });
         TryInitialize("FontFallbackAuditService", () => { FontFallbackAuditService.Initialize(runtimeConfig); });
         TryInitialize("AlertTextureReplacementService", () => { AlertTextureReplacementService.Initialize(pluginDir); });
@@ -140,6 +143,8 @@ public sealed class Plugin : BaseUnityPlugin
         CleanupPlugin();
     }
 
+    private void Update() => FontSelectionService.ApplyPendingSelection();
+
     private void CleanupPlugin()
     {
         if (_cleanupCompleted)
@@ -162,6 +167,8 @@ public sealed class Plugin : BaseUnityPlugin
         TryCleanup("CompanySubtitleService.Shutdown", () => { CompanySubtitleService.Shutdown(); });
         TryCleanup("ChatEmojiSpriteService.Shutdown", () => { ChatEmojiSpriteService.Shutdown(); });
         TryCleanup("FontFallbackAuditService.Shutdown", () => { FontFallbackAuditService.Shutdown(); });
+        TryCleanup("TerminalCommandLocalizationService.Shutdown", () => { TerminalCommandLocalizationService.Shutdown(); });
+        TryCleanup("FontSelectionService.Shutdown", () => { FontSelectionService.Shutdown(); });
         TryCleanup("FontFallbackService.Shutdown", () => { FontFallbackService.Shutdown(); });
         TryCleanup("ClipboardManualLocalizationService.Shutdown", () => { ClipboardManualLocalizationService.Shutdown(); });
         TryCleanup("StickyNoteLocalizationService.Shutdown", () => { StickyNoteLocalizationService.Shutdown(); });

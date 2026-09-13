@@ -2,7 +2,9 @@
 
 放置中文原始字体和旧版 TMP 字体 AssetBundle 兜底资源。
 
-运行时加载顺序：
+3.2.9 支持在 `fonts` 中放入任意文件名的 TTF/OTF/TTC 字体，并通过 LethalConfig 的 `ChineseFont` 下拉框选择、应用和实时切换。启动及重新打开模组配置时扫描文件，cfg 的可选值同步更新；选择“默认字体”恢复原有加载顺序。无效或缺少简体中文字形的字体会被拒绝。
+
+默认加载顺序：
 
 ```text
 fonts/NotoSansSC-VF.ttf

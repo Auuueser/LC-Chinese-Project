@@ -963,7 +963,7 @@ internal static partial class TranslationService
             return value;
         }
 
-        private static bool TranslateHudNotificationFast(string source, out string translated)
+        internal static bool TranslateHudNotificationFast(string source, out string translated)
         {
             translated = source;
             var trimmed = StripRichTextTagsCheap(source).Trim();

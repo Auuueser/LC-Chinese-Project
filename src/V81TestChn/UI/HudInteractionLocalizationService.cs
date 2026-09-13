@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using GameNetcodeStuff;
 
@@ -20,12 +20,15 @@ internal static class HudInteractionLocalizationService
 
     public static void ApplyDisplayTip(ref string headerText, ref string bodyText)
     {
-        headerText = TranslateDisplayTipText(headerText);
+        headerText = string.Equals(headerText?.Trim(), "Tip", StringComparison.OrdinalIgnoreCase) ? "提示" : TranslateDisplayTipText(headerText ?? string.Empty);
         bodyText = TranslateDisplayTipText(bodyText);
     }
 
     private static string TranslateDisplayTipText(string source)
     {
+        if (string.IsNullOrWhiteSpace(source)) return source ?? string.Empty;
+        if (source.Trim().Equals("Cannot store!", StringComparison.OrdinalIgnoreCase)) return "无法存入仓库！";
+        if (source.Trim().Equals("This furniture contains scrap.", StringComparison.OrdinalIgnoreCase)) return "这件家具中存放着废料。";
         if (ExternalEnglishCompatibilityService.TryTranslateDisplayTipText(source, out var externalTranslated))
         {
             return externalTranslated;

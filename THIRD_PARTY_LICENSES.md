@@ -1,4 +1,4 @@
-# Third-Party Licenses And Attribution
+﻿# Third-Party Licenses And Attribution
 
 This file records third-party content that is bundled or generated into LC Chinese Project releases. LC Chinese Project itself is distributed under the MIT License; see `LICENSE`.
 
@@ -55,16 +55,6 @@ assets/textures/zh-CN/Texture
 ```
 
 These localized textures are project-owned assets created from original drawing instructions and Chinese UI wording. Noto Sans SC is used for glyph rasterization; the full OFL text is included at `fonts/OFL-1.1.txt`.
-
-## Compatibility References Not Bundled
-
-The project includes compatibility handling for the following mods, but does not bundle their code or assets:
-
-- RuntimeIcons
-- RuntimeIcons_BetterRotations
-- HoneeItemIcons
-
-Compatibility is implemented by preserving vanilla English item keys for icon matching while translating display text separately.
 
 ## Distribution Checklist
 

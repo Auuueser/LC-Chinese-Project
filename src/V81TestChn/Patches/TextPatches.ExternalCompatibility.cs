@@ -9,6 +9,20 @@ namespace V81TestChn;
 
 internal static partial class TextPatches
 {
+    private static void QuickSellFancyChatDisplayPrefix(ref string message, ref string title)
+    {
+        if (Plugin.IsRuntimeShuttingDown) return;
+        try
+        {
+            var localizedMessage = message;
+            var localizedTitle = title;
+            QuickSellLocalizationService.TranslateDisplay(ref localizedMessage, ref localizedTitle);
+            message = localizedMessage;
+            title = localizedTitle;
+        }
+        catch (Exception ex) { Plugin.Log.LogWarning("QuickSell display localization skipped: " + ex.Message); }
+    }
+
     private const string AdvancedFeaturesGradeLabelLocalized = "\u8bc4\u7ea7";
     private const string TooManyEmotesSyncTipEnglish = "[E] Sync emote";
     private const string TooManyEmotesSyncTipLocalized = "[E] \u540c\u6b65\u52a8\u4f5c";
@@ -19,6 +33,7 @@ internal static partial class TextPatches
 
     private static void LethalConfigConfigMenuOpenPostfix(object __instance)
     {
+        FontSelectionService.RefreshChoices();
         if (__instance is Component component)
         {
             ExternalEnglishCompatibilityUiService.TranslateRoot(component.gameObject, includeInactive: true, "LethalConfig.ConfigMenu.Open");

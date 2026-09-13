@@ -42,37 +42,37 @@ internal static class AutomaticTranslationService
             ConfigSections.AutomaticTranslation,
             "EnableAutomaticTranslation",
             false,
-            "Default false. When enabled, untranslated English mod text can be translated through the configured HTTP provider.");
+            "默认关闭。开启后，通过配置的 HTTP 服务翻译尚未汉化的模组英文文本。");
         _providerEndpoint = config.Bind(
             ConfigSections.AutomaticTranslation,
             "ProviderEndpoint",
             string.Empty,
-            "HTTP POST endpoint. Request JSON: { text, source, target }. Response can be JSON or plain text.");
+            "翻译服务的 HTTP POST 地址。请求 JSON 字段为 { text, source, target }；响应支持 JSON 或纯文本。");
         _providerTimeoutMilliseconds = config.Bind(
             ConfigSections.AutomaticTranslation,
             "ProviderTimeoutMilliseconds",
             DefaultTimeoutMilliseconds,
-            "Background provider timeout in milliseconds. Main-thread text hooks never wait for this request.");
+            "后台翻译请求的超时时间，单位为毫秒。主线程的文本处理不会等待该请求。");
         _maxTextLength = config.Bind(
             ConfigSections.AutomaticTranslation,
             "MaxTextLength",
             300,
-            "Maximum source text length accepted for automatic translation.");
+            "允许自动翻译的原文最大字符数。");
         _maxCacheEntries = config.Bind(
             ConfigSections.AutomaticTranslation,
             "MaxCacheEntries",
             2000,
-            "Maximum cached automatic translations kept per plugin directory.");
+            "每个插件目录最多保存的自动翻译缓存条数。");
         _maxPendingRequests = config.Bind(
             ConfigSections.AutomaticTranslation,
             "MaxPendingRequests",
             32,
-            "Maximum background automatic translation requests allowed at the same time.");
+            "后台自动翻译请求的最大并发数。");
         _logAutomaticTranslation = config.Bind(
             ConfigSections.AutomaticTranslation,
             "LogAutomaticTranslation",
             false,
-            "Log automatic translation cache hits, provider results, and provider failures.");
+            "记录自动翻译缓存命中、服务响应和请求失败日志。默认关闭。");
 
         lock (SyncRoot)
         {

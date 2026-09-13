@@ -1671,7 +1671,8 @@ internal static class TargetedUiTranslator
             return false;
         }
 
-        if (ContainsCjk(source) && !TranslationService.ChatDynamicTranslator.CanHandleCheap(source))
+        if (ContainsCjk(source) && !TranslationService.ChatDynamicTranslator.CanHandleCheap(source) &&
+            !ExternalEnglishCompatibilityService.CanHandleCheap(source))
         {
             return false;
         }

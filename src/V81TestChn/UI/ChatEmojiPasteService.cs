@@ -95,7 +95,7 @@ internal static class ChatEmojiPasteService
             return false;
         }
 
-        if (CountTerminalInputCharacters(appendedText) > terminal.currentNode.maxCharactersToType)
+        if (CountTerminalInputCharacters(appendedText) > TerminalCommandLocalizationService.GetInputLimit(terminal.currentNode.maxCharactersToType))
         {
             terminal.screenText.text = currentText;
             return true;

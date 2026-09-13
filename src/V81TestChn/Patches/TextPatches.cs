@@ -307,22 +307,22 @@ internal static partial class TextPatches
             ConfigSections.DiagnosticsGeneral,
             "EnableTmpHookPerfCounters",
             false,
-            "Enable temporary TMP hook performance counters. Default off.");
+            "启用临时 TMP 文本处理性能计数器。默认关闭。");
         _tmpHookPerfLogIntervalSeconds = config.Bind(
             ConfigSections.DiagnosticsGeneral,
             "TmpHookPerfLogIntervalSeconds",
             10,
-            "TMP hook performance counter log interval in seconds when enabled.");
+            "启用 TMP 性能计数后，输出统计日志的间隔，单位为秒。");
         _enableGlobalTmpColorHook = config.Bind(
             ConfigSections.Performance,
             "EnableGlobalTmpColorHook",
             false,
-            "Enable the legacy global TMP_Text.color hook. Default off to avoid per-color-update overhead in large modpacks.");
+            "启用旧版全局 TMP_Text.color 处理。默认关闭，避免大型整合包中每次颜色更新都产生额外开销。");
         _enableGlobalTmpPostSetRepair = config.Bind(
             ConfigSections.Performance,
             "EnableGlobalTmpPostSetRepair",
             false,
-            "Enable legacy global TMP post-set repair. Default off to avoid one extra Harmony callback for every TMP text assignment.");
+            "启用旧版全局 TMP 文本赋值后修复。默认关闭，避免每次文本赋值额外触发一次 Harmony 回调。");
         _tmpHookPerfCountersEnabledFast = _enableTmpHookPerfCounters.Value;
         _tmpHookPerfLogIntervalTicksFast = Math.Max(1, _tmpHookPerfLogIntervalSeconds.Value) * Stopwatch.Frequency;
         _enableGlobalTmpColorHookFast = _enableGlobalTmpColorHook.Value;

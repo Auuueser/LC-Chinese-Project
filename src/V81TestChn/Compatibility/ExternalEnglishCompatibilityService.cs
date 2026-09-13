@@ -338,6 +338,7 @@ internal static class ExternalEnglishCompatibilityService
 
     private static bool CanHandleCheapCore(string source)
     {
+        if (RuntimeCommandFeedbackLocalizer.CanHandle(StripLeadingSimpleRichTextTags(StripOuterSimpleRichTextEnvelope(source)).Trim())) return true;
         if (LooksLikeLobbyControlNotification(source))
         {
             return true;
@@ -406,6 +407,7 @@ internal static class ExternalEnglishCompatibilityService
             return false;
         }
 
+        if (RuntimeCommandFeedbackLocalizer.CanHandle(line.ToString())) return true;
         var hasAsciiLetter = false;
         foreach (var ch in line)
         {
@@ -465,7 +467,7 @@ internal static class ExternalEnglishCompatibilityService
         }
 
         var content = StripMenuSelectionPrefix(text);
-        if (ExactEntries.ContainsKey(content) ||
+        if (RuntimeCommandFeedbackLocalizer.CanHandle(content) || ExactEntries.ContainsKey(content) ||
             LooksLikeShipLootPlusHudText(content) ||
             LooksLikeVersionedServerListLoadingText(content) ||
             LooksLikeChallengeLeaderboardHeader(content) ||
@@ -849,12 +851,13 @@ internal static class ExternalEnglishCompatibilityService
             text = StripMenuSelectionPrefix(text);
         }
 
-        if (LooksLikeNonUiName(text) && !LooksLikeEladsHudConfigToken(text))
+        if (LooksLikeNonUiName(text) && !LooksLikeEladsHudConfigToken(text) && !RuntimeCommandFeedbackLocalizer.CanHandle(text))
         {
             return false;
         }
 
-        if (TryTranslateBracketedCommand(text, out translated) ||
+        if (RuntimeCommandFeedbackLocalizer.TryTranslate(text, out translated) ||
+            TryTranslateBracketedCommand(text, out translated) ||
             TryTranslateShipLootPlusHudText(text, out translated) ||
             TryTranslateVersionedServerListLoadingText(text, out translated) ||
             TryTranslateChallengeLeaderboardHeader(text, out translated) ||

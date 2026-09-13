@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace V81TestChn;
 
@@ -9,7 +9,18 @@ internal static class TerminalScreenLocalizationService
 
     public static void ApplyTextPostProcess(TerminalNode? node, ref string result)
     {
+        if (TerminalCommandLocalizationService.IsGuideText(result))
+        {
+            _lastProcessedNodeId = node == null ? 0 : node.GetInstanceID();
+            _lastProcessedOutput = result;
+            return;
+        }
+        if (node != null) result = TranslationService.RestorePurchaseConfirmationName(OriginalResourceStateService.GetOriginalTerminalNodeDisplayText(node), result);
         var translated = TranslationService.TranslateTerminalOutputForNode(result, node != null && node.clearPreviousText);
+        if (node != null) translated = TranslationService.RestorePurchaseConfirmationName(OriginalResourceStateService.GetOriginalTerminalNodeDisplayText(node), translated);
+        if (StoryLogNameLocalizationService.IsLog(node)) translated = StoryLogNameLocalizationService.Normalize(translated);
+        translated = TerminalCommandLocalizationService.AppendGuide(translated);
+        translated = TerminalCommandLocalizationService.StyleHelp(translated);
         if (translated != result)
         {
             result = translated;
@@ -40,6 +51,8 @@ internal static class TerminalScreenLocalizationService
 
         var clearPreviousText = terminal.currentNode == null || terminal.currentNode.clearPreviousText;
         var translated = TranslationService.TranslateTerminalOutputForNode(original, clearPreviousText);
+        if (StoryLogNameLocalizationService.IsLog(terminal.currentNode)) translated = StoryLogNameLocalizationService.Normalize(translated);
+        translated = TerminalCommandLocalizationService.StyleHelp(TerminalCommandLocalizationService.AppendGuide(translated));
         if (!string.Equals(original, translated, StringComparison.Ordinal))
         {
             var canRestoreModifyingText = false;

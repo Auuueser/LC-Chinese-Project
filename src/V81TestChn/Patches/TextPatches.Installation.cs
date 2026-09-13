@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using GameNetcodeStuff;
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,9 @@ internal static partial class TextPatches
         var patched = 0;
 
         PatchPostfix(harmony, typeof(MenuManager), "OnEnable", nameof(MenuManagerOnEnablePostfix), ref patched);
+        PatchPostfix(harmony, typeof(TextMeshProUGUI), "OnEnable", nameof(MenuLabelTmpOnEnablePostfix), ref patched);
+        PatchPostfix(harmony, typeof(UnityEngine.UI.Text), "OnEnable", nameof(MenuLabelTextOnEnablePostfix), ref patched);
+        PatchPrefix(harmony, typeof(HUDManager), "DisplayGlobalNotification", nameof(HudGlobalNotificationPrefix), ref patched);
         PatchPostfix(harmony, typeof(MenuManager), "EnableUIPanel", nameof(MenuManagerEnableUIPanelPostfix), ref patched);
         PatchPostfix(harmony, typeof(MenuManager), "EnableLeaderboardDisplay", nameof(MenuManagerEnableLeaderboardDisplayPostfix), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(MenuManager), "SetLeaderboardFilter", nameof(MenuManagerSetLeaderboardFilterPostfix), ref patched, Priority.Last);
@@ -194,6 +197,7 @@ internal static partial class TextPatches
         {
             PatchPostfix(harmony, normalizeMethod, nameof(TmpInputFieldNormalizeSelectionPostfix), ref patched, Priority.Last);
         }
+        PatchTranspiler(harmony, typeof(Terminal), "TextChanged", nameof(TerminalInputLimitTranspiler), ref patched);
         PatchPrefix(harmony, typeof(Terminal), "TextChanged", nameof(TerminalTextChangedPrefix), ref patched, Priority.First);
         if (IsGlobalTmpPostSetRepairEnabled)
         {
@@ -215,9 +219,13 @@ internal static partial class TextPatches
         }
 
         PatchPostfix(harmony, typeof(Terminal), "TextPostProcess", nameof(TerminalTextPostProcessPostfix), ref patched);
+        PatchTranspiler(harmony, typeof(Terminal), "LoadNewNode", nameof(TerminalStaticDescriptionTranspiler), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "LoadNewNode", nameof(TerminalLoadNewNodePostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "OnSubmit", nameof(TerminalOnSubmitPostfix), ref patched);
         PatchTranspiler(harmony, typeof(Terminal), "ParsePlayerSentence", nameof(SignalTranslatorSubstringTranspiler), ref patched);
+        PatchPrefix(harmony, typeof(Terminal), "ParsePlayerSentence", nameof(TerminalParseInputPrefix), ref patched, Priority.First);
+        PatchPrefix(harmony, typeof(Terminal), "RemovePunctuation", nameof(TerminalRemovePunctuationPrefix), ref patched);
+        PatchFinalizer(harmony, typeof(Terminal), "ParsePlayerSentence", nameof(TerminalParseInputFinalizer), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(Terminal), "ParsePlayerSentence", nameof(TerminalParsePlayerSentencePostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "PlayBroadcastCodeEffect", nameof(TerminalPlayBroadcastCodeEffectPostfix), ref patched);
         PatchPostfix(harmony, typeof(Terminal), "loadTextAnimation", nameof(TerminalLoadTextAnimationPostfix), ref patched);
@@ -293,6 +301,7 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "LethalCompanyInputUtils.Components.PopOvers.PopOverTextContainer", "SetText", nameof(InputUtilsPopOverTextSetPostfix), ref patched, Priority.Last);
         PatchOptionalPrefix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPrefix), ref patched, Priority.First);
         PatchOptionalPostfix(harmony, "AdvancedFeatures.Endscreen", "Open", nameof(AdvancedFeaturesEndscreenOpenPostfix), ref patched);
+        PatchOptionalPrefix(harmony, "QuickSell.QuickSell", "FancyChatDisplay", nameof(QuickSellFancyChatDisplayPrefix), ref patched);
         InstallTooManyEmotesCompatibilityPatches(harmony, ref patched);
         PatchOptionalPrefix(harmony, "Steamworks.SteamUtils", "ShowGamepadTextInput", nameof(SteamworksShowGamepadTextInputPrefix), ref patched, Priority.First);
     }

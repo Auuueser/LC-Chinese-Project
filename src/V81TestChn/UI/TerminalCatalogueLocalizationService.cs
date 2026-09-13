@@ -21,12 +21,14 @@ internal static class TerminalCatalogueLocalizationService
             return 0;
         }
 
+        StoryLogNameLocalizationService.Register(terminal.logEntryFiles);
         return ApplyNodes(terminal.enemyFiles) +
                ApplyNodes(terminal.logEntryFiles);
     }
 
     public static void ClearRuntimeCache()
     {
+        StoryLogNameLocalizationService.Clear();
         ProcessedNodes = new ConditionalWeakTable<TerminalNode, ProcessedNodeMarker>();
     }
 

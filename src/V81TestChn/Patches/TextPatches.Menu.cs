@@ -5,6 +5,18 @@ namespace V81TestChn;
 
 internal static partial class TextPatches
 {
+    private static void MenuLabelTmpOnEnablePostfix(TMPro.TextMeshProUGUI __instance)
+        => MenuFirstFrameLocalizationService.ApplyTmp(__instance);
+
+    private static void MenuLabelTextOnEnablePostfix(UnityEngine.UI.Text __instance)
+        => MenuFirstFrameLocalizationService.ApplyText(__instance);
+
+    private static void HudGlobalNotificationPrefix(ref string displayText)
+    {
+        if (TranslationService.HudDynamicTranslator.TranslateHudNotificationFast(displayText, out var translated))
+            displayText = translated;
+    }
+
     private static void LobbyImprovementsConfirmHostButtonPostfix(object[] __args)
     {
         if (__args.Length == 0 || __args[0] is not MenuManager menuManager)

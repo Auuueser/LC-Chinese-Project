@@ -28,6 +28,7 @@ internal enum DynamicTextDomain
 internal static partial class TranslationService
 {
     private const int TerminalRollingWindowChars = 250;
+    private static readonly TerminalStaticDescriptionLookup TerminalDescriptions = new();
     private const int MaxTranslationResultCache = 8000;
 
     private enum KnownSlowCfgRegexKind
@@ -701,6 +702,7 @@ internal static partial class TranslationService
 
         LoadCleanRuntimeJson(pluginDir, loadedSources);
         LoadCleanRuntimeCfgDirectories(pluginDir, loadedSources);
+        TerminalDescriptions.Rebuild(ExactMap.Concat(TerminalBodyEntries));
 
         CompositeEntries.AddRange(ExactMap
             .Where(entry => entry.Key.Length >= 4 && entry.Key != entry.Value)
@@ -2317,6 +2319,13 @@ internal static partial class TranslationService
         return SanitizeTranslatedText(translated);
     }
 
+    internal static string TranslateStaticTerminalDescription(string source)
+    {
+        if (string.IsNullOrEmpty(source)) return source;
+        return TerminalDescriptions.TryTranslate(source, out var translated)
+            ? CorrectTerminalDisplayDetails(translated) : source;
+    }
+
     public static string TranslateTerminalOutput(string? source)
     {
         if (string.IsNullOrEmpty(source))
@@ -2324,7 +2333,10 @@ internal static partial class TranslationService
             return source ?? string.Empty;
         }
 
-        var translated = RewriteTerminalRouteWeatherBlocks(source);
+        // Authored command examples must retain their literal input spelling.
+        if (TerminalCommandLocalizationService.IsGuideText(source)) return source;
+        source = TranslateStaticTerminalDescription(source);
+        var translated = RewriteTerminalRouteWeatherBlocks(RuntimeCommandFeedbackLocalizer.TranslateTerminalLines(TerminalCommandLocalizationService.UnstyleHelp(source)));
         translated = TooManyEmotesCompatibilityTranslator.TranslateTerminalOutput(translated);
         var standardizedStoreBeforeBody = LooksLikeTerminalStorePage(translated);
         if (standardizedStoreBeforeBody)
@@ -2341,6 +2353,14 @@ internal static partial class TranslationService
             translated = StandardizeTerminalStoragePage(translated);
         }
 
+        // Resolve the complete purchase response before line/regex translation
+        // can translate its framing and leave the captured item name untouched.
+        translated = StandardizeTerminalStoreTransactions(translated);
+        // The generic confirmation regex discards rich item aliases and can
+        // consume the whole page on a second pass. This page is already complete.
+        if (IsLocalizedPurchaseConfirmation(translated))
+            return SanitizeTranslatedText(CorrectTerminalDisplayDetails(translated));
+        translated = StandardizeTerminalOtherPage(translated);
         translated = TranslateTerminalOutputBody(translated);
         translated = StandardizeTerminalCruiserWarrantyText(translated);
         translated = StandardizeTerminalSignalTranslatorText(translated);
@@ -2369,7 +2389,56 @@ internal static partial class TranslationService
         // generic terminal standardizers run. A final line pass normalizes those
         // dynamic date/time and player-answer lines without touching commands.
         translated = TranslateTerminalOutputLinewise(translated);
+        translated = CorrectTerminalDisplayDetails(translated);
         return SanitizeTranslatedText(translated);
+    }
+
+    private static bool IsLocalizedPurchaseConfirmation(string text) =>
+        (text.Contains("你请求订购 ", StringComparison.Ordinal) || text.Contains("你已请求订购 ", StringComparison.Ordinal)) &&
+        (text.Contains("总价", StringComparison.Ordinal)) && text.Contains("CONFIRM", StringComparison.Ordinal) && text.Contains("DENY", StringComparison.Ordinal);
+
+    internal static string RestorePurchaseConfirmationName(string originalNodeText, string text)
+    {
+        if (!originalNodeText.Contains("You have requested to order", StringComparison.OrdinalIgnoreCase) &&
+            !originalNodeText.Contains("Ordered ", StringComparison.OrdinalIgnoreCase)) return text;
+        var name = SafeRegexMatch(originalNodeText, @"You have requested to order (?<item>[^.\r\n]+?)(?:\.|, which)", RegexOptions.IgnoreCase);
+        if (name.Success)
+        {
+            var bilingual = BuildChineseFirstBilingual(ToSingularTerminalItem(name.Groups["item"].Value.Trim()));
+            text = SafeRegexReplace(text, @"^(?<lead>\s*)(?:你|您)(?:已经|已)?请求订购\s*[^。，\r\n]+(?<stop>[。，])",
+                m => m.Groups["lead"].Value + "你请求订购 " + bilingual + m.Groups["stop"].Value, RegexOptions.CultureInvariant);
+            if (originalNodeText.Contains("CONFIRM") && originalNodeText.Contains("DENY"))
+                text = SafeRegexReplace(text, @"请(?:输入\s*)?确认\s*或\s*(?:拒绝|取消)[。！!]",
+                    "请输入 确认 <color=#A0A0A0>（CONFIRM）</color> 或 取消 <color=#A0A0A0>（DENY）</color>。", RegexOptions.CultureInvariant);
+            return text;
+        }
+        // Serialized purchase receipts may already contain only a Chinese item name.
+        name = SafeRegexMatch(originalNodeText, @"^\s*Ordered (?:the )?(?<item>[^.!\r\n]+)[.!]", RegexOptions.IgnoreCase);
+        if (!name.Success || char.IsDigit(name.Groups["item"].Value[0])) return text;
+        var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(name.Groups["item"].Value));
+        return SafeRegexReplace(text, @"^(?<lead>\s*)(?:(?:已订购|已购买)\s*[^。！!\r\n]+|[^。！!\r\n]+已下单)[。！!]",
+            m => m.Groups["lead"].Value + "已订购 " + item + "。", RegexOptions.CultureInvariant);
+    }
+
+    private static string CorrectTerminalDisplayDetails(string text)
+    {
+        text = text.Replace("\"transmit\" 命令", "发送 <color=#A0A0A0>（transmit）</color> 命令", StringComparison.OrdinalIgnoreCase);
+        text = text.Replace("\"SWITCH\" 命令", "切换 <color=#A0A0A0>（SWITCH）</color> 命令", StringComparison.OrdinalIgnoreCase);
+        text = text.Replace("\"PING\" 命令", "鸣笛 <color=#A0A0A0>（PING）</color> 命令", StringComparison.OrdinalIgnoreCase);
+        text = text.Replace("\"FLASH\" 命令", "闪光 <color=#A0A0A0>（FLASH）</color> 命令", StringComparison.OrdinalIgnoreCase);
+        text = SafeRegexReplace(text, @"(?m)^[^\r\n]*(?:任意|任何)(?:商品|物品)[^\r\n]*\bBUY\b[^\r\n]*\bINFO\b[^\r\n]*$",
+            "可对商品使用 购买 <color=#A0A0A0>（BUY）</color> 和 详情 <color=#A0A0A0>（INFO）</color> 命令。", RegexOptions.CultureInvariant);
+        text = SafeRegexReplace(text, @"(?m)^(?<lead>\s*>?)INFO[。.]?\s*$",
+            "${lead}详情 <color=#A0A0A0>（INFO）</color>", RegexOptions.CultureInvariant);
+
+        text = SafeRegexReplace(text, @"(?m)^(?<prefix>\s*请输入\s*)<?CONFIRM>?\s*或\s*<?DENY>?[。.]?",
+            "${prefix}确认 <color=#A0A0A0>（CONFIRM）</color> 或 取消 <color=#A0A0A0>（DENY）</color>。", RegexOptions.CultureInvariant);
+        if (text.Contains("日志条目", StringComparison.Ordinal))
+        {
+            text = text.Replace("Sigurd 的日志条目", "西格德的日志条目").Replace("Sigurd的日志条目", "西格德的日志条目");
+            text = SafeRegexReplace(text, @"\(NEW\)", "（新）", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        }
+        return text;
     }
 
     public static string TranslateTerminalOutputForNode(string? source, bool clearPreviousText)
@@ -2688,6 +2757,8 @@ internal static partial class TranslationService
         {
             return false;
         }
+
+        if (TerminalDescriptions.TryTranslate(line, out translated)) return true;
 
         if (TerminalDynamicTranslator.TranslateWelcomeLine(line, out translated))
         {
@@ -3291,11 +3362,11 @@ internal static partial class TranslationService
         var replacements = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["Other commands:"] = "\u5176\u4ed6\u547d\u4ee4\uff1a",
-            [">VIEW MONITOR"] = ">VIEW MONITOR\uff08\u67e5\u770b\u76d1\u89c6\u5668\uff09",
-            [">SWITCH [Player name]"] = ">SWITCH\uff08\u5207\u6362\u89c6\u89d2\uff09 [Player name / \u73a9\u5bb6\u540d\u79f0]",
-            [">PING [Radar booster name]"] = ">PING\uff08\u63d0\u793a\uff09 [Radar booster name / \u96f7\u8fbe\u589e\u5e45\u5668\u540d\u79f0]",
-            [">TRANSMIT [message]"] = ">TRANSMIT\uff08\u53d1\u9001\uff09 [message / \u6d88\u606f]",
-            [">SCAN"] = ">SCAN\uff08\u626b\u63cf\uff09",
+            [">VIEW MONITOR"] = ">查看监控 <color=#A0A0A0>（view monitor）</color>",
+            [">SWITCH [Player name]"] = ">切换 [玩家名称] <color=#A0A0A0>（switch [Player name]）</color>",
+            [">PING [Radar booster name]"] = ">鸣笛 [雷达增幅器名称] <color=#A0A0A0>（ping [Radar booster name]）</color>",
+            [">TRANSMIT [message]"] = ">发送 [消息] <color=#A0A0A0>（transmit [message]）</color>",
+            [">SCAN"] = ">扫描 <color=#A0A0A0>（scan）</color>",
             ["To toggle on AND off the main monitor's map cam"] = "\u5f00\u542f\u6216\u5173\u95ed\u4e3b\u76d1\u89c6\u5668\u7684\u5730\u56fe\u6444\u50cf\u3002",
             ["To switch view to a player on the main monitor"] = "\u5c06\u4e3b\u76d1\u89c6\u5668\u7684\u89c6\u89d2\u5207\u6362\u5230\u6307\u5b9a\u73a9\u5bb6\u3002",
             ["To make a radar booster play a noise."] = "\u8ba9\u96f7\u8fbe\u589e\u5e45\u5668\u64ad\u653e\u63d0\u793a\u97f3\u3002",
@@ -3565,10 +3636,10 @@ internal static partial class TranslationService
 
         updated = SafeRegexReplace(
             updated,
-            @"^You have requested to order (?<item>.+?)\.\s*(?<detail>[\s\S]*?)Total cost of items?: (?<cost>.+?)\.\s*Please CONFIRM or DENY\.\s*$",
+            @"^You have requested to order (?<item>(?:(?!, which ).)+?)\.\s*(?<detail>[\s\S]*?)Total cost of items?: (?<cost>.+?)\.\s*Please CONFIRM or DENY\.\s*$",
             m =>
             {
-                var item = BuildTerminalLocalizedItemName(m.Groups["item"].Value.Trim());
+                var item = BuildChineseFirstBilingual(ToSingularTerminalItem(m.Groups["item"].Value.Trim()));
                 var detail = TranslateTerminalOrderDetail(m.Groups["detail"].Value);
                 var cost = NormalizeTerminalTransactionCost(m.Groups["cost"].Value);
                 var detailBlock = detail.Length == 0 ? string.Empty : $"\n{detail}\n";
@@ -3581,7 +3652,7 @@ internal static partial class TranslationService
             @"^You have requested to order (?<item>.+?), which (?<detail>.+?)\.\s*Total cost of item: (?<cost>.+?)\.\s*Please CONFIRM or DENY\.\s*$",
             m =>
             {
-                var item = BuildTerminalLocalizedItemName(m.Groups["item"].Value.Trim());
+                var item = BuildChineseFirstBilingual(ToSingularTerminalItem(m.Groups["item"].Value.Trim()));
                 var detail = TranslateTerminalOrderDetail(m.Groups["detail"].Value.Trim());
                 var cost = NormalizeTerminalTransactionCost(m.Groups["cost"].Value);
                 return $"\n\n\u4f60\u8bf7\u6c42\u8ba2\u8d2d {item}\uff0c{detail}\u3002\n\u5355\u4ef6\u603b\u4ef7\uff1a{cost}\u3002\n\n\u8bf7\u8f93\u5165 CONFIRM \u6216 DENY\u3002\n\n";
@@ -3593,7 +3664,7 @@ internal static partial class TranslationService
             @"^\s*Ordered the (?<item>Company Cruiser|Cruiser)[.!]\s*(?:Your new balance is|(?:\u4f60|\u60a8)\u7684\u65b0\u4f59\u989d\u4e3a)\s*(?<credits>[$\u25a0]?\s*[+-]?\d+(?:\.\d+)?)\s*[\.\u3002]?(?<rest>[\s\S]*?)\s*$",
             m =>
             {
-                var item = BuildTerminalLocalizedItemName(m.Groups["item"].Value.Trim());
+                var item = BuildChineseFirstBilingual(ToSingularTerminalItem(m.Groups["item"].Value.Trim()));
                 var credits = SafeRegexReplace(m.Groups["credits"].Value, @"\s+", string.Empty, RegexOptions.CultureInvariant);
                 var rest = m.Groups["rest"].Value.Trim();
                 if (rest.Length == 0)
@@ -3654,7 +3725,7 @@ internal static partial class TranslationService
             @"^Ordered the (?<item>Company Cruiser|Cruiser)[.!] Your new balance is (?<credits>.+?)\.(?<rest>[\s\S]*)$",
             m =>
             {
-                var item = BuildTerminalLocalizedItemName(m.Groups["item"].Value.Trim());
+                var item = BuildChineseFirstBilingual(ToSingularTerminalItem(m.Groups["item"].Value.Trim()));
                 var credits = m.Groups["credits"].Value.Trim();
                 var rest = m.Groups["rest"].Value.Trim();
                 if (rest.Length == 0)
@@ -3670,7 +3741,7 @@ internal static partial class TranslationService
 
         updated = SafeRegexReplace(
             updated,
-            @"^Ordered the (?<item>.+?)[.!] Your new balance is (?<credits>.+?)\.(?<rest>[\s\S]*)$",
+            @"^Ordered (?:the )?(?<item>.+?)[.!] Your new balance is (?<credits>.+?)\.(?<rest>[\s\S]*)$",
             m =>
             {
                 var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(m.Groups["item"].Value.Trim()));
@@ -3783,7 +3854,7 @@ internal static partial class TranslationService
 
     private static string ToSingularTerminalItem(string item)
     {
-        var normalized = item.Trim();
+        var normalized = NormalizeTerminalArticleItem(item);
         return normalized.ToLowerInvariant() switch
         {
             "shovels" => "Shovel",
@@ -3808,6 +3879,9 @@ internal static partial class TranslationService
 
     private static string NormalizeTerminalArticleItem(string item)
     {
+        item = item.Trim();
+        if (item.EndsWith(" ship upgrade", StringComparison.OrdinalIgnoreCase))
+            item = item[..^13].TrimEnd();
         if (item.StartsWith("a ", StringComparison.OrdinalIgnoreCase))
         {
             return item[2..].Trim();
@@ -3826,14 +3900,14 @@ internal static partial class TranslationService
         return item.Trim();
     }
 
-    private static string BuildChineseFirstBilingual(string english, bool dimEnglishSuffix = false)
+    private static string BuildChineseFirstBilingual(string english, bool dimEnglishSuffix = true)
     {
         if (string.IsNullOrWhiteSpace(english))
         {
             return english;
         }
 
-        var sourceName = english.Trim();
+        var sourceName = NormalizeTerminalArticleItem(english);
         if (TryExtractTerminalBilingualEnglish(sourceName, out var extractedEnglish))
         {
             sourceName = extractedEnglish;

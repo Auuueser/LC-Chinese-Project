@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace V81TestChn;
 
@@ -465,7 +465,8 @@ internal static partial class TranslationService
                 return SanitizeTranslatedText(warranty);
             }
 
-            var translated = TranslateTerminalOutputBody(normalized);
+            // Translate complete instructions before generic patterns can consume their opening words.
+            var translated = TranslateTerminalOutputBody(TranslateOrderDetailPhrases(normalized));
             translated = TranslateOrderDetailPhrases(translated);
             translated = StandardizeCruiserWarrantyText(translated);
             return SanitizeTranslatedText(translated);
@@ -474,6 +475,8 @@ internal static partial class TranslationService
         public static string TranslateOrderDetailPhrases(string source)
         {
             var translated = source;
+            translated = ReplaceIgnoreCase(translated, "comes with a complementary glass bowl", "附送一个玻璃鱼缸");
+            translated = ReplaceIgnoreCase(translated, "will make everyone feel at home", "让每个人都有宾至如归的感觉");
             translated = ReplaceIgnoreCase(
                 translated,
                 "Press [B] to rearrange objects in your ship and [V] to confirm.",

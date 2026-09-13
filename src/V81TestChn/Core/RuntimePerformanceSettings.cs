@@ -43,61 +43,61 @@ internal static class RuntimePerformanceSettings
             DefaultTmpHookCacheLimit,
             1024,
             32768,
-            "Maximum entries for global TMP hook translation/no-op/color caches. Larger modpacks benefit from the default 16384.");
+            "全局 TMP 文本翻译、无需处理结果及颜色缓存的条数上限。大型整合包建议保持默认值 16384。");
         _componentTextCacheLimit = BindInt(
             config,
             "LargeModpackComponentTextCacheLimit",
             DefaultComponentTextCacheLimit,
             1024,
             32768,
-            "Maximum entries for targeted UI component text caches. Larger modpacks benefit from the default 16384.");
+            "定向界面组件文本缓存的条数上限。大型整合包建议保持默认值 16384。");
         _hudScannerCacheLimit = BindInt(
             config,
             "LargeModpackHudScannerCacheLimit",
             DefaultHudScannerCacheLimit,
             1024,
             32768,
-            "Maximum entries for HUD scanner text and node caches. Larger modpacks benefit from the default 16384.");
+            "HUD 扫描文本与节点缓存的条数上限。大型整合包建议保持默认值 16384。");
         _externalCompatibilityCacheLimit = BindInt(
             config,
             "LargeModpackExternalCompatibilityCacheLimit",
             DefaultExternalCompatibilityCacheLimit,
             512,
             16384,
-            "Maximum entries for generic external English compatibility runtime caches. Default 4096 keeps memory bounded.");
+            "通用第三方英文兼容缓存的条数上限。默认 4096，限制内存占用。");
         _fontFallbackCacheLimit = BindInt(
             config,
             "LargeModpackFontFallbackCacheLimit",
             DefaultFontFallbackCacheLimit,
             1024,
             32768,
-            "Maximum entries for font fallback/style repair caches. Larger modpacks benefit from the default 16384.");
+            "字体回退与样式修复缓存的条数上限。大型整合包建议保持默认值 16384。");
         _menuTranslationWorkBudgetPerFrame = BindInt(
             config,
             "MenuTranslationWorkBudgetPerFrame",
             DefaultMenuTranslationWorkBudgetPerFrame,
             4,
             64,
-            "Maximum targeted menu text components translated per frame. Lower values reduce spikes; higher values finish menu localization sooner.");
+            "每帧定向翻译的菜单文本组件数量上限。调低可减少单帧负担，调高可更快补齐菜单汉化。");
         _chatTranslationMaxEntriesPerFrame = BindInt(
             config,
             "ChatTranslationMaxEntriesPerFrame",
             DefaultChatTranslationMaxEntriesPerFrame,
             4,
             256,
-            "Maximum chat history entries validated per frame. Visible snapshots use a one-shot line cap of four times this value to avoid stale-work starvation.");
+            "每帧检查的聊天历史条数上限。当前可见内容单次最多处理此值的四倍行数，避免持续被旧任务延后。");
         _chatTranslationMaxCharactersPerFrame = BindInt(
             config,
             "ChatTranslationMaxCharactersPerFrame",
             DefaultChatTranslationMaxCharactersPerFrame,
             512,
             32768,
-            "Maximum characters in a visible chat snapshot or history entry translated in one work item. Oversized third-party output remains unchanged to prevent frame spikes.");
+            "单次翻译可见聊天内容或历史记录的最大字符数。超长第三方输出保持原样，避免单帧负担过重。");
         _enableTargetedUiStyleRepairFastGate = config.Bind(
             ConfigSections.Performance,
             "EnableTargetedUiStyleRepairFastGate",
             DefaultEnableTargetedUiStyleRepairFastGate,
-            "Skip repeated targeted UI style repairs for the same component/text/style state. Disable if a UI needs repeated style repair.");
+            "组件、文本和样式状态未变化时，跳过重复的定向界面样式修复。若界面需要反复修复样式，可关闭此项。");
         _enableTargetedUiStyleRepairFastGate.SettingChanged += OnSettingsChanged;
 
         RefreshFastValues();
@@ -116,7 +116,7 @@ internal static class RuntimePerformanceSettings
             key,
             defaultValue,
             new ConfigDescription(
-                $"{description} Range: {min}-{max}. Changes apply immediately.",
+                $"{description} 范围：{min}–{max}。修改后立即生效。",
                 new AcceptableValueRange<int>(min, max)));
         entry.SettingChanged += OnSettingsChanged;
         return entry;

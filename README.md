@@ -1,68 +1,50 @@
-<h1 align="center">LC Chinese Project</h1>
-
-<p align="center">
-  <strong>面向 Lethal Company V81 的完整简体中文体验</strong><br>
-  文本、字体、字幕与烘焙贴图统一维护
-</p>
-
-<p align="center">
-  <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.8" src="assets/readme/badge-version.svg" height="22"></a>
-  <a href="https://store.steampowered.com/app/1966720/Lethal_Company/"><img alt="支持游戏版本 V81" src="assets/readme/badge-game.svg" height="22"></a>
-  <a href="https://bepinex.org/"><img alt="运行环境 BepInEx 5" src="assets/readme/badge-runtime.svg" height="22"></a>
-  <a href="https://github.com/Auuueser/LC-Chinese-Project/blob/main/LICENSE"><img alt="MIT 许可证" src="assets/readme/badge-license.svg" height="22"></a>
-</p>
-
-<p align="center">
-  <a href="https://thunderstore.io/c/lethal-company/p/Aueser/LC_Chinese_Project/"><img alt="Thunderstore 下载" src="assets/readme/badge-download.svg" height="24"></a>
-  <a href="CHANGELOG.md"><img alt="查看更新日志" src="assets/readme/badge-changelog.svg" height="24"></a>
-  <a href="https://github.com/Auuueser/LC-Chinese-Project/issues"><img alt="提交问题反馈" src="assets/readme/badge-feedback.svg" height="24"></a>
-</p>
+  <h1 align="center">LC Chinese Project</h1>
+  <p align="center">
+    <strong>面向 Lethal Company V81 的完整简体中文体验</strong><br>
+    文本、字体、字幕与烘焙贴图统一维护
+  </p>
+  <p align="center">
+    <a href="https://github.com/Auuueser/LC-Chinese-Project/releases"><img alt="模组版本 3.2.9" src="https://img.shields.io/badge/%E6%A8%A1%E7%BB%84%E7%89%88%E6%9C%AC-3.2.9-E35B18?style=flat-square"></a>
+    <a href="https://store.steampowered.com/app/1966720/Lethal_Company/"><img alt="支持游戏版本 V81" src="https://img.shields.io/badge/%E6%B8%B8%E6%88%8F%E7%89%88%E6%9C%AC-V81-E35B18?style=flat-square"></a>
+    <a href="https://bepinex.org/"><img alt="运行环境 BepInEx 5" src="https://img.shields.io/badge/%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83-BepInEx%205-526D82?style=flat-square"></a>
+    <a href="https://github.com/Auuueser/LC-Chinese-Project/blob/main/LICENSE"><img alt="MIT 许可证" src="https://img.shields.io/badge/%E8%AE%B8%E5%8F%AF-MIT-E35B18?style=flat-square"></a>
+  </p>
+  <p align="center">
+    <a href="https://github.com/Auuueser/LC-Chinese-Project"><img alt="GitHub 项目主页" src="https://img.shields.io/badge/GitHub-%E9%A1%B9%E7%9B%AE%E4%B8%BB%E9%A1%B5-24292F?style=flat-square&amp;logo=github"></a>
+    <a href="https://github.com/Auuueser/LC-Chinese-Project/issues"><img alt="问题反馈" src="https://img.shields.io/badge/%E9%97%AE%E9%A2%98%E5%8F%8D%E9%A6%88-GitHub%20Issues-E35B18?style=flat-square&amp;logo=github"></a>
+  </p>
 
 ## 汉化不止是替换文字
 
-| 原版内容 | 视觉本地化 | 字幕与显示 | 模组兼容 |
-|:--|:--|:--|:--|
-| 菜单、HUD、终端、扫描、商店、星球信息、设置与结算 | 船内设施、载具、手册、工具与废料包装 | 中文字体、公司音频字幕与 3943 个受支持 Emoji | 保护玩家输入与内部标识，补全常见动态界面 |
+| 原版内容 | 视觉本地化 | 字幕与显示 | 模组兼容 | 中文命令 |
+|:--|:--|:--|:--|:--|
+| 菜单、HUD、终端、扫描、商店、星球信息、设置与结算 | 船内设施、载具、手册、工具与废料包装 | 中文字体、公司音频字幕与 3943 个受支持 Emoji | 保护玩家输入与内部标识，补全常见动态界面 | 中文、完整拼音与首字母输入，快捷购买及分类中文帮助 |
 
 ## 视觉预览
 
-<p align="center">
-  <img src="assets/readme/cruiser-localization-preview.png" alt="公司巡航车干净与脏污版本中文车标" width="100%">
-</p>
+![公司巡航车干净与脏污版本中文车标](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/cruiser-localization-preview.png)
 
-<p align="center">
-  <img src="assets/readme/primary-visual-localization-preview.png" alt="船内海报、巡航车车载手册、手持文件夹板与船内便签中文视觉预览" width="100%">
-</p>
+![船内海报、巡航车车载手册、手持文件夹板与船内便签中文视觉预览](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/primary-visual-localization-preview.png)
 
 ### 环境、工具与废料包装
 
-<p align="center">
-  <img src="assets/readme/localized-assets-showcase.png" alt="欢迎地垫、厕纸、土制闪光弹、气喇叭、TZP、喷漆罐、告示牌与多种废料的模型包装汉化成品" width="100%">
-</p>
+![欢迎地垫、厕纸、土制闪光弹、气喇叭、TZP、喷漆罐、告示牌与多种废料的模型包装汉化成品](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/localized-assets-showcase.png)
 
 ### 员工徽章
 
-<p align="center">
-  <img src="assets/readme/player-badges-localization-preview.png" alt="原版玩家模型上的 VIP 员工与五档中文员工等级徽章" width="100%">
-</p>
+![原版玩家模型上的 VIP 员工与五档中文员工等级徽章](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/player-badges-localization-preview.png)
 
 ### 配电箱
 
-<p align="center">
-  <img src="assets/readme/powerbox-localization-preview.png" alt="配电箱关门、开门与完整中文 UV 贴图预览" width="100%">
-</p>
+![配电箱关门、开门与完整中文 UV 贴图预览](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/powerbox-localization-preview.png)
 
 ### 设施门
 
-<p align="center">
-  <img src="assets/readme/facility-doors-localization-preview.png" alt="消防出口与矿坑设施门中文烘焙贴图预览" width="100%">
-</p>
+![消防出口与矿坑设施门中文烘焙贴图预览](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/facility-doors-localization-preview.png)
 
 ### 公司音频中文字幕
 
-<p align="center">
-  <img src="assets/readme/chinese-subtitles-preview.jpg" alt="飞船广播、电视节目与公司柜台语音的中文字幕实机预览" width="100%">
-</p>
+![飞船广播、电视节目与公司柜台语音的中文字幕实机预览](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/chinese-subtitles-preview.jpg)
 
 <details>
 <summary><strong>查看完整中文字幕覆盖内容</strong></summary>
@@ -141,32 +123,59 @@
 
 </details>
 
-## 安装
-
-<p align="center">
-  <img src="assets/readme/install-guide.svg" alt="安装引导：安装 BepInExPack、安装本模组、启动游戏" width="100%">
-</p>
-
-推荐使用 **r2modman / Thunderstore Mod Manager**，搜索 `LC Chinese Project` 后安装；依赖项会由管理器自动处理。
+## 中文命令与自定义字体
 
 <details>
-<summary>手动安装</summary>
+<summary><strong>中文命令</strong></summary>
 
-1. 安装 `BepInExPack 5.4.2100`。
-2. 将发布包中的 `BepInEx` 文件夹合并到游戏或 profile 根目录。
-3. 启动游戏，确认 `BepInEx/plugins/V81TestChn/V81TestChn.dll` 已加载。
+终端支持中文、完整拼音和拼音首字母，默认开启。输入 `中文帮助` 或 `zhhelp`，即可查看分类词表和更多用法。
+
+| 想做什么 | 输入示例（任选一种） |
+|:--|:--|
+| 查看商店 | `商店` / `shangdian` |
+| 购买两支手电筒 | `购买 手电筒 2` / `goumai shoudiantong 2` / `2 sd` / `sd 2` |
+| 确认或取消订单 | `确认` / `qr`；`取消` / `qx` |
+| 切换监控目标 | `切换` / `qh` |
+| 使用信号翻译器发报 | `发送 内容` / `fasong 内容` / `fs 内容` |
+| 购买或取回家具、飞船设施 | 直接输入名称，如 `扬声喇叭` / `yslb` |
+
+命令、物品和数量之间留一个空格，拼音不加声调。购买仍需确认；出现多个候选时，改用完整名称重新输入。
+
+原版英文命令照常使用，星球和第三方模组命令沿用原来的写法。
+
+需要关闭中文输入时，可在 LethalConfig 的“06 终端 - 中文输入”中调整。
 
 </details>
 
-## 配置
+<details>
+<summary><strong>自定义字体</strong></summary>
 
-配置文件位于：
+1. 准备一份支持简体中文的 `.ttf`、`.otf` 或 `.ttc` 字体，放入下面的文件夹，无需改名或删除默认字体。
+
+   ```text
+   BepInEx/plugins/Aueser-LC_Chinese_Project/V81TestChn/fonts/
+   ```
+
+2. 在游戏中打开 LethalConfig，进入本模组的“03 字体 - 字体兼容”。
+3. 在 `ChineseFont` 中选择新字体并应用，即可实时切换。
+
+游戏中新增字体后，重新打开模组配置即可刷新列表。选择“默认字体”可恢复；字体无法加载时会保留当前字体。
+
+</details>
+
+## 安装与配置
+
+![安装引导：安装 BepInExPack、安装本模组、启动游戏](https://raw.githubusercontent.com/Auuueser/LC-Chinese-Project/v3.2.9/assets/readme/install-guide.svg)
+
+在 r2modman 或 Thunderstore Mod Manager 中点击 **Install with Mod Manager**；`BepInExPack` 会作为依赖自动安装。
+
+手动安装时，将发布包中的 `BepInEx` 文件夹合并到游戏或 profile 根目录。首次启动后，配置文件位于：
 
 ```text
 BepInEx/config/Aueser.LCChineseProject.cfg
 ```
 
-支持通过 LethalConfig 调整字幕字号、位置、底板透明度及其他常用选项；通常保持默认值即可。
+支持通过 LethalConfig 调整字幕字号、位置、底板透明度及其他常用选项。
 
 <details>
 <summary>自定义翻译与本地构建</summary>
@@ -187,6 +196,6 @@ dotnet build src\V81TestChn\V81TestChn.csproj -c Release -p:GameDir="D:\Steam\st
 
 ## 反馈与许可
 
-遇到漏译、误译或排版问题，请在 [GitHub Issues](https://github.com/Auuueser/LC-Chinese-Project/issues) 附上截图、出现位置、模组列表及 `BepInEx/LogOutput.log`。
+遇到漏译、误译或排版问题，请前往 [GitHub Issues](https://github.com/Auuueser/LC-Chinese-Project/issues)，并附上截图、模组列表及 `BepInEx/LogOutput.log`。
 
-项目采用 [MIT License](LICENSE)。字体与第三方资源归属见 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)。
+项目采用 [MIT License](https://github.com/Auuueser/LC-Chinese-Project/blob/main/LICENSE)。字体与第三方资源归属见发布包中的 `THIRD_PARTY_LICENSES.md`。

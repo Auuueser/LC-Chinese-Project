@@ -232,6 +232,20 @@ internal static class FontFallbackService
 
     private static bool TryLoadFontFileAsset(string pluginDir)
     {
+        var selectedPath = FontSelectionService.SelectedFontPath;
+        if (selectedPath != null)
+        {
+            try
+            {
+                if (TryCreateTmpFontAsset(new Font(selectedPath), Path.GetFileNameWithoutExtension(selectedPath)))
+                {
+                    Plugin.Log.LogInfo($"Loaded Chinese fallback font from font file: {selectedPath}");
+                    return true;
+                }
+            }
+            catch (Exception ex) { Plugin.Log.LogWarning($"Selected font load failed: {ex.Message}"); }
+            FontSelectionService.ResetFailedStartupSelection();
+        }
         foreach (var fontPath in new[]
         {
             Path.Combine(pluginDir, "V81TestChn", "fonts", "NotoSansSC-VF.ttf"),
@@ -289,6 +303,90 @@ internal static class FontFallbackService
 
         Plugin.Log.LogWarning("No compatible Chinese system font fallback was loaded.");
         return false;
+    }
+
+    internal static bool TrySwitchFontFile(string? path)
+    {
+        if (path != null && !File.Exists(path)) return false;
+        var previous = _fallbackFont;
+        var previousSource = _fallbackSourceFont;
+        var previousOwned = _ownsFallbackFont;
+        // Build and validate the replacement before touching any visible text.
+        _fallbackFont = null;
+        _fallbackSourceFont = null;
+        _ownsFallbackFont = false;
+        var ready = false;
+        try
+        {
+            var loaded = path == null
+                ? TryLoadFontFileAsset(_pluginDir ?? string.Empty) || TryLoadSystemFontAsset()
+                : TryCreateTmpFontAsset(new Font(path), Path.GetFileNameWithoutExtension(path));
+            if (!loaded) return false;
+            ready = true;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"Font switch failed: {ex.Message}");
+            return false;
+        }
+        finally
+        {
+            if (!ready)
+            {
+                if (_fallbackFont != null) DestroyOwnedFont(_fallbackFont);
+                if (_fallbackSourceFont != null) UnityEngine.Object.Destroy(_fallbackSourceFont);
+                _fallbackFont = previous;
+                _fallbackSourceFont = previousSource;
+                _ownsFallbackFont = previousOwned;
+            }
+        }
+
+        var replacement = _fallbackFont!;
+        var global = TMP_Settings.fallbackFontAssets;
+        if (global != null && previous != null) global.Remove(previous);
+        foreach (var font in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
+        {
+            if (font == null || font == previous) continue;
+            var table = font.fallbackFontAssetTable;
+            if (table != null && previous != null)
+            {
+                var index = table.IndexOf(previous);
+                if (index >= 0)
+                {
+                    table.RemoveAll(f => f == previous);
+                    if (font != replacement && !table.Contains(replacement)) table.Insert(Math.Min(index, table.Count), replacement);
+                }
+            }
+            // TMP caches characters found through fallback fonts on the parent.
+            // Rebuild from its own character table to drop those old references.
+            font.ReadFontAssetDefinition();
+        }
+        FallbackApplicationCache.Clear();
+        AppliedFallbackFontIds.Clear();
+        NormalizedFallbackMaterialIds.Clear();
+        _globalFallbackApplied = false;
+        ApplyFallbackGlobally();
+        foreach (var text in Resources.FindObjectsOfTypeAll<TMP_Text>())
+        {
+            if (text == null || !text.gameObject.scene.IsValid()) continue;
+            if (text.font == previous) text.font = replacement;
+            ApplyFallback(text, text.text);
+            text.havePropertiesChanged = true;
+            text.SetAllDirty();
+            if (text.isActiveAndEnabled) text.ForceMeshUpdate();
+        }
+        if (previousOwned && previous != null) DestroyOwnedFont(previous);
+        if (previousSource != null) UnityEngine.Object.Destroy(previousSource);
+        return true;
+    }
+
+    private static void DestroyOwnedFont(TMP_FontAsset font)
+    {
+        if (font.atlasTextures != null)
+            foreach (var atlas in font.atlasTextures)
+                if (atlas != null) UnityEngine.Object.Destroy(atlas);
+        if (font.material != null) UnityEngine.Object.Destroy(font.material);
+        UnityEngine.Object.Destroy(font);
     }
 
     public static void ClearSceneComponentCaches()

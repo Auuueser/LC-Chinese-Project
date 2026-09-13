@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using BepInEx.Configuration;
 using TMPro;
@@ -36,13 +36,6 @@ internal static class TranslationGuard
         public ComponentDecision Decision { get; }
         public string Reason { get; }
     }
-
-    private static readonly string[] ExcludedNameTokens =
-    {
-        "RuntimeIcons",
-        "HoneeItemIcons",
-        "BetterRotations"
-    };
 
     public static void Initialize(ConfigFile config)
     {
@@ -237,13 +230,6 @@ internal static class TranslationGuard
             return true;
         }
 
-        if (TryGetExcludedNameToken(component.transform, out var token))
-        {
-            reason = $"name token: {token}";
-            CacheComponentDecision(component, ComponentDecision.Skip, reason);
-            return true;
-        }
-
         reason = string.Empty;
         if (CanCacheAllowDecision(component))
         {
@@ -310,27 +296,6 @@ internal static class TranslationGuard
     {
         var parent = component.transform == null ? null : component.transform.parent;
         return parent == null ? 0 : parent.GetInstanceID();
-    }
-
-    private static bool TryGetExcludedNameToken(Transform? transform, out string matchedToken)
-    {
-        var current = transform;
-        while (current != null)
-        {
-            foreach (var token in ExcludedNameTokens)
-            {
-                if (current.name.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    matchedToken = token;
-                    return true;
-                }
-            }
-
-            current = current.parent;
-        }
-
-        matchedToken = string.Empty;
-        return false;
     }
 
     private static bool CanCacheAllowDecision(Component component)
