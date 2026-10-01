@@ -9,6 +9,8 @@ internal static class ConfigSections
     public const string FontCompatibility = "03 字体 - 字体兼容";
     public const string RadiationWarning = "04 资源 - 辐射警告";
     public const string CompanySubtitles = "05 界面 - 公司音频字幕";
+    public const string HudLayout = "05 界面 - HUD 布局";
+    public const string SpeechInput = "06 输入 - 语音转文字";
     public const string DiagnosticsGeneral = "90 诊断 - 通用";
     public const string DiagnosticsTextCollector = "90 诊断 - 未翻译文本收集";
     public const string DiagnosticsFontFallback = "90 诊断 - 字体审计";

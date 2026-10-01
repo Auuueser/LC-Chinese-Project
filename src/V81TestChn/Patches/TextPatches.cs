@@ -301,6 +301,7 @@ internal static partial class TextPatches
 
     public static void Initialize(ConfigFile config)
     {
+        PlayerNameSettings.Initialize(config);
         HudScannerLocalizationService.Initialize(config);
         PlayerNameDiagnosticService.Initialize(config);
         _enableTmpHookPerfCounters = config.Bind(
@@ -338,6 +339,8 @@ internal static partial class TextPatches
     {
         HudScannerLocalizationService.Clear();
         PlayerNameDiagnosticService.Clear();
+        PlayerNameSourceService.Clear();
+        QuickMenuPreparationService.Clear();
         SignalTranslatorLocalizationService.Clear();
         TerminalScreenLocalizationService.ClearRuntimeCache();
         TerminalCatalogueLocalizationService.ClearRuntimeCache();
@@ -354,7 +357,6 @@ internal static partial class TextPatches
         AdvancedFeaturesGradeTextIds.Clear();
         _hudScannerUpdateTextWriteActive = false;
         _restoringAdvancedFeaturesEndscreenSource = false;
-        _cachedPlayerNameQuickMenuManager = null;
         ExternalEnglishCompatibilityService.ClearRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
         ResetTmpHookPerfCounters();
@@ -372,7 +374,6 @@ internal static partial class TextPatches
         TmpColorHookEligibilityCache.Clear();
         TmpColorHookCandidateTextIds.Clear();
         AdvancedFeaturesGradeTextIds.Clear();
-        _cachedPlayerNameQuickMenuManager = null;
         TerminalScreenLocalizationService.ClearRuntimeCache();
         ClearHudRuntimeCaches();
         ExternalEnglishCompatibilityUiService.ClearRuntimeCaches();
@@ -418,6 +419,8 @@ internal static partial class TextPatches
         TargetedUiTranslator.TranslateHudChatPrompts(__instance, "HUDManager.Start.chat-prompts");
         ChatEmojiSpriteService.ApplyToHud(__instance);
         CompanySubtitleService.ResetForHudLifecycle(__instance);
+        HandsFullLayoutService.Attach(__instance);
+        SpeechInputService.Attach(__instance);
         TranslateTooManyEmotesMenu(__instance);
         // Plugin.Log.LogInfo($"Patch entry HUDManager.Start loadingText={__instance.loadingText?.name ?? "<null>"} riskText={__instance.planetRiskLevelText?.name ?? "<null>"}");
     }
@@ -735,6 +738,7 @@ internal static partial class TextPatches
     private static void PlayerControllerBStartPostfix(PlayerControllerB __instance)
     {
         EnvironmentTextureLocalizationService.ApplyPlayerBadges(__instance);
+        QuickMenuPreparationService.Request(__instance.quickMenuManager);
     }
 
     [HarmonyPatch(typeof(HUDManager), "ApplyPenalty")]
@@ -1026,6 +1030,13 @@ internal static partial class TextPatches
 
         if (_restoringLateWriterCursorTipSource || _restoringAdvancedFeaturesEndscreenSource)
         {
+            MarkTmpSetTextPostfixSkip(__instance, value);
+            return;
+        }
+
+        if (PlayerNameSourceService.IsNameComponent(__instance))
+        {
+            ApplyTmpHookFallback(__instance, value);
             MarkTmpSetTextPostfixSkip(__instance, value);
             return;
         }

@@ -16,10 +16,14 @@ internal static class TargetedUiTranslator
     private static int _dropdownRefreshDepth;
 
     private static readonly HashSet<int> QuickMenuTranslated = new();
-    private static readonly HashSet<int> QuickMenuDebugTranslated = new();
-    private static readonly HashSet<int> MenuPanelTranslated = new();
-    private static readonly HashSet<int> QuickMenuTranslationRunning = new();
-    private static readonly HashSet<int> MenuPanelTranslationRunning = new();
+    private static readonly MenuFrameBudget MenuBudget = new();
+    private static readonly long MenuTimeBudgetTicks = Math.Max(1, System.Diagnostics.Stopwatch.Frequency * 3 / 4000); // 0.75 ms
+    internal static bool HasMenuTime() => MenuBudget.HasTimeRemaining(Time.frameCount,
+        System.Diagnostics.Stopwatch.GetTimestamp(), MenuTimeBudgetTicks);
+    private static bool SpendMenuComponent() => HasMenuTime() &&
+        MenuBudget.TrySpendComponent(Time.frameCount, RuntimePerformanceSettings.MenuTranslationWorkBudgetPerFrame);
+    private static bool SpendMenuNode() => HasMenuTime() &&
+        MenuBudget.TrySpendNode(Time.frameCount, RuntimePerformanceSettings.MenuTranslationWorkBudgetPerFrame);
     private static readonly HashSet<int> HudChatOutputTranslationPending = new();
     private static readonly HashSet<int> HudChatOutputTranslationRunning = new();
     private static readonly Dictionary<int, int> HudChatOutputTranslationGenerations = new();
@@ -101,7 +105,6 @@ internal static class TargetedUiTranslator
     {
         public int Translated;
         public int Seen;
-        public int WorkThisFrame;
     }
 
     public static void Initialize()
@@ -129,10 +132,7 @@ internal static class TargetedUiTranslator
     public static void ClearCaches()
     {
         QuickMenuTranslated.Clear();
-        QuickMenuDebugTranslated.Clear();
-        MenuPanelTranslated.Clear();
-        QuickMenuTranslationRunning.Clear();
-        MenuPanelTranslationRunning.Clear();
+        MenuTranslationScan.ResetEpoch();
         HudChatOutputTranslationPending.Clear();
         HudChatOutputTranslationRunning.Clear();
         HudChatOutputTranslationGenerations.Clear();
@@ -147,6 +147,7 @@ internal static class TargetedUiTranslator
         HudEventSeenObjects.Clear();
         RoundTransitionTextThrottle.Reset();
         ClearScanBuffers();
+        QuickMenuPreparationService.OnTranslationCachesCleared();
     }
 
     private static void FillScanBuffer<T>(GameObject root, bool includeInactive, List<T> buffer)
@@ -189,53 +190,15 @@ internal static class TargetedUiTranslator
 
     public static (int translated, int seen) TranslateMenuPanelOnce(GameObject? root, string reason)
     {
-        if (root == null)
-        {
-            return (0, 0);
-        }
-
-        var instanceId = root.GetInstanceID();
-        if (!MenuPanelTranslated.Add(instanceId))
-        {
-            return (0, 0);
-        }
-
-        var seen = new HashSet<int>();
-        var result = TranslateGameObject(root, seen, includeInactive: false);
-        Plugin.LogTargetedTranslation(reason, result.translated, result.seen);
-        return result;
+        // Even an inactive panel retains its request and starts on activation.
+        ScheduleMenuPanelOnce(null, root, reason);
+        return (0, 0);
     }
 
     public static bool ScheduleMenuPanelOnce(MonoBehaviour? owner, GameObject? root, string reason)
     {
-        if (root == null)
-        {
-            return true;
-        }
-
-        var instanceId = root.GetInstanceID();
-        if (MenuPanelTranslated.Contains(instanceId) || MenuPanelTranslationRunning.Contains(instanceId))
-        {
-            return true;
-        }
-
-        if (owner == null || !owner.isActiveAndEnabled)
-        {
-            return false;
-        }
-
-        try
-        {
-            MenuPanelTranslationRunning.Add(instanceId);
-            owner.StartCoroutine(TranslateMenuPanelOnceBudgeted(root, reason, instanceId));
-            return true;
-        }
-        catch (Exception ex)
-        {
-            MenuPanelTranslationRunning.Remove(instanceId);
-            Plugin.Log.LogWarning($"Menu panel translation scheduling failed: {ex.GetType().Name}: {ex.Message}");
-            return false;
-        }
+        if (root != null) MenuTranslationScan.For(root).Request(reason);
+        return true;
     }
 
     public static (int translated, int seen) TranslateQuickMenuLeaveGamePanel(GameObject? panel, string reason)
@@ -245,6 +208,24 @@ internal static class TargetedUiTranslator
             return (0, 0);
         }
 
+        // LeaveGame enables this small confirmation panel before its postfix.
+        // Apply exact wording now, before the frame renders; a deferred scan
+        // alone permits one English frame, especially immediately after joining.
+        foreach (var text in panel.GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (MenuFirstFrameLocalizationService.IsProtectedText(text) ||
+                !TranslationService.TryTranslateFastExact(text.text, out var value) ||
+                string.Equals(text.text, value, StringComparison.Ordinal)) continue;
+            text.text = value;
+            FontFallbackService.ApplyFallback(text, value);
+        }
+        foreach (var text in panel.GetComponentsInChildren<Text>(true))
+        {
+            if (MenuFirstFrameLocalizationService.IsProtectedText(text) ||
+                !TranslationService.TryTranslateFastExact(text.text, out var value) ||
+                string.Equals(text.text, value, StringComparison.Ordinal)) continue;
+            text.text = value;
+        }
         return TranslateMenuPanelOnce(panel, reason);
     }
 
@@ -334,106 +315,46 @@ internal static class TargetedUiTranslator
 
     public static (int translated, int seen) TranslateQuickMenu(QuickMenuManager menu, string reason)
     {
-        var firstPass = QuickMenuTranslated.Add(menu.GetInstanceID());
+        ScheduleQuickMenu(menu, reason);
+        return (0, 0);
+    }
+
+    public static bool ScheduleQuickMenu(QuickMenuManager? menu, string reason)
+    {
+        if (menu == null) return true;
+        // Each root has its own lifecycle/completion. A hidden player list or a
+        // replacement root must not inherit completion from the main buttons.
+        ScheduleMenuPanelOnce(menu, menu.mainButtonsPanel, reason + ".buttons");
+        ScheduleMenuPanelOnce(menu, menu.playerListPanel, reason + ".players");
         var debugMenu = menu.debugMenuUI;
-        var debugMenuAvailable = debugMenu != null;
-        var debugFirstPass = debugMenuAvailable && QuickMenuDebugTranslated.Add(debugMenu!.GetInstanceID());
-        var seen = new HashSet<int>();
-        var translated = 0;
-        var totalSeen = 0;
-
-        if (firstPass)
+        if (debugMenu != null)
         {
-            Add(TranslateRootOnly(menu.mainButtonsPanel, seen));
-            if (menu.playerListPanel != null && menu.playerListPanel.activeInHierarchy)
-            {
-                Add(TranslateRootOnly(menu.playerListPanel, seen));
-            }
-
+            TranslateDebugMenuBeforeFirstRender(menu, reason + ".debug-before-render");
+            if (debugMenu.activeInHierarchy) TranslateDebugMenuStateLabels(debugMenu);
+            MenuTranslationScan.For(debugMenu).Request(reason + ".debug", debugMenu.GetInstanceID());
         }
 
-        // LethalDevMode can expose this root after QuickMenuManager.Start. Scan
-        // its hierarchy once, then only revisit the cached Enabled/Disabled
-        // labels when ESC is opened again.
-        if (debugMenuAvailable)
+        if (!QuickMenuTranslated.Contains(menu.GetInstanceID()))
         {
-            Add(TranslateDebugMenuStateLabels(debugMenu));
-            if (debugFirstPass)
-            {
-                Add(TranslateRootOnly(debugMenu, seen));
-            }
-        }
-
-        if (firstPass)
-        {
+            var seen = new HashSet<int>();
+            var translated = 0;
+            var totalSeen = 0;
             TranslateTmp(menu.interactTipText, seen, ref translated, ref totalSeen);
             TranslateTmp(menu.leaveGameClarificationText, seen, ref translated, ref totalSeen);
             TranslateTmp(menu.ConfirmKickPlayerText, seen, ref translated, ref totalSeen);
             TranslateTmp(menu.currentMicrophoneText, seen, ref translated, ref totalSeen);
             TranslateTmp(menu.changesNotAppliedText, seen, ref translated, ref totalSeen);
             TranslateTmp(menu.settingsBackButton, seen, ref translated, ref totalSeen);
+            QuickMenuTranslated.Add(menu.GetInstanceID());
+            Plugin.LogTargetedTranslation(reason, translated, totalSeen);
         }
-
-        Plugin.LogTargetedTranslation(reason, translated, totalSeen);
-        return (translated, totalSeen);
-
-        void Add((int translated, int seen) part)
-        {
-            translated += part.translated;
-            totalSeen += part.seen;
-        }
+        return true;
     }
 
-    public static bool ScheduleQuickMenu(QuickMenuManager? menu, string reason)
+    internal static void ForgetMenuRoot(int instanceId)
     {
-        if (menu == null)
-        {
-            return true;
-        }
-
-        var instanceId = menu.GetInstanceID();
-        if (QuickMenuTranslationRunning.Contains(instanceId))
-        {
-            return true;
-        }
-
-        if (!menu.isActiveAndEnabled)
-        {
-            return false;
-        }
-
-        var firstPass = QuickMenuTranslated.Add(instanceId);
-        var debugMenu = menu.debugMenuUI;
-        var debugMenuActive = debugMenu != null && debugMenu.activeInHierarchy;
-        var debugFirstPass = debugMenuActive && QuickMenuDebugTranslated.Add(debugMenu!.GetInstanceID());
-        if (debugMenuActive && !debugFirstPass)
-        {
-            TranslateDebugMenuStateLabels(debugMenu);
-        }
-
-        if (!firstPass && !debugFirstPass)
-        {
-            return true;
-        }
-
-        try
-        {
-            QuickMenuTranslationRunning.Add(instanceId);
-            menu.StartCoroutine(TranslateQuickMenuBudgeted(menu, reason, instanceId, firstPass, debugFirstPass));
-            return true;
-        }
-        catch (Exception ex)
-        {
-            QuickMenuTranslationRunning.Remove(instanceId);
-            Plugin.Log.LogWarning($"Quick menu translation scheduling failed: {ex.GetType().Name}: {ex.Message}");
-            if (firstPass)
-            {
-                // Re-enable the synchronous first pass fallback if coroutine scheduling failed.
-                QuickMenuTranslated.Remove(instanceId);
-            }
-
-            return false;
-        }
+        DebugMenuStateTextCache.Remove(instanceId);
+        QuickMenuTranslated.Remove(instanceId);
     }
 
     public static (int translated, int seen) TranslateHud(HUDManager hud, string reason)
@@ -2314,83 +2235,14 @@ internal static class TargetedUiTranslator
         return (translated, totalSeen);
     }
 
-    private static IEnumerator TranslateMenuPanelOnceBudgeted(GameObject root, string reason, int instanceId)
+    internal static IEnumerator TranslateMenuRootBudgeted(GameObject root, string reason, int debugMenuRootId)
     {
         var counts = new TranslationCounts();
-        try
-        {
-            if (!MenuPanelTranslated.Add(instanceId))
-            {
-                yield break;
-            }
-
-            var seen = new HashSet<int>();
-            yield return TranslateGameObjectBudgeted(root, seen, includeInactive: false, counts);
-            Plugin.LogTargetedTranslation(reason, counts.Translated, counts.Seen);
-        }
-        finally
-        {
-            MenuPanelTranslationRunning.Remove(instanceId);
-        }
-    }
-
-    private static IEnumerator TranslateQuickMenuBudgeted(
-        QuickMenuManager menu,
-        string reason,
-        int instanceId,
-        bool firstPass,
-        bool debugFirstPass)
-    {
-        var counts = new TranslationCounts();
-        try
-        {
-            var seen = new HashSet<int>();
-            if (firstPass)
-            {
-                yield return TranslateRootOnlyBudgeted(menu.mainButtonsPanel, seen, counts);
-                if (menu.playerListPanel != null && menu.playerListPanel.activeInHierarchy)
-                {
-                    yield return TranslateRootOnlyBudgeted(menu.playerListPanel, seen, counts);
-                }
-            }
-
-            if (debugFirstPass && menu.debugMenuUI != null && menu.debugMenuUI.activeInHierarchy)
-            {
-                var debugMenu = menu.debugMenuUI;
-                yield return TranslateGameObjectBudgeted(
-                    debugMenu,
-                    seen,
-                    includeInactive: true,
-                    counts,
-                    debugMenu.GetInstanceID());
-            }
-
-            if (firstPass)
-            {
-                TranslateTmp(menu.interactTipText, seen, ref counts.Translated, ref counts.Seen);
-                TranslateTmp(menu.leaveGameClarificationText, seen, ref counts.Translated, ref counts.Seen);
-                TranslateTmp(menu.ConfirmKickPlayerText, seen, ref counts.Translated, ref counts.Seen);
-                TranslateTmp(menu.currentMicrophoneText, seen, ref counts.Translated, ref counts.Seen);
-                TranslateTmp(menu.changesNotAppliedText, seen, ref counts.Translated, ref counts.Seen);
-                TranslateTmp(menu.settingsBackButton, seen, ref counts.Translated, ref counts.Seen);
-            }
-
-            Plugin.LogTargetedTranslation(reason, counts.Translated, counts.Seen);
-        }
-        finally
-        {
-            QuickMenuTranslationRunning.Remove(instanceId);
-        }
-    }
-
-    private static IEnumerator TranslateRootOnlyBudgeted(GameObject? root, HashSet<int> seenObjects, TranslationCounts counts)
-    {
-        if (root == null)
-        {
-            yield break;
-        }
-
-        yield return TranslateGameObjectBudgeted(root, seenObjects, includeInactive: true, counts);
+        var seen = new HashSet<int>();
+        // Include inactive descendants: visibility changes cannot silently skip
+        // half a subtree and still mark the panel complete.
+        yield return TranslateGameObjectBudgeted(root, seen, includeInactive: true, counts, debugMenuRootId);
+        Plugin.LogTargetedTranslation(reason, counts.Translated, counts.Seen);
     }
 
     private static (int translated, int seen) TranslateDebugMenuStateLabels(
@@ -2452,12 +2304,13 @@ internal static class TargetedUiTranslator
         TranslationCounts counts,
         int debugMenuRootId = 0)
     {
+        var scan = root.GetComponent<MenuTranslationScan>();
         var debugStateTexts = debugMenuRootId != 0 ? new List<TMP_Text>(4) : null;
         var pending = new Stack<Transform>(64);
         pending.Push(root.transform);
-        var traversedThisFrame = 0;
         while (pending.Count > 0)
         {
+            while (!SpendMenuNode()) yield return null;
             var current = pending.Pop();
             if (current == null || (!includeInactive && !current.gameObject.activeInHierarchy))
             {
@@ -2466,31 +2319,36 @@ internal static class TargetedUiTranslator
 
             for (var childIndex = current.childCount - 1; childIndex >= 0; childIndex--)
             {
+                // A mod can put hundreds of rows under one transform. Charge
+                // discovery as well as visitation, and recheck after yielding.
+                while (!SpendMenuNode()) yield return null;
+                if (current == null) break;
+                if (childIndex >= current.childCount) continue;
                 pending.Push(current.GetChild(childIndex));
             }
 
+            if (current == null) continue;
             if (current.TryGetComponent<TMP_Dropdown>(out var tmpDropdown))
             {
-                TranslateTmpDropdown(tmpDropdown, ref counts.Translated);
-                if (AdvanceMenuBudget(counts))
-                {
-                    traversedThisFrame = 0;
-                    yield return null;
-                }
+                yield return TranslateMenuOptionsBudgeted(tmpDropdown, () => tmpDropdown.options,
+                    option => option.text, (option, value) => option.text = value,
+                    TmpDropdownOptionTextCache, () => SafeRefreshShownValue(tmpDropdown), counts);
             }
 
+            if (current == null) continue;
             if (current.TryGetComponent<Dropdown>(out var dropdown))
             {
-                TranslateDropdown(dropdown, ref counts.Translated);
-                if (AdvanceMenuBudget(counts))
-                {
-                    traversedThisFrame = 0;
-                    yield return null;
-                }
+                yield return TranslateMenuOptionsBudgeted(dropdown, () => dropdown.options,
+                    option => option.text, (option, value) => option.text = value,
+                    DropdownOptionTextCache, () => SafeRefreshShownValue(dropdown), counts);
             }
 
+            if (current == null) continue;
             if (current.TryGetComponent<TMP_Text>(out var tmpText))
             {
+                while (!SpendMenuComponent()) yield return null;
+                if (current == null || tmpText == null) continue;
+                scan?.RecordText(tmpText);
                 TranslateTmp(tmpText, seenObjects, ref counts.Translated, ref counts.Seen);
                 if (debugStateTexts != null && TryTranslateDebugMenuStateLabel(tmpText, out var stateChanged))
                 {
@@ -2500,39 +2358,21 @@ internal static class TargetedUiTranslator
                         counts.Translated++;
                     }
                 }
-
-                if (AdvanceMenuBudget(counts))
-                {
-                    traversedThisFrame = 0;
-                    yield return null;
-                }
             }
 
             if (current.TryGetComponent<Text>(out var uiText))
             {
+                while (!SpendMenuComponent()) yield return null;
+                if (current == null || uiText == null) continue;
+                scan?.RecordText(uiText);
                 TranslateUiText(uiText, seenObjects, ref counts.Translated, ref counts.Seen);
-                if (AdvanceMenuBudget(counts))
-                {
-                    traversedThisFrame = 0;
-                    yield return null;
-                }
             }
 
             if (current.TryGetComponent<TextMesh>(out var textMesh))
             {
+                while (!SpendMenuComponent()) yield return null;
+                if (current == null) continue;
                 TranslateTextMesh(textMesh, seenObjects, ref counts.Translated, ref counts.Seen);
-                if (AdvanceMenuBudget(counts))
-                {
-                    traversedThisFrame = 0;
-                    yield return null;
-                }
-            }
-
-            traversedThisFrame++;
-            if (traversedThisFrame >= RuntimePerformanceSettings.MenuTranslationWorkBudgetPerFrame * 4)
-            {
-                traversedThisFrame = 0;
-                yield return null;
             }
         }
 
@@ -2572,61 +2412,11 @@ internal static class TargetedUiTranslator
         return true;
     }
 
-    private static bool AdvanceMenuBudget(TranslationCounts counts)
+    internal static void TranslateMenuComponentBeforeRender(Component text)
     {
-        counts.WorkThisFrame++;
-        if (counts.WorkThisFrame < RuntimePerformanceSettings.MenuTranslationWorkBudgetPerFrame)
-        {
-            return false;
-        }
-
-        counts.WorkThisFrame = 0;
-        return true;
-    }
-
-    private static void TranslateGameObjectOpenFrameFast(GameObject? root, bool includeInactive)
-    {
-        if (root == null)
-        {
-            return;
-        }
-
-        try
-        {
-            FillScanBuffer(root, includeInactive, TmpDropdownScanBuffer);
-            foreach (var dropdown in TmpDropdownScanBuffer)
-            {
-                TranslateTmpDropdownOptionsFastExact(dropdown);
-            }
-
-            FillScanBuffer(root, includeInactive, DropdownScanBuffer);
-            foreach (var dropdown in DropdownScanBuffer)
-            {
-                TranslateDropdownOptionsFastExact(dropdown);
-            }
-
-            FillScanBuffer(root, includeInactive, TmpTextScanBuffer);
-            foreach (var text in TmpTextScanBuffer)
-            {
-                TranslateTmpOpenFrameFast(text);
-            }
-
-            FillScanBuffer(root, includeInactive, UiTextScanBuffer);
-            foreach (var text in UiTextScanBuffer)
-            {
-                TranslateUiTextOpenFrameFast(text);
-            }
-
-            FillScanBuffer(root, includeInactive, TextMeshScanBuffer);
-            foreach (var text in TextMeshScanBuffer)
-            {
-                TranslateTextMeshOpenFrameFast(text);
-            }
-        }
-        finally
-        {
-            ClearScanBuffers();
-        }
+        if (MenuFirstFrameLocalizationService.IsProtectedText(text)) return;
+        if (text is TMP_Text tmp) TranslateTmpOpenFrameFast(tmp);
+        else if (text is Text legacy) TranslateUiTextOpenFrameFast(legacy);
     }
 
     private static void TranslateTmpOpenFrameFast(TMP_Text? text)
@@ -2819,7 +2609,7 @@ internal static class TargetedUiTranslator
             return;
         }
 
-        if (IsLobbySlotDynamicText(text))
+        if (IsLobbySlotDynamicText(text) || MenuFirstFrameLocalizationService.IsPlayerNameText(text))
         {
             totalSeen++;
             if (WasTranslationProcessed(text, text.text))
@@ -3038,6 +2828,30 @@ internal static class TargetedUiTranslator
         }
 
         return false;
+    }
+
+    private static IEnumerator TranslateMenuOptionsBudgeted<T>(UnityEngine.Object dropdown,
+        Func<IList<T>?> options, Func<T, string?> read, Action<T, string> write,
+        BoundedCache<int, List<int>> cache, Action refresh, TranslationCounts counts) where T : class
+    {
+        if (dropdown == null) yield break;
+        var id = dropdown.GetInstanceID();
+        yield return BudgetedMenuOptions.Run(() => dropdown != null, options, SpendMenuComponent,
+            (option, index) =>
+            {
+                var source = read(option);
+                if (WasDropdownOptionProcessed(cache, id, index, source)) return false;
+                var changed = TranslationService.TryTranslate(source, out var translated) ||
+                    AutomaticTranslationService.TryTranslateOrQueue(source, out translated);
+                if (changed)
+                {
+                    write(option, translated);
+                    counts.Translated++;
+                    Plugin.ReportTranslationHit();
+                }
+                MarkDropdownOptionProcessed(cache, id, index, read(option));
+                return changed;
+            }, refresh);
     }
 
     private static void TranslateTmpDropdown(TMP_Dropdown? dropdown, ref int translated)

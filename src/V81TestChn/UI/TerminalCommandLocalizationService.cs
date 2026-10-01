@@ -20,6 +20,10 @@ internal static class TerminalCommandLocalizationService
     [ThreadStatic] private static string? _resolved;
     [ThreadStatic] private static Terminal? _parsingTerminal;
     private static TerminalNode? _feedback;
+    private static readonly (string Plain, string Styled)[] HelpHeadingStyles =
+        new[] { "Moons", "Store", "Bestiary", "Storage", "Other" }
+            .Select(name => ("〈" + name + "〉", "<color=#A0A0A0>〈" + name + "〉</color>"))
+            .ToArray();
 
     internal static void Initialize(ConfigFile config)
     {
@@ -268,10 +272,9 @@ internal static class TerminalCommandLocalizationService
 
     internal static string UnstyleHelp(string text)
     {
-        foreach (var name in new[] { "Moons", "Store", "Bestiary", "Storage", "Other" })
+        foreach (var heading in HelpHeadingStyles)
         {
-            var token = "〈" + name + "〉";
-            text = text.Replace("<color=#A0A0A0>" + token + "</color>", token);
+            text = text.Replace(heading.Styled, heading.Plain);
         }
         return text;
     }
@@ -279,11 +282,9 @@ internal static class TerminalCommandLocalizationService
     internal static string StyleHelp(string text)
     {
         // Fixed headings only; never style payloads, arbitrary names, or nested tags.
-        foreach (var name in new[] { "Moons", "Store", "Bestiary", "Storage", "Other" })
+        foreach (var heading in HelpHeadingStyles)
         {
-            var token = "〈" + name + "〉";
-            var styled = "<color=#A0A0A0>" + token + "</color>";
-            text = text.Replace(styled, token).Replace(token, styled);
+            text = text.Replace(heading.Styled, heading.Plain).Replace(heading.Plain, heading.Styled);
         }
         return text;
     }

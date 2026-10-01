@@ -10,6 +10,7 @@ using UnityEngine;
 namespace V81TestChn;
 
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+[BepInDependency("ChuxiaFixes", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("gafoneo.quicksell", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("ainavt.lc.lethalconfig", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("Zaggy1024.OpenBodyCams", BepInDependency.DependencyFlags.SoftDependency)]
@@ -23,7 +24,7 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string PluginGuid = "Aueser.LCChineseProject";
     public const string PluginName = "V81 TEST CHN";
-    public const string PluginVersion = "3.2.9";
+    public const string PluginVersion = "3.3.1";
 
     internal static ManualLogSource Log = null!;
 
@@ -60,6 +61,7 @@ public sealed class Plugin : BaseUnityPlugin
         RuntimePerformanceSettings.Initialize(runtimeConfig);
         TranslationGuard.Initialize(runtimeConfig);
         TextPatches.Initialize(runtimeConfig);
+        MenuRuntimeHost.Initialize();
         TryInitialize("CustomLocalizationExtensionService", () => { CustomLocalizationExtensionService.Initialize(pluginDir, runtimeConfig); });
         TryInitialize("ItemIdentityCompatibilityService", () => { ItemIdentityCompatibilityService.Initialize(); });
         try
@@ -79,6 +81,7 @@ public sealed class Plugin : BaseUnityPlugin
         TryInitialize("EnvironmentTextureLocalizationService", () => { EnvironmentTextureLocalizationService.Initialize(pluginDir); });
         TryInitialize("ChatEmojiSpriteService", () => { ChatEmojiSpriteService.Initialize(pluginDir, runtimeConfig); });
         TryInitialize("CompanySubtitleService", () => { CompanySubtitleService.Initialize(runtimeConfig); });
+        TryInitialize("HandsFullLayoutService", () => { HandsFullLayoutService.Initialize(runtimeConfig); });
 
         var existingPatchCount = CountOwnHarmonyPatches();
         var manualPatchCount = 0;
@@ -96,6 +99,10 @@ public sealed class Plugin : BaseUnityPlugin
             Logger.LogWarning("Manual patch count is 0; global text hooks are not installed.");
         }
 
+        // Diagnostics share our Harmony owner: install only after the main
+        // duplicate-install guard has checked and installed localization hooks.
+        TryInitialize("QuickMenuTimingService", () => QuickMenuTimingService.Initialize(runtimeConfig, _harmony));
+        TryInitialize("SpeechInputService", () => SpeechInputService.Initialize(pluginDir, runtimeConfig, _harmony));
         TryInitialize("TerminalCommandLocalizationService", () => { TerminalCommandLocalizationService.Initialize(runtimeConfig); });
         TryInitialize("FontSelectionService", () => { FontSelectionService.Initialize(pluginDir, runtimeConfig); });
         TryInitialize("FontFallbackService", () => { FontFallbackService.TryLoadFontAsset(pluginDir); });
@@ -143,7 +150,11 @@ public sealed class Plugin : BaseUnityPlugin
         CleanupPlugin();
     }
 
-    private void Update() => FontSelectionService.ApplyPendingSelection();
+    private void Update()
+    {
+        FontSelectionService.ApplyPendingSelection();
+        SteamPlayerNameService.ApplyPending();
+    }
 
     private void CleanupPlugin()
     {
@@ -156,6 +167,9 @@ public sealed class Plugin : BaseUnityPlugin
         Application.quitting -= OnUnityQuitting;
         _cleanupInProgress = true;
         _runtimeShutDown = true;
+        TryCleanup("SpeechInputService.Shutdown", SpeechInputService.Shutdown);
+        TryCleanup("ChatImeService.Clear", ChatImeService.Clear);
+        TryCleanup("MenuRuntimeHost.Shutdown", MenuRuntimeHost.Shutdown);
         TryCleanup("Harmony.UnpatchSelf", _harmony.UnpatchSelf);
         TryCleanup("OriginalResourceStateService.RestoreAll", () => { OriginalResourceStateService.RestoreAll(); });
         TryCleanup("ItemIdentityCompatibilityService.Shutdown", () => { ItemIdentityCompatibilityService.Shutdown(); });
@@ -165,6 +179,7 @@ public sealed class Plugin : BaseUnityPlugin
         TryCleanup("TranslationService.ClearCaches", () => { TranslationService.ClearCaches(); });
         TryCleanup("CustomLocalizationExtensionService.Shutdown", () => { CustomLocalizationExtensionService.Shutdown(); });
         TryCleanup("CompanySubtitleService.Shutdown", () => { CompanySubtitleService.Shutdown(); });
+        TryCleanup("HandsFullLayoutService.Shutdown", HandsFullLayoutService.Shutdown);
         TryCleanup("ChatEmojiSpriteService.Shutdown", () => { ChatEmojiSpriteService.Shutdown(); });
         TryCleanup("FontFallbackAuditService.Shutdown", () => { FontFallbackAuditService.Shutdown(); });
         TryCleanup("TerminalCommandLocalizationService.Shutdown", () => { TerminalCommandLocalizationService.Shutdown(); });

@@ -1,0 +1,58 @@
+{
+  "schema": 2,
+  "engine": "org.k2fsa.sherpa.onnx",
+  "engineVersion": "1.13.8",
+  "model": "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17",
+  "modelAuthors": ["Alibaba Group", "FunAudioLLM"],
+  "modelProjectUrl": "https://github.com/FunAudioLLM/SenseVoice",
+  "modelArchiveUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2",
+  "modelArchiveSha256": "7D1EFA2138A65B0B488DF37F8B89E3D91A60676E416F515B952358D83DFD347E",
+  "modelSha256": "C71F0CE00BEC95B07744E116345E33D8CBBE08CEF896382CF907BF4B51A2CD51",
+  "tokensSha256": "F449EB28DC567533D7FA59BE34E2ABCA8784F771850C78A47FB731A31429A1DC",
+  "target": "win-x64",
+  "sampleRate": 48000,
+  "inferenceThreads": 1,
+  "worker": "native-cpp",
+  "cApiHeader": {
+    "path": "src/V81SpeechWorker/third_party/sherpa-onnx/c-api.h",
+    "url": "https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf/sherpa-onnx/c-api/c-api.h",
+    "sha256": "2A1B95084BE8FD1DEB3228FCAD2FD3F7F0258B64582F7402281EC174C7B7F4CE"
+  },
+  "runtimePackage": {
+    "name": "org.k2fsa.sherpa.onnx.runtime.win-x64",
+    "version": "1.13.8",
+    "url": "https://api.nuget.org/v3-flatcontainer/org.k2fsa.sherpa.onnx.runtime.win-x64/1.13.8/org.k2fsa.sherpa.onnx.runtime.win-x64.1.13.8.nupkg",
+    "sha256": "2257C06893D1D90792EA3157606DE33A51122D935B6913BED5442D2FFB9E9BD7"
+  },
+  "nativeLibraries": [
+    {
+      "file": "sherpa-onnx-c-api.dll",
+      "archivePath": "runtimes/win-x64/native/sherpa-onnx-c-api.dll",
+      "size": 4605952,
+      "sha256": "2729A0DA3FBD20FB4E14E157F7CC0E00AF848B55F04121319D445C138AEBA214"
+    },
+    {
+      "file": "onnxruntime.dll",
+      "archivePath": "runtimes/win-x64/native/onnxruntime.dll",
+      "size": 17799168,
+      "sha256": "7F66F939A881BAF4F46A2216496798EDF4A1429878B646D12674AA62F27D8A25"
+    }
+  ],
+  "notices": [
+    {
+      "file": "SenseVoice-MODEL-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/modelscope/FunASR/58830eca4012644aac0c3218c3ccc7d98f003fda/MODEL_LICENSE",
+      "sha256": "7DBA975A2069691DB4992B0592D70828B330D2F8A30A71450F4E152A554E84F8"
+    },
+    {
+      "file": "onnxruntime-MIT.txt",
+      "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/LICENSE",
+      "sha256": "2F07C72751AED99790B8A4869CF2311DF85A860B22DED05FA22803587A48922C"
+    },
+    {
+      "file": "onnxruntime-THIRD-PARTY-NOTICES.txt",
+      "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/ThirdPartyNotices.txt",
+      "sha256": "0E07B95F3A8D6230037707C5C4A2B554D12C4CB67369669AC255635528FFCEE2"
+    }
+  ]
+}

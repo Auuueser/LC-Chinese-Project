@@ -31,6 +31,7 @@ internal static class FontFallbackService
     private static readonly HashSet<int> OwnedSupplementalFallbackFontIds = new(4);
     private static readonly Dictionary<int, UnreadableDynamicAtlasOverride> UnreadableDynamicAtlasOverrides = new(32);
     private static readonly List<int> StaleUnreadableDynamicAtlasOverrideIds = new(8);
+    private static readonly List<uint> RetiredFontCharacterKeys = new(128);
     private static int _renderAuditBudget = 80;
     private static int _finalRenderRepairLogBudget = 80;
     private static int _specialCaseLogBudget = 60;
@@ -95,6 +96,7 @@ internal static class FontFallbackService
         RestoreUnreadableDynamicAtlasPopulationModes();
         AppliedFallbackFontIds.Clear();
         NormalizedFallbackMaterialIds.Clear();
+        RetiredFontCharacterKeys.Clear();
 
         var loadedFallbacks = GetLoadedFallbackFonts();
         if (loadedFallbacks.Count > 0)
@@ -344,7 +346,9 @@ internal static class FontFallbackService
         var replacement = _fallbackFont!;
         var global = TMP_Settings.fallbackFontAssets;
         if (global != null && previous != null) global.Remove(previous);
-        foreach (var font in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
+        var loadedFonts = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
+        var previousId = previous != null ? previous.GetInstanceID() : 0;
+        foreach (var font in loadedFonts)
         {
             if (font == null || font == previous) continue;
             var table = font.fallbackFontAssetTable;
@@ -357,15 +361,21 @@ internal static class FontFallbackService
                     if (font != replacement && !table.Contains(replacement)) table.Insert(Math.Min(index, table.Count), replacement);
                 }
             }
-            // TMP caches characters found through fallback fonts on the parent.
-            // Rebuild from its own character table to drop those old references.
-            font.ReadFontAssetDefinition();
+            if (previous != null)
+            {
+                // Access the existing lookup directly: the public getter initializes
+                // untouched fonts. Preserve their own, synthetic and other fallback
+                // characters instead of rebuilding every font's native definition.
+                FontSwitchLookupInvalidator.RemoveRetiredCharacters(
+                    font.m_CharacterLookupDictionary, previous, RetiredFontCharacterKeys);
+                font.FallbackSearchQueryLookup?.Remove(previousId);
+            }
         }
         FallbackApplicationCache.Clear();
         AppliedFallbackFontIds.Clear();
         NormalizedFallbackMaterialIds.Clear();
         _globalFallbackApplied = false;
-        ApplyFallbackGlobally();
+        ApplyFallbackGlobally(loadedFonts);
         foreach (var text in Resources.FindObjectsOfTypeAll<TMP_Text>())
         {
             if (text == null || !text.gameObject.scene.IsValid()) continue;
@@ -855,6 +865,11 @@ internal static class FontFallbackService
             return;
         }
 
+        ApplyFallbackGlobally(Resources.FindObjectsOfTypeAll<TMP_FontAsset>());
+    }
+
+    private static void ApplyFallbackGlobally(TMP_FontAsset[] loadedFonts)
+    {
         var globalFallbacks = TMP_Settings.fallbackFontAssets;
         if (globalFallbacks != null)
         {
@@ -872,7 +887,7 @@ internal static class FontFallbackService
             }
         }
 
-        foreach (var fontAsset in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
+        foreach (var fontAsset in loadedFonts)
         {
             ApplyFallbackToFont(fontAsset);
         }

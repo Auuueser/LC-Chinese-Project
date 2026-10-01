@@ -63,3 +63,11 @@ These localized textures are project-owned assets created from original drawing 
 - Include the full OFL text when distributing the original font or generated TMP font assets.
 - Do not distribute generated font assets as standalone font products.
 - Do not claim third-party translation, font, or compatibility work as original project authorship.
+
+## Offline Speech Recognition
+
+- sherpa-onnx 1.13.8: [k2-fsa/sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx), Apache 2.0. The Windows x64 native C API library is an unmodified, separate DLL. The C++ worker uses the pinned upstream C API header. Full text: `licenses/sherpa-onnx-Apache-2.0.txt`.
+- SenseVoiceSmall int8 (2024-07-17): [FunAudioLLM / Alibaba Group](https://github.com/FunAudioLLM/SenseVoice). Model weights use the FunASR Model Open Source License Agreement, rather than the project's MIT license. Full terms: `licenses/SenseVoice-MODEL-LICENSE.txt`. Original archive notices, model name, author information, source URLs and SHA-256 hashes are preserved in `source-manifest.json` and `licenses/`.
+- ONNX Runtime 1.28.2: Microsoft, MIT. Supplied as an unmodified, separate `onnxruntime.dll` from sherpa-onnx's Windows x64 runtime package. Full text and third-party notices: `licenses/onnxruntime-MIT.txt` and `licenses/onnxruntime-THIRD-PARTY-NOTICES.txt`.
+
+Paths in this section are relative to the package's `BepInEx/plugins/V81TestChn/speech/` directory. r2modman adds its package-name directory below `BepInEx/plugins/`. The two native inference DLLs have no CLR entry and are skipped by BepInEx plugin discovery; inference still runs in a separate process. No speech file uses the `.mm.dll` patch suffix. The native C++ worker, two inference DLLs, model and notices are inventoried with their sizes and SHA-256 values in `files.json`; their pinned upstream sources are recorded in `source-manifest.json`. The complete release package supplies the engine and model directly; no runtime download, extra .NET installation or sign-in is required.

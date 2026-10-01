@@ -32,12 +32,16 @@ internal static class AutomaticTranslationService
     private static bool _cacheDirty;
     private static int _inFlightRequests;
     private static DateTime _nextCacheSaveUtc;
+    private static long _requestGeneration;
+    private static CoalescingBackgroundWriter<CacheSnapshot>? _cacheWriter;
 
     public static bool IsEnabled => _enabledFast;
     public static bool NeedsMainThreadPump => _enabledFast && _initialized;
 
     public static void Initialize(string pluginDir, ConfigFile config)
     {
+        // Drain an older lifetime before loading the same path again.
+        if (_initialized || _cacheWriter != null) Shutdown();
         _enabled = config.Bind(
             ConfigSections.AutomaticTranslation,
             "EnableAutomaticTranslation",
@@ -83,6 +87,8 @@ internal static class AutomaticTranslationService
             _inFlightRequests = 0;
             _nextCacheSaveUtc = DateTime.UtcNow.AddSeconds(CacheSaveIntervalSeconds);
             _cachePath = Path.Combine(pluginDir, "config", CacheFileName);
+            _requestGeneration++;
+            _cacheWriter = new CoalescingBackgroundWriter<CacheSnapshot>(WriteCacheSnapshot);
             _enabledFast = _enabled.Value;
             _initialized = true;
         }
@@ -96,8 +102,10 @@ internal static class AutomaticTranslationService
     public static void Shutdown()
     {
         SaveCacheIfDirty(force: true);
+        var writer = _cacheWriter;
         lock (SyncRoot)
         {
+            _requestGeneration++;
             Cache.Clear();
             PendingSources.Clear();
             CompletedRequests.Clear();
@@ -106,6 +114,15 @@ internal static class AutomaticTranslationService
             _enabledFast = false;
             _cacheDirty = false;
             _inFlightRequests = 0;
+            _cacheWriter = null;
+        }
+        // Normal HUD frames never wait. At shutdown preserve the previous
+        // synchronous-save durability: finish the final accepted snapshot.
+        if (writer != null)
+        {
+            writer.Complete().GetAwaiter().GetResult();
+            var failure = writer.TakeFailure();
+            if (failure != null) LogCacheWriteFailure(failure);
         }
     }
 
@@ -123,6 +140,7 @@ internal static class AutomaticTranslationService
             return false;
         }
 
+        long generation;
         lock (SyncRoot)
         {
             if (Cache.TryGetValue(normalized, out translated))
@@ -157,13 +175,14 @@ internal static class AutomaticTranslationService
 
             PendingSources.Add(normalized);
             _inFlightRequests++;
+            generation = _requestGeneration;
         }
 
         var timeoutMilliseconds = GetProviderTimeoutMilliseconds();
         _ = Task.Run(async () =>
         {
             var result = await RequestTranslationAsync(normalized, endpoint, timeoutMilliseconds).ConfigureAwait(false);
-            CompleteRequest(result);
+            CompleteRequest(result, generation);
         });
         return false;
     }
@@ -331,10 +350,11 @@ internal static class AutomaticTranslationService
         return trimmed;
     }
 
-    private static void CompleteRequest(AutomaticTranslationResult result)
+    private static void CompleteRequest(AutomaticTranslationResult result, long generation)
     {
         lock (SyncRoot)
         {
+            if (!_initialized || generation != _requestGeneration) return;
             PendingSources.Remove(result.Source);
             if (_inFlightRequests > 0)
             {
@@ -400,10 +420,17 @@ internal static class AutomaticTranslationService
 
     private static void SaveCacheIfDirty(bool force)
     {
-        Dictionary<string, string>? snapshot = null;
-        var path = _cachePath;
+        var writer = _cacheWriter;
+        if (writer == null) return;
+        var failure = writer.TakeFailure();
+        if (failure != null)
+        {
+            lock (SyncRoot) _cacheDirty = true;
+            LogCacheWriteFailure(failure);
+        }
         lock (SyncRoot)
         {
+            var path = _cachePath;
             if (string.IsNullOrEmpty(path) || !_cacheDirty)
             {
                 return;
@@ -414,25 +441,26 @@ internal static class AutomaticTranslationService
                 return;
             }
 
-            snapshot = new Dictionary<string, string>(Cache, StringComparer.Ordinal);
+            // Only the dictionary copy remains on the owner thread. Background
+            // code owns this snapshot and never reads live Cache or Unity state.
+            var snapshot = new CacheSnapshot(path, new Dictionary<string, string>(Cache, StringComparer.Ordinal));
+            if (!writer.TryEnqueue(snapshot)) return;
             _cacheDirty = false;
             _nextCacheSaveUtc = DateTime.UtcNow.AddSeconds(CacheSaveIntervalSeconds);
         }
+    }
 
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, JsonConvert.SerializeObject(snapshot, Formatting.Indented), new UTF8Encoding(false));
-        }
-        catch (Exception ex)
-        {
-            lock (SyncRoot)
-            {
-                _cacheDirty = true;
-            }
+    private static void WriteCacheSnapshot(CacheSnapshot snapshot)
+        => AtomicCacheFile.Write(snapshot.Path, JsonConvert.SerializeObject(snapshot.Values, Formatting.Indented));
 
-            Plugin.Log.LogWarning($"Automatic translation cache save failed: {ex.GetType().Name}: {ex.Message}");
-        }
+    private static void LogCacheWriteFailure(Exception ex)
+        => Plugin.Log.LogWarning($"Automatic translation cache save failed: {ex.GetType().Name}: {ex.Message}");
+
+    private sealed class CacheSnapshot
+    {
+        internal CacheSnapshot(string path, Dictionary<string, string> values) { Path = path; Values = values; }
+        internal string Path { get; }
+        internal Dictionary<string, string> Values { get; }
     }
 
     private static bool IsAcceptableTranslation(string source, string? translated)

@@ -79,6 +79,7 @@ internal static partial class TranslationService
     private static readonly BoundedCache<string, string> CompositeTranslationResultCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
     private static readonly BoundedSet<string> FastExactMissCache = new(MaxTranslationResultCache, StringComparer.Ordinal);
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(25);
+    private static readonly BoundedRegexCache BuiltInRegexCache = new(256);
     private const string TemperatureUnitCelsius = "Celsius";
     private const string TemperatureUnitFahrenheit = "Fahrenheit";
     private const int KnownDynamicHitLogBudget = 80;
@@ -557,6 +558,52 @@ internal static partial class TranslationService
         ["Radar booster name"] = "\u96f7\u8fbe\u589e\u5e45\u5668\u540d\u79f0",
         ["message"] = "\u6d88\u606f"
     };
+    private static readonly Dictionary<string, string> TerminalMoonInfoLineEntries = new(StringComparer.Ordinal)
+    {
+        ["CONDITIONS:"] = "\u73af\u5883\u6761\u4ef6\uff1a",
+        ["HISTORY:"] = "\u5386\u53f2\uff1a",
+        ["FAUNA:"] = "\u751f\u6001\u7fa4\u7cfb\uff1a",
+        ["Sigurd's danger level:"] = "Sigurd \u5371\u9669\u7b49\u7ea7\uff1a",
+        ["Scientific name:"] = "\u5b66\u540d\uff1a",
+        ["Population:"] = "\u4f30\u8ba1\u79cd\u7fa4\uff1a"
+    };
+    private static readonly Dictionary<string, string> TerminalOtherLineEntries = new(StringComparer.Ordinal)
+    {
+        ["Other commands:"] = "\u5176\u4ed6\u547d\u4ee4\uff1a",
+        [">VIEW MONITOR"] = ">查看监控 <color=#A0A0A0>（view monitor）</color>",
+        [">SWITCH [Player name]"] = ">切换 [玩家名称] <color=#A0A0A0>（switch [Player name]）</color>",
+        [">PING [Radar booster name]"] = ">鸣笛 [雷达增幅器名称] <color=#A0A0A0>（ping [Radar booster name]）</color>",
+        [">TRANSMIT [message]"] = ">发送 [消息] <color=#A0A0A0>（transmit [message]）</color>",
+        [">SCAN"] = ">扫描 <color=#A0A0A0>（scan）</color>",
+        ["To toggle on AND off the main monitor's map cam"] = "\u5f00\u542f\u6216\u5173\u95ed\u4e3b\u76d1\u89c6\u5668\u7684\u5730\u56fe\u6444\u50cf\u3002",
+        ["To switch view to a player on the main monitor"] = "\u5c06\u4e3b\u76d1\u89c6\u5668\u7684\u89c6\u89d2\u5207\u6362\u5230\u6307\u5b9a\u73a9\u5bb6\u3002",
+        ["To make a radar booster play a noise."] = "\u8ba9\u96f7\u8fbe\u589e\u5e45\u5668\u64ad\u653e\u63d0\u793a\u97f3\u3002",
+        ["To transmit a message with the signal translator"] = "\u4f7f\u7528\u4fe1\u53f7\u7ffb\u8bd1\u5668\u53d1\u9001\u4e00\u6761\u6d88\u606f\u3002",
+        ["To scan for the number of items left on the current planet."] = "\u626b\u63cf\u5f53\u524d\u661f\u7403\u4e0a\u5269\u4f59\u7269\u54c1\u7684\u6570\u91cf\u3002"
+    };
+
+    // These overrides are fixed for the lifetime of the plugin. Preserve the
+    // original stable length ordering, including which punctuation alias wins.
+    private static readonly string[] TerminalBilingualKeysLongestFirst =
+        TerminalBilingualOverrides.Keys.OrderByDescending(key => key.Length).ToArray();
+    private static readonly Dictionary<string, string> TerminalCanonicalEnglishNames =
+        BuildTerminalCanonicalEnglishNames();
+
+    private static Dictionary<string, string> BuildTerminalCanonicalEnglishNames()
+    {
+        var canonicalNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var key in TerminalBilingualKeysLongestFirst)
+        {
+            var normalizedKey = NormalizeTerminalEnglishName(key);
+            if (normalizedKey.Length > 0 && !canonicalNames.ContainsKey(normalizedKey))
+            {
+                canonicalNames.Add(normalizedKey, key);
+            }
+        }
+
+        return canonicalNames;
+    }
+
     private static readonly KeyValuePair<string, string>[] ForcedPhraseEntries =
     {
         new("ENTERING THE ATMOSPHERE...", "\u6b63\u5728\u8fdb\u5165\u5927\u6c14\u5c42\u2026"),
@@ -705,7 +752,8 @@ internal static partial class TranslationService
         TerminalDescriptions.Rebuild(ExactMap.Concat(TerminalBodyEntries));
 
         CompositeEntries.AddRange(ExactMap
-            .Where(entry => entry.Key.Length >= 4 && entry.Key != entry.Value)
+            .Where(entry => entry.Key.Length >= 4 && entry.Key != entry.Value &&
+                            ShouldApplyCompositeEntryAsSubstring(entry.Key))
             .OrderByDescending(entry => entry.Key.Length));
 
         Plugin.Log.LogInfo($"TranslationService loaded {ExactMap.Count} exact + {RegexEntries.Count} regex entries from {loadedSources.Count} source(s).");
@@ -836,7 +884,9 @@ internal static partial class TranslationService
             return true;
         }
 
-        translated = TranslateComposite(source);
+        // The same source already missed the full dynamic rule chain above.
+        // Carry that fact only into this call; never cache stateful misses globally.
+        translated = TranslateCompositeCore(source, knownDynamicChecked: true, regexChecked: true);
         if (!string.Equals(translated, source, StringComparison.Ordinal))
         {
             CacheTranslationResult(source, translated);
@@ -1562,6 +1612,9 @@ internal static partial class TranslationService
     }
 
     public static string TranslateComposite(string? source)
+        => TranslateCompositeCore(source, knownDynamicChecked: false);
+
+    private static string TranslateCompositeCore(string? source, bool knownDynamicChecked, bool regexChecked = false)
     {
         if (string.IsNullOrEmpty(source))
         {
@@ -1612,7 +1665,7 @@ internal static partial class TranslationService
             return customTranslation;
         }
 
-        if (TryTranslateKnownDynamicText(source, out var knownDynamic))
+        if (!knownDynamicChecked && TryTranslateKnownDynamicText(source, out var knownDynamic))
         {
             CacheCompositeTranslationResult(source, knownDynamic);
             return knownDynamic;
@@ -1635,7 +1688,7 @@ internal static partial class TranslationService
             return controlTipItemName;
         }
 
-        if (TryTranslateRegex(source, out var regex))
+        if (!regexChecked && TryTranslateRegex(source, out var regex))
         {
             CacheCompositeTranslationResult(source, regex);
             return regex;
@@ -1655,7 +1708,9 @@ internal static partial class TranslationService
 
         foreach (var entry in CompositeEntries)
         {
-            if (ShouldApplyCompositeEntryAsSubstring(entry.Key) && translated.Contains(entry.Key))
+            // Eligibility depends only on the dictionary key and is fixed at
+            // Load time. Rechecking here trimmed every long lore key per miss.
+            if (translated.Contains(entry.Key))
             {
                 translated = translated.Replace(entry.Key, entry.Value);
             }
@@ -1669,11 +1724,17 @@ internal static partial class TranslationService
             }
         }
 
-        foreach (var regexEntry in RegexEntries)
+        // This exact source already missed every dictionary regex above (or in
+        // TryTranslate). Only retry after a phrase changed the text; a changed
+        // intermediate value can activate a rule that did not match the input.
+        if (!string.Equals(translated, source, StringComparison.Ordinal))
         {
-            if (TryApplyRegexEntry(translated, regexEntry, out var updated))
+            foreach (var regexEntry in RegexEntries)
             {
-                translated = updated;
+                if (TryApplyRegexEntry(translated, regexEntry, out var updated))
+                {
+                    translated = updated;
+                }
             }
         }
 
@@ -1939,11 +2000,8 @@ internal static partial class TranslationService
 
     private static bool TryApplyBuiltInPhraseRegexes(string source, out string translated)
     {
-        if (TryTranslateKnownDynamicText(source, out var knownDynamic))
-        {
-            translated = knownDynamic;
-            return true;
-        }
+        // Only called by TranslateCompositeCore, after the identical source has
+        // missed dynamic rules. No replacement has occurred before this point.
 
         if (TryTranslateControlTipItemName(source, out translated))
         {
@@ -2414,7 +2472,11 @@ internal static partial class TranslationService
         }
         // Serialized purchase receipts may already contain only a Chinese item name.
         name = SafeRegexMatch(originalNodeText, @"^\s*Ordered (?:the )?(?<item>[^.!\r\n]+)[.!]", RegexOptions.IgnoreCase);
-        if (!name.Success || char.IsDigit(name.Groups["item"].Value[0])) return text;
+        // Quantity receipts are already expanded by Terminal.TextPostProcess.
+        // The serialized placeholder is not part of the item name: restoring
+        // it here would overwrite the real quantity and localized item again.
+        if (!name.Success || char.IsDigit(name.Groups["item"].Value[0]) ||
+            name.Groups["item"].Value.StartsWith("[variableAmount]", StringComparison.Ordinal)) return text;
         var item = BuildChineseFirstBilingual(NormalizeTerminalArticleItem(name.Groups["item"].Value));
         return SafeRegexReplace(text, @"^(?<lead>\s*)(?:(?:已订购|已购买)\s*[^。！!\r\n]+|[^。！!\r\n]+已下单)[。！!]",
             m => m.Groups["lead"].Value + "已订购 " + item + "。", RegexOptions.CultureInvariant);
@@ -2437,6 +2499,14 @@ internal static partial class TranslationService
         {
             text = text.Replace("Sigurd 的日志条目", "西格德的日志条目").Replace("Sigurd的日志条目", "西格德的日志条目");
             text = SafeRegexReplace(text, @"\(NEW\)", "（新）", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        }
+        else if (text.Contains("生物档案", StringComparison.Ordinal) &&
+                 text.IndexOf("(NEW)", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            // Vanilla appends this marker after the bilingual creature name.
+            // Only localize catalogue row suffixes; preserve names/body text.
+            text = SafeRegexReplace(text, @"(?m)\(NEW\)(?=[ \t]*\r?$)", "（新）",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         }
         return text;
     }
@@ -3150,17 +3220,7 @@ internal static partial class TranslationService
         }
 
         var trimmed = line.Trim();
-        var replacements = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["CONDITIONS:"] = "\u73af\u5883\u6761\u4ef6\uff1a",
-            ["HISTORY:"] = "\u5386\u53f2\uff1a",
-            ["FAUNA:"] = "\u751f\u6001\u7fa4\u7cfb\uff1a",
-            ["Sigurd's danger level:"] = "Sigurd \u5371\u9669\u7b49\u7ea7\uff1a",
-            ["Scientific name:"] = "\u5b66\u540d\uff1a",
-            ["Population:"] = "\u4f30\u8ba1\u79cd\u7fa4\uff1a"
-        };
-
-        if (!replacements.TryGetValue(trimmed, out var replaced))
+        if (!TerminalMoonInfoLineEntries.TryGetValue(trimmed, out var replaced))
         {
             return line;
         }
@@ -3315,6 +3375,14 @@ internal static partial class TranslationService
             return line;
         }
 
+        // This is an instruction, not a furniture identifier to type back in.
+        // Do not manufacture an English alias for the empty-storage notice.
+        if (string.Equals(trimmed, "[No items stored. While moving an object with B, press X to store it.]", StringComparison.Ordinal))
+        {
+            var indent = line.Length - line.TrimStart().Length;
+            return line[..indent] + "[没有已收纳物品。按 B 移动物体时，按 X 可将其收纳。]";
+        }
+
         var leadingLength = line.Length - line.TrimStart().Length;
         var leading = leadingLength > 0 ? line[..leadingLength] : string.Empty;
         var bilingual = BuildChineseFirstBilingual(trimmed, dimEnglishSuffix: true);
@@ -3359,22 +3427,7 @@ internal static partial class TranslationService
             return line;
         }
 
-        var replacements = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["Other commands:"] = "\u5176\u4ed6\u547d\u4ee4\uff1a",
-            [">VIEW MONITOR"] = ">查看监控 <color=#A0A0A0>（view monitor）</color>",
-            [">SWITCH [Player name]"] = ">切换 [玩家名称] <color=#A0A0A0>（switch [Player name]）</color>",
-            [">PING [Radar booster name]"] = ">鸣笛 [雷达增幅器名称] <color=#A0A0A0>（ping [Radar booster name]）</color>",
-            [">TRANSMIT [message]"] = ">发送 [消息] <color=#A0A0A0>（transmit [message]）</color>",
-            [">SCAN"] = ">扫描 <color=#A0A0A0>（scan）</color>",
-            ["To toggle on AND off the main monitor's map cam"] = "\u5f00\u542f\u6216\u5173\u95ed\u4e3b\u76d1\u89c6\u5668\u7684\u5730\u56fe\u6444\u50cf\u3002",
-            ["To switch view to a player on the main monitor"] = "\u5c06\u4e3b\u76d1\u89c6\u5668\u7684\u89c6\u89d2\u5207\u6362\u5230\u6307\u5b9a\u73a9\u5bb6\u3002",
-            ["To make a radar booster play a noise."] = "\u8ba9\u96f7\u8fbe\u589e\u5e45\u5668\u64ad\u653e\u63d0\u793a\u97f3\u3002",
-            ["To transmit a message with the signal translator"] = "\u4f7f\u7528\u4fe1\u53f7\u7ffb\u8bd1\u5668\u53d1\u9001\u4e00\u6761\u6d88\u606f\u3002",
-            ["To scan for the number of items left on the current planet."] = "\u626b\u63cf\u5f53\u524d\u661f\u7403\u4e0a\u5269\u4f59\u7269\u54c1\u7684\u6570\u91cf\u3002"
-        };
-
-        if (!replacements.TryGetValue(trimmed, out var replaced))
+        if (!TerminalOtherLineEntries.TryGetValue(trimmed, out var replaced))
         {
             return line;
         }
@@ -3965,7 +4018,7 @@ internal static partial class TranslationService
             return false;
         }
 
-        foreach (var key in TerminalBilingualOverrides.Keys.OrderByDescending(key => key.Length))
+        foreach (var key in TerminalBilingualKeysLongestFirst)
         {
             if (trimmed.IndexOf(key, StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -4018,14 +4071,9 @@ internal static partial class TranslationService
             return false;
         }
 
-        foreach (var key in TerminalBilingualOverrides.Keys.OrderByDescending(key => key.Length))
+        if (TerminalCanonicalEnglishNames.TryGetValue(normalizedCandidate, out var canonicalEnglish))
         {
-            if (NormalizeTerminalEnglishName(key) != normalizedCandidate)
-            {
-                continue;
-            }
-
-            english = key;
+            english = canonicalEnglish;
             return true;
         }
 
@@ -4051,7 +4099,7 @@ internal static partial class TranslationService
         var hasLetter = false;
         foreach (var ch in value)
         {
-            if (ContainsCjk(ch.ToString()))
+            if (IsCjk(ch))
             {
                 return false;
             }
@@ -4066,8 +4114,7 @@ internal static partial class TranslationService
     {
         foreach (var ch in value)
         {
-            if ((ch >= '\u3400' && ch <= '\u9fff') ||
-                (ch >= '\uf900' && ch <= '\ufaff'))
+            if (IsCjk(ch))
             {
                 return true;
             }
@@ -4075,6 +4122,9 @@ internal static partial class TranslationService
 
         return false;
     }
+
+    private static bool IsCjk(char ch) =>
+        (ch >= '\u3400' && ch <= '\u9fff') || (ch >= '\uf900' && ch <= '\ufaff');
 
     private static void LoadCleanRuntimeJson(string pluginDir, List<string> loadedSources)
     {
@@ -4430,7 +4480,9 @@ internal static partial class TranslationService
 
     private static bool TryApplyKnownSlowRegexEntry(string source, KnownSlowCfgRegexKind kind, string replacement, out string translated)
     {
-        if (string.IsNullOrEmpty(source))
+        var suffix = KnownSlowRegexSuffix(kind);
+        if (string.IsNullOrEmpty(source) || suffix.Length == 0 ||
+            source.IndexOf(suffix, StringComparison.Ordinal) < 0)
         {
             translated = source;
             return false;
@@ -4464,14 +4516,7 @@ internal static partial class TranslationService
             return false;
         }
 
-        var suffix = kind switch
-        {
-            KnownSlowCfgRegexKind.PurchasedItemsOnRoute => " purchased items on route.",
-            KnownSlowCfgRegexKind.PurchasedVehicleOnRoute => " purchased vehicle on route.",
-            KnownSlowCfgRegexKind.ColonAll => ": ALL",
-            KnownSlowCfgRegexKind.ColonNone => ": NONE",
-            _ => string.Empty
-        };
+        var suffix = KnownSlowRegexSuffix(kind);
 
         if (suffix.Length == 0)
         {
@@ -4495,6 +4540,15 @@ internal static partial class TranslationService
         translated = replacement.Replace("$1", capture, StringComparison.Ordinal) + tail;
         return true;
     }
+
+    private static string KnownSlowRegexSuffix(KnownSlowCfgRegexKind kind) => kind switch
+    {
+        KnownSlowCfgRegexKind.PurchasedItemsOnRoute => " purchased items on route.",
+        KnownSlowCfgRegexKind.PurchasedVehicleOnRoute => " purchased vehicle on route.",
+        KnownSlowCfgRegexKind.ColonAll => ": ALL",
+        KnownSlowCfgRegexKind.ColonNone => ": NONE",
+        _ => string.Empty
+    };
 
     private static IEnumerable<string> ResolveCleanRuntimeJsonPaths(string pluginDir)
     {
@@ -4586,6 +4640,28 @@ internal static partial class TranslationService
             return string.Empty;
         }
 
+        // Already normalized labels are by far the common case. Keep the
+        // original reference instead of allocating a builder and an equal copy.
+        var needsNormalization = false;
+        var previousWasSpace = false;
+        for (var i = 0; i < source.Length; i++)
+        {
+            var ch = source[i];
+            if (ch is '\u2026' or '\u2018' or '\u2019' or '\u201C' or '\u201D' ||
+                (char.IsWhiteSpace(ch) && (ch != ' ' || previousWasSpace || i == 0 || i == source.Length - 1)))
+            {
+                needsNormalization = true;
+                break;
+            }
+
+            previousWasSpace = ch == ' ';
+        }
+
+        if (!needsNormalization)
+        {
+            return source;
+        }
+
         var normalized = source
             .Replace("\u2026", "...")
             .Replace('\u2018', '\'')
@@ -4651,7 +4727,7 @@ internal static partial class TranslationService
     {
         try
         {
-            return Regex.Match(source, pattern, options, RegexTimeout);
+            return BuiltInRegexCache.Get(pattern, options, RegexTimeout).Match(source);
         }
         catch (RegexMatchTimeoutException ex)
         {
@@ -4665,7 +4741,7 @@ internal static partial class TranslationService
         MatchCollection matches;
         try
         {
-            matches = Regex.Matches(source, pattern, options, RegexTimeout);
+            matches = BuiltInRegexCache.Get(pattern, options, RegexTimeout).Matches(source);
         }
         catch (RegexMatchTimeoutException ex)
         {
@@ -4683,7 +4759,7 @@ internal static partial class TranslationService
     {
         try
         {
-            return Regex.Replace(source, pattern, replacement, options, RegexTimeout);
+            return BuiltInRegexCache.Get(pattern, options, RegexTimeout).Replace(source, replacement);
         }
         catch (RegexMatchTimeoutException ex)
         {
@@ -4696,7 +4772,7 @@ internal static partial class TranslationService
     {
         try
         {
-            return Regex.Replace(source, pattern, evaluator, options, RegexTimeout);
+            return BuiltInRegexCache.Get(pattern, options, RegexTimeout).Replace(source, evaluator);
         }
         catch (RegexMatchTimeoutException ex)
         {

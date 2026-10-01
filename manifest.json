@@ -1,0 +1,9 @@
+{
+  "name": "LC_Chinese_Project",
+  "version_number": "3.3.1",
+  "website_url": "https://github.com/Auuueser/LC-Chinese-Project",
+  "description": "Lethal Company 简体中文汉化，提供游戏文本、UI 贴图、中文字体与离线语音转文字支持。",
+  "dependencies": [
+    "BepInEx-BepInExPack-5.4.2100"
+  ]
+}

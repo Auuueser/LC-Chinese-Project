@@ -2,6 +2,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>V81TestChn</AssemblyName>
+    <Version>3.3.1</Version>
+    <AssemblyVersion>3.3.1.0</AssemblyVersion>
+    <FileVersion>3.3.1.0</FileVersion>
     <RootNamespace>V81TestChn</RootNamespace>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
@@ -10,9 +13,18 @@
     <TestDeployDir Condition="'$(TestDeployDir)' == ''"></TestDeployDir>
     <EnableTestDeploy Condition="'$(EnableTestDeploy)' == ''">false</EnableTestDeploy>
     <EnableDistSync Condition="'$(EnableDistSync)' == ''">false</EnableDistSync>
+    <RequireSpeechPayload Condition="'$(RequireSpeechPayload)' == '' and '$(Configuration)' == 'Release'">true</RequireSpeechPayload>
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="Facepunch.Steamworks.Win64">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\Facepunch.Steamworks.Win64.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="DissonanceVoip">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\DissonanceVoip.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Compile Remove="build_tmpobj\**\*.cs" />
     <Compile Remove="tmpobj\**\*.cs" />
     <Compile Remove="obj\**\*.cs" />
@@ -36,7 +48,7 @@
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Unity.TextMeshPro">
+    <Reference Include="Unity.TextMeshPro" Publicize="true">
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\Unity.TextMeshPro.dll</HintPath>
       <Private>false</Private>
     </Reference>
@@ -82,6 +94,18 @@
     </Reference>
     <Reference Include="UnityEngine.UIModule">
       <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.InputSystem" Publicize="true">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\Unity.InputSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GameDir)\Lethal Company_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
@@ -151,6 +175,28 @@
 
   <Target Name="RequireGameDir" BeforeTargets="ResolveReferences" Condition="'$(GameDir)' == ''">
     <Error Text="GameDir is required. Pass -p:GameDir=&quot;D:\Steam\steamapps\common\Lethal Company&quot; or set LETHAL_COMPANY_DIR." />
+  </Target>
+
+  <ItemGroup>
+    <None Include="..\..\assets\speech-payload\**\*" CopyToOutputDirectory="PreserveNewest" Link="speech\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\assets\speech-payload')" />
+  </ItemGroup>
+
+  <Target Name="RequireSpeechPayloadFiles" BeforeTargets="PrepareForBuild" Condition="'$(RequireSpeechPayload)' == 'true'">
+    <ItemGroup>
+      <RequiredSpeechDependency Include="V81SpeechWorker.exe;onnxruntime.dll;sherpa-onnx-c-api.dll;source-manifest.json;worker-source.json" />
+      <ForbiddenSpeechDependency Include="..\..\assets\speech-payload\**\*.deps.json;..\..\assets\speech-payload\**\*.runtimeconfig.json;..\..\assets\speech-payload\**\*.dll;..\..\assets\speech-payload\**\*.exe" Exclude="..\..\assets\speech-payload\V81SpeechWorker.exe;..\..\assets\speech-payload\onnxruntime.dll;..\..\assets\speech-payload\sherpa-onnx-c-api.dll" />
+      <SpeechWorkerSourceFile Include="..\V81SpeechWorker\CMakeLists.txt"><SourcePattern>CMakeLists[.]txt</SourcePattern></SpeechWorkerSourceFile>
+      <SpeechWorkerSourceFile Include="..\V81SpeechWorker\main.cpp"><SourcePattern>main[.]cpp</SourcePattern></SpeechWorkerSourceFile>
+      <SpeechWorkerSourceFile Include="..\V81SpeechWorker\third_party\sherpa-onnx\c-api.h"><SourcePattern>third_party/sherpa-onnx/c-api[.]h</SourcePattern></SpeechWorkerSourceFile>
+    </ItemGroup>
+    <Error Condition="!Exists('..\..\assets\speech-payload\%(RequiredSpeechDependency.Identity)')" Text="Missing native speech worker dependency: %(RequiredSpeechDependency.Identity). Run scripts/prepare-speech-payload.ps1 first." />
+    <Error Condition="'@(ForbiddenSpeechDependency)' != ''" Text="Managed/.NET speech worker files must not be included in the native payload: @(ForbiddenSpeechDependency). Re-run scripts/prepare-speech-payload.ps1." />
+    <Error Condition="!Exists('..\..\assets\speech-payload\V81SpeechWorker.exe') or !Exists('..\..\assets\speech-payload\models\model.int8.onnx') or !Exists('..\..\assets\speech-payload\models\tokens.txt') or !Exists('..\..\assets\speech-payload\files.json')" Text="Complete offline speech payload is required for Release. Run scripts/prepare-speech-payload.ps1 first. Source-only audits may use -p:RequireSpeechPayload=false." />
+    <PropertyGroup>
+      <SpeechWorkerSourceText>$([System.IO.File]::ReadAllText('..\..\assets\speech-payload\worker-source.json'))</SpeechWorkerSourceText>
+    </PropertyGroup>
+    <GetFileHash Files="@(SpeechWorkerSourceFile)" Algorithm="SHA256"><Output TaskParameter="Items" ItemName="HashedSpeechWorkerSource" /></GetFileHash>
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(SpeechWorkerSourceText)', '(?is)&quot;path&quot;\s*:\s*&quot;src/V81SpeechWorker/%(HashedSpeechWorkerSource.SourcePattern)&quot;\s*,\s*&quot;sha256&quot;\s*:\s*&quot;%(HashedSpeechWorkerSource.FileHash)&quot;'))" Text="Speech worker source changed after its build: %(HashedSpeechWorkerSource.Identity). Re-run scripts/prepare-speech-payload.ps1." />
   </Target>
 
   <Target Name="CleanOverlayArtifacts" AfterTargets="Build">

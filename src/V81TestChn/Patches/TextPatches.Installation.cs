@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using GameNetcodeStuff;
 using System;
 using System.Collections.Generic;
@@ -19,9 +19,20 @@ internal static partial class TextPatches
     {
         var patched = 0;
 
+        PatchPrefix(harmony, AccessTools.Method(typeof(UnityEngine.InputSystem.InputAction).Assembly.GetType(
+            "UnityEngine.InputSystem.InputActionState"), "CallActionListeners"), nameof(ChatActionDispatchImePrefix), ref patched, Priority.First);
+        PatchPrefix(harmony, typeof(HUDManager), "SubmitChat_performed", nameof(HudSubmitChatImePrefix), ref patched, Priority.First);
+        PatchPostfix(harmony, typeof(HUDManager), "EnableChat_performed", nameof(HudEnableChatImePostfix), ref patched, Priority.Last);
+        PatchPrefix(harmony, AccessTools.Method(typeof(TMP_InputField), "KeyPressed", new[] { typeof(Event) }), nameof(TmpChatImeKeyPressedPrefix), ref patched, Priority.First);
+        PatchPrefix(harmony, AccessTools.Method(typeof(TMP_InputField), "OnSubmit"), nameof(TmpChatImeSubmitPrefix), ref patched, Priority.First);
+        PatchPrefix(harmony, AccessTools.Method(typeof(TMP_InputField), "OnUpdateSelected"), nameof(TmpChatImeUpdatePrefix), ref patched, Priority.First);
+        PatchPrefix(harmony, AccessTools.Method(typeof(TMP_InputField), "LateUpdate"), nameof(TmpChatImeLateUpdatePrefix), ref patched, Priority.Last);
+        PatchPostfix(harmony, AccessTools.Method(typeof(TMP_InputField), "OnDeselect"), nameof(TmpChatImeDeselectPostfix), ref patched);
+        PatchPostfix(harmony, AccessTools.Method(typeof(TMP_InputField), "OnDisable"), nameof(TmpChatImeDisablePostfix), ref patched);
+
         PatchPostfix(harmony, typeof(MenuManager), "OnEnable", nameof(MenuManagerOnEnablePostfix), ref patched);
-        PatchPostfix(harmony, typeof(TextMeshProUGUI), "OnEnable", nameof(MenuLabelTmpOnEnablePostfix), ref patched);
-        PatchPostfix(harmony, typeof(UnityEngine.UI.Text), "OnEnable", nameof(MenuLabelTextOnEnablePostfix), ref patched);
+        PatchPostfix(harmony, typeof(TextMeshProUGUI), "OnEnable", nameof(MenuLabelTmpOnEnablePostfix), ref patched, Priority.Last);
+        PatchPostfix(harmony, typeof(UnityEngine.UI.Text), "OnEnable", nameof(MenuLabelTextOnEnablePostfix), ref patched, Priority.Last);
         PatchPrefix(harmony, typeof(HUDManager), "DisplayGlobalNotification", nameof(HudGlobalNotificationPrefix), ref patched);
         PatchPostfix(harmony, typeof(MenuManager), "EnableUIPanel", nameof(MenuManagerEnableUIPanelPostfix), ref patched);
         PatchPostfix(harmony, typeof(MenuManager), "EnableLeaderboardDisplay", nameof(MenuManagerEnableLeaderboardDisplayPostfix), ref patched, Priority.Last);
@@ -33,15 +44,26 @@ internal static partial class TextPatches
 
         PatchPostfix(harmony, typeof(PreInitSceneScript), "Start", nameof(PreInitSceneScriptStartPostfix), ref patched);
         PatchPostfix(harmony, typeof(PreInitSceneScript), "SetLaunchPanelsEnabled", nameof(PreInitSceneScriptSetLaunchPanelsEnabledPostfix), ref patched);
-        PatchPostfix(harmony, typeof(QuickMenuManager), "OpenQuickMenu", nameof(QuickMenuManagerOpenPostfix), ref patched);
+        PatchPostfix(harmony, typeof(QuickMenuManager), "OpenQuickMenu", nameof(QuickMenuManagerOpenPostfix), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(QuickMenuManager), "Start", nameof(QuickMenuManagerStartPostfix), ref patched, Priority.Last);
+        if (PlayerNameSettings.Enabled)
+        {
+            PatchPrefix(harmony, typeof(QuickMenuManager), "AddUserToPlayerList", nameof(PlayerNameSlotPrefix), ref patched, Priority.First);
+            PatchPostfix(harmony, typeof(QuickMenuManager), "AddUserToPlayerList", nameof(PlayerNameSlotPostfix), ref patched, Priority.Last);
+            PatchPostfix(harmony, typeof(StartOfRound), "OnPlayerDC", nameof(PlayerNamesDisconnectedPostfix), ref patched, Priority.Last);
+            PatchPostfix(harmony, typeof(GameNetworkManager), "SetInstanceValuesBackToDefault", nameof(PlayerNamesResetPostfix), ref patched, Priority.Last);
+        }
         PatchPostfix(harmony, typeof(QuickMenuManager), "KickUserFromServer", nameof(QuickMenuManagerKickUserFromServerPostfix), ref patched, Priority.Last);
         PatchPostfix(harmony, typeof(QuickMenuManager), "EnableUIPanel", nameof(QuickMenuManagerEnableUIPanelPostfix), ref patched);
         PatchPostfix(harmony, typeof(QuickMenuManager), "LeaveGame", nameof(QuickMenuManagerLeaveGamePostfix), ref patched);
         PatchPostfix(harmony, typeof(PlayerControllerB), "Start", nameof(PlayerControllerBStartPostfix), ref patched, Priority.Last);
-        PatchPrefix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPrefix), ref patched, Priority.First);
-        PatchTranspiler(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcTranspiler), ref patched);
-        PatchPostfix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPostfix), ref patched, Priority.Last);
+        if (PlayerNameSettings.Enabled)
+        {
+            PatchPrefix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPrefix), ref patched, Priority.First);
+            PatchPrefix(harmony, typeof(PlayerControllerB), "ConnectClientToPlayerObject", nameof(PlayerNameSteamConnectPrefix), ref patched, Priority.First);
+            PatchTranspiler(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcTranspiler), ref patched);
+            PatchPostfix(harmony, typeof(PlayerControllerB), "SendNewPlayerValuesClientRpc", nameof(PlayerControllerBSendNewPlayerValuesClientRpcPostfix), ref patched, Priority.Last);
+        }
         PatchPrefix(harmony, typeof(IngamePlayerSettings), "SetSettingsOptionsText", nameof(IngamePlayerSettingsSetSettingsOptionsTextPrefix), ref patched);
         PatchPostfix(harmony, typeof(IngamePlayerSettings), "DisplayConfirmChangesScreen", nameof(IngamePlayerSettingsDisplayConfirmChangesScreenPostfix), ref patched);
         PatchPostfix(harmony, typeof(SandSpiderAI), "Start", nameof(SandSpiderAIStartPostfix), ref patched);
@@ -291,8 +313,12 @@ internal static partial class TextPatches
         PatchOptionalPostfix(harmony, "LCBetterSaves.Plugin", "InitializeBetterSaves", nameof(BetterSavesInitializeBetterSavesPostfix), ref patched);
         PatchOptionalPostfix(harmony, "DeleteFileButton_BetterSaves", "UpdateFileToDelete", nameof(BetterSavesDeleteFileButtonUpdateFileToDeletePostfix), ref patched);
         PatchOptionalPostfix(harmony, "LobbyImprovements.LANDiscovery.LANLobbyManager_InGame", "UpdatePlayerListHeader", nameof(LobbyImprovementsUpdatePlayerListHeaderPostfix), ref patched, Priority.Last);
-        PatchOptionalPostfix(harmony, "LobbyImprovements.SessionTickets_Client", "ParsePlayerName", nameof(LobbyImprovementsParsePlayerNamePostfix), ref patched, Priority.Last);
-        PatchOptionalPostfix(harmony, "LobbyImprovements.SessionTickets_Client", "AddUserToPlayerList", nameof(LobbyImprovementsAddUserToPlayerListPostfix), ref patched, Priority.Last);
+        if (PlayerNameSettings.Enabled)
+        {
+            PatchOptionalPostfix(harmony, "LobbyImprovements.SessionTickets_Client", "ParsePlayerName", nameof(LobbyImprovementsParsePlayerNamePostfix), ref patched, Priority.Last);
+            InstallLobbyImprovementsNameSources(harmony, ref patched);
+            InstallChuxiaPlayerNameCompatibility(harmony, ref patched);
+        }
         PatchOptionalPostfix(harmony, "LobbyImprovements.HostingUI", "MM_ConfirmHostButton", nameof(LobbyImprovementsConfirmHostButtonPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "LobbyImprovements.LANDiscovery.LANLobbyManager_InGame", "AddTextToChatOnServer", nameof(LobbyImprovementsAddTextToChatOnServerPostfix), ref patched, Priority.Last);
         PatchOptionalPostfix(harmony, "MoreCompany.MenuManagerHost", "CreateCrewCountInput", nameof(MoreCompanyCreateCrewCountInputPostfix), ref patched, Priority.Last);

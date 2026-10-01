@@ -18,6 +18,7 @@ internal static class PlayerNameDiagnosticService
     private static int _rpcSequence;
     private static bool _patchOwnersLogged;
     private static string _lastDisplaySignature = string.Empty;
+    private static bool CanLog => _enabled && Volatile.Read(ref _remainingLogs) > 0;
 
     internal static void Initialize(ConfigFile config)
     {
@@ -25,7 +26,7 @@ internal static class PlayerNameDiagnosticService
             ConfigSection,
             "EnablePlayerNameDiagnostics",
             false,
-            "记录玩家名称同步、清洗、重名计数、ESC 列表和雷达显示的限量诊断。仅排查名称尾随数字时开启。");
+            "记录房主与客户端的 Steam 名称来源、更新事件、清洗、ESC 列表和雷达显示。仅排查名称异常时开启。");
         var budget = config.Bind(
             ConfigSection,
             "PlayerNameDiagnosticLogBudget",
@@ -39,9 +40,9 @@ internal static class PlayerNameDiagnosticService
         _rpcSequence = 0;
         _patchOwnersLogged = false;
         _lastDisplaySignature = string.Empty;
-        if (_enabled)
+        if (CanLog)
         {
-            TryLog($"enabled budget={_remainingLogs}");
+            TryLog($"enabled budget={_remainingLogs} build={typeof(PlayerNameDiagnosticService).Assembly.ManifestModule.ModuleVersionId}");
         }
     }
 
@@ -54,34 +55,54 @@ internal static class PlayerNameDiagnosticService
         _lastDisplaySignature = string.Empty;
     }
 
-    internal static int BeginRpc(PlayerControllerB instance, object[] args)
+    internal static void LogSteamSource(PlayerControllerB player, string reason, string? before, string? raw, string after)
     {
-        if (!_enabled || !IsRemoteClientSession())
+        if (!CanLog) return;
+        var spaces = 0;
+        if (raw != null) foreach (var ch in raw) if (ch == ' ') spaces++;
+        TryLog($"steam-source reason={reason} client={player.actualClientId} steam={player.playerSteamId} " +
+            $"before={Quote(before)} raw={Quote(raw)} length={raw?.Length ?? 0} spaces={spaces} after={Quote(after)}");
+    }
+
+    internal static void LogSteamRequest(PlayerControllerB player, bool pending)
+    {
+        if (CanLog) TryLog($"steam-request client={player.actualClientId} steam={player.playerSteamId} pending={pending}");
+    }
+
+    internal static void LogSteamPublish(ulong lobbyId, string name)
+    {
+        if (CanLog) TryLog($"steam-member-publish lobby={lobbyId} name={Quote(name)} length={name.Length}");
+    }
+
+    internal static int BeginRpc(PlayerControllerB instance, ulong[] steamIds)
+    {
+        if (!CanLog || !IsRemoteClientSession())
         {
             return 0;
         }
 
         var sequence = Interlocked.Increment(ref _rpcSequence);
         LogPatchOwnersOnce();
-        TryLog($"rpc={sequence} phase=enter instanceSlot={FindPlayerSlot(instance)} args={FormatArguments(args)}");
+        if (!CanLog) return sequence;
+        TryLog($"rpc={sequence} phase=enter instanceSlot={FindPlayerSlot(instance)} steamIdCount={steamIds?.Length ?? 0}");
         LogSnapshot(sequence, "enter");
         return sequence;
     }
 
     internal static void EndRpc(PlayerControllerB instance, int sequence)
     {
-        if (!_enabled || sequence <= 0)
+        if (!CanLog || sequence <= 0)
         {
             return;
         }
 
         LogSnapshot(sequence, "postfix");
-        instance.StartCoroutine(CaptureNextFrame(sequence));
+        if (CanLog) instance.StartCoroutine(CaptureNextFrame(sequence));
     }
 
     internal static void LogSanitizer(string? input, string output)
     {
-        if (_enabled && IsRemoteClientSession())
+        if (CanLog && IsRemoteClientSession())
         {
             TryLog($"sanitizer input={Quote(input)} output={Quote(output)}");
         }
@@ -89,7 +110,7 @@ internal static class PlayerNameDiagnosticService
 
     internal static void LogDuplicateCounter(PlayerControllerB instance)
     {
-        if (_enabled && IsRemoteClientSession())
+        if (CanLog && IsRemoteClientSession())
         {
             TryLog($"duplicate-counter instanceSlot={FindPlayerSlot(instance)} username={Quote(instance?.playerUsername)} forcedResult=0");
         }
@@ -97,41 +118,20 @@ internal static class PlayerNameDiagnosticService
 
     internal static void LogQuickMenu(QuickMenuManager? manager, string reason)
     {
-        if (!_enabled || manager == null || !IsRemoteClientSession())
+        if (!CanLog || manager == null || !IsRemoteClientSession())
         {
             return;
         }
 
-        LogDisplaySnapshot(reason, manager);
-        manager.StartCoroutine(CaptureQuickMenuNextFrame(manager, reason));
-    }
-
-    internal static void LogLobbyImprovementsPlayerList(object? instance, object[] args, string reason)
-    {
-        if (!_enabled)
-        {
-            return;
-        }
-
-        var manager = UnityEngine.Object.FindObjectOfType<QuickMenuManager>();
-        if (manager == null)
-        {
-            return;
-        }
-
-        if (IsRemoteClientSession())
-        {
-            TryLog($"display-event={reason} instance={instance?.GetType().FullName ?? "<null>"} args={FormatArguments(args)}");
-            LogDisplaySnapshot(reason, manager);
-        }
-
+        // Opening ESC should not synchronously allocate/format every player's
+        // diagnostic snapshot. Diagnostic-only sampling begins next frame.
         manager.StartCoroutine(CaptureQuickMenuNextFrame(manager, reason));
     }
 
     private static IEnumerator CaptureNextFrame(int sequence)
     {
         yield return null;
-        if (_enabled)
+        if (CanLog)
         {
             LogSnapshot(sequence, "next-frame");
         }
@@ -140,11 +140,12 @@ internal static class PlayerNameDiagnosticService
     private static IEnumerator CaptureQuickMenuNextFrame(QuickMenuManager manager, string reason)
     {
         yield return null;
-        if (_enabled && manager != null)
+        if (CanLog && manager != null)
         {
             LogDisplaySnapshot(reason + ".next-frame", manager);
+            if (!CanLog) yield break;
             yield return null;
-            if (_enabled && manager != null)
+            if (CanLog && manager != null)
             {
                 LogDisplaySnapshot(reason + ".second-frame", manager);
             }
@@ -153,7 +154,7 @@ internal static class PlayerNameDiagnosticService
 
     private static void LogSnapshot(int sequence, string phase)
     {
-        if (!IsRemoteClientSession())
+        if (!CanLog || !IsRemoteClientSession())
         {
             return;
         }
@@ -165,7 +166,7 @@ internal static class PlayerNameDiagnosticService
 
     private static void LogDisplaySnapshot(string reason, QuickMenuManager? manager)
     {
-        if (!_enabled || !IsRemoteClientSession())
+        if (!CanLog || !IsRemoteClientSession())
         {
             return;
         }
@@ -276,10 +277,7 @@ internal static class PlayerNameDiagnosticService
     {
         var round = StartOfRound.Instance;
         return round != null &&
-               GetConnectedPlayerCount() >= 2 &&
-               ReadNetworkFlag(round, "IsClient") &&
-               !ReadNetworkFlag(round, "IsHost") &&
-               !ReadNetworkFlag(round, "IsServer");
+               ReadNetworkFlag(round, "IsClient");
     }
 
     private static bool ReadNetworkFlag(object instance, string propertyName)
@@ -309,7 +307,7 @@ internal static class PlayerNameDiagnosticService
 
     private static void LogPatchOwnersOnce()
     {
-        if (_patchOwnersLogged)
+        if (!CanLog || _patchOwnersLogged)
         {
             return;
         }
@@ -339,49 +337,6 @@ internal static class PlayerNameDiagnosticService
         }
 
         return string.Join(",", rows);
-    }
-
-    private static string FormatArguments(object[] args)
-    {
-        if (args == null || args.Length == 0)
-        {
-            return "[]";
-        }
-
-        var rows = new string[args.Length];
-        for (var i = 0; i < args.Length; i++)
-        {
-            rows[i] = $"{i}:{FormatArgument(args[i])}";
-        }
-
-        return "[" + string.Join(",", rows) + "]";
-    }
-
-    private static string FormatArgument(object? value)
-    {
-        if (value == null)
-        {
-            return "<null>";
-        }
-
-        if (value is string text)
-        {
-            return Quote(text);
-        }
-
-        if (value is ulong)
-        {
-            return "<UInt64-redacted>";
-        }
-
-        if (value is Array array)
-        {
-            return $"<{value.GetType().Name}:length={array.Length}>";
-        }
-
-        return value is bool or byte or sbyte or short or ushort or int or uint or long or float or double
-            ? Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? value.GetType().Name
-            : $"<{value.GetType().Name}>";
     }
 
     private static int FindPlayerSlot(PlayerControllerB? target)
@@ -415,9 +370,15 @@ internal static class PlayerNameDiagnosticService
 
     private static void TryLog(string message)
     {
-        if (!_enabled || Interlocked.Decrement(ref _remainingLogs) < 0)
+        if (!CanLog)
         {
-            _enabled = false;
+            return;
+        }
+
+        var remaining = Interlocked.Decrement(ref _remainingLogs);
+        if (remaining <= 0) _enabled = false;
+        if (remaining < 0)
+        {
             return;
         }
 

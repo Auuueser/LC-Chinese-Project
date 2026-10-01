@@ -151,16 +151,23 @@ internal static class EnvironmentTextureLocalizationService
     private static readonly Dictionary<int, RendererState> RendererStates = new();
     private static readonly Dictionary<int, MaterialState> MaterialStates = new();
     private static readonly Dictionary<int, FireExitState> FireExitStates = new();
+    private static EnvironmentCleanupGate ObjectCleanupGate;
     private static Texture2D? _fireExitLabelTexture;
     private static Material? _fireExitLabelMaterial;
     private static Material? _fireExitHiddenMaterial;
     private static Mesh? _fireExitOverlayMesh;
     private static string _textureDirectory = string.Empty;
     private static bool _initialized;
+    private static EnvironmentLevelScan? _levelScan;
+    private static RoundManager? _levelScanOwner;
+    private static int _levelScanFrame;
+    private static bool _levelCleanupPending;
 
     public static void Initialize(string pluginDir)
     {
+        CancelLevelScan();
         _textureDirectory = Path.Combine(pluginDir, "textures");
+        ObjectCleanupGate.Reset();
         _initialized = true;
     }
 
@@ -223,42 +230,73 @@ internal static class EnvironmentTextureLocalizationService
             return;
         }
 
-        PruneDestroyedRendererStates();
-        PruneDestroyedFireExitStates();
-        PruneUnusedMaterialStates();
-        UnchangedMaterialIdsThisPass.Clear();
+        CancelLevelScan();
+        _levelScanOwner = roundManager;
+        _levelScan = new EnvironmentLevelScan(ApplyLevelRenderer);
+        _levelCleanupPending = true;
+        // Never add the first slice to FinishGeneratingNewLevelClientRpc.
+        _levelScanFrame = Time.frameCount;
+        MenuRuntimeHost.Ensure();
+    }
+
+    internal static void PumpPendingLevelScan()
+    {
+        if (_levelScan == null) return;
+        if (!CanApply() || _levelScanOwner == null)
+        {
+            CancelLevelScan();
+            return;
+        }
+        if (_levelScanFrame == Time.frameCount) return;
+        _levelScanFrame = Time.frameCount;
+        var scan = _levelScan;
         try
         {
-            for (var sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            if (_levelCleanupPending)
             {
-                var scene = SceneManager.GetSceneAt(sceneIndex);
-                if (!scene.IsValid() || !scene.isLoaded)
-                {
-                    continue;
-                }
-
-                foreach (var root in scene.GetRootGameObjects())
-                {
-                    if (root == null)
-                    {
-                        continue;
-                    }
-
-                    RendererScanBuffer.Clear();
-                    root.GetComponentsInChildren(true, RendererScanBuffer);
-                    foreach (var renderer in RendererScanBuffer)
-                    {
-                        ApplyToRenderer(renderer, cacheUnchangedMaterials: true);
-                        TryApplyFireExitDoor(renderer);
-                    }
-                }
+                PruneDestroyedRendererStates();
+                PruneDestroyedFireExitStates();
+                PruneUnusedMaterialStates();
+                _levelCleanupPending = false;
+                return;
             }
+            if (!scan.Pump() && ReferenceEquals(scan, _levelScan)) CancelLevelScan();
+        }
+        catch (Exception ex)
+        {
+            if (ReferenceEquals(scan, _levelScan)) CancelLevelScan();
+            Plugin.Log.LogWarning($"Environment scan failed: {ex.GetType().Name}: {ex.Message}");
         }
         finally
         {
-            RendererScanBuffer.Clear();
+            // The former all-at-once negative cache cannot span frames: another
+            // mod can replace a material texture while the scan is suspended.
             UnchangedMaterialIdsThisPass.Clear();
         }
+    }
+
+    private static void ApplyLevelRenderer(Renderer renderer)
+    {
+        try
+        {
+            ApplyToRenderer(renderer, cacheUnchangedMaterials: true);
+            TryApplyFireExitDoor(renderer);
+        }
+        catch (Exception ex)
+        {
+            // A third-party renderer failure must not drop the remaining map.
+            Plugin.Log.LogWarning($"Environment renderer localization failed: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    private static void CancelLevelScan()
+    {
+        var scan = _levelScan;
+        _levelScan = null;
+        _levelScanOwner = null;
+        _levelCleanupPending = false;
+        scan?.Dispose();
+        UnchangedMaterialIdsThisPass.Clear();
     }
 
     public static void ApplyGrabbableObject(GrabbableObject? grabbableObject)
@@ -268,8 +306,7 @@ internal static class EnvironmentTextureLocalizationService
             return;
         }
 
-        PruneDestroyedRendererStates();
-        PruneUnusedMaterialStates();
+        PruneObjectStatesOncePerFrame();
         RendererScanBuffer.Clear();
         grabbableObject.GetComponentsInChildren(true, RendererScanBuffer);
         foreach (var renderer in RendererScanBuffer)
@@ -288,8 +325,7 @@ internal static class EnvironmentTextureLocalizationService
             return;
         }
 
-        PruneDestroyedRendererStates();
-        PruneUnusedMaterialStates();
+        PruneObjectStatesOncePerFrame();
         RendererScanBuffer.Clear();
         shipDecoration.GetComponentsInChildren(true, RendererScanBuffer);
         foreach (var renderer in RendererScanBuffer)
@@ -307,8 +343,7 @@ internal static class EnvironmentTextureLocalizationService
             return;
         }
 
-        PruneDestroyedRendererStates();
-        PruneUnusedMaterialStates();
+        PruneObjectStatesOncePerFrame();
 
         var levelBadgeRenderer = playerController.playerBadgeMesh != null
             ? playerController.playerBadgeMesh.GetComponent<Renderer>()
@@ -319,6 +354,7 @@ internal static class EnvironmentTextureLocalizationService
 
     public static void Shutdown()
     {
+        CancelLevelScan();
         foreach (var state in RendererStates.Values)
         {
             try
@@ -378,14 +414,21 @@ internal static class EnvironmentTextureLocalizationService
         _fireExitOverlayMesh = null;
         _fireExitLabelTexture = null;
         _textureDirectory = string.Empty;
+        ObjectCleanupGate.Reset();
         _initialized = false;
     }
 
     public static void OnSceneUnloaded()
     {
+        // Scene indices, roots and native objects may all have changed. Restart
+        // only an in-flight request, retaining coverage of still-loaded scenes.
+        var pendingOwner = _levelScanOwner;
+        CancelLevelScan();
         PruneDestroyedRendererStates();
         PruneDestroyedFireExitStates();
         PruneUnusedMaterialStates();
+        ObjectCleanupGate.Reset();
+        if (pendingOwner != null) ApplyLevelEnvironment(pendingOwner);
     }
 
     private static bool CanApply()
@@ -495,8 +538,9 @@ internal static class EnvironmentTextureLocalizationService
                 throw new InvalidDataException("missing or invalid fire-exit label texture");
             }
 
-            var texture = LoadTextureData(File.ReadAllBytes(path), useRuntimeCompression: true) ??
-                          LoadTextureData(File.ReadAllBytes(path), useRuntimeCompression: false);
+            var data = File.ReadAllBytes(path);
+            var texture = LoadTextureData(data, useRuntimeCompression: true) ??
+                          LoadTextureData(data, useRuntimeCompression: false);
             if (texture == null || texture.width != 512 || texture.height != 128)
             {
                 DestroyUnityObject(texture);
@@ -600,9 +644,22 @@ internal static class EnvironmentTextureLocalizationService
 
     private static void ApplyToRenderer(Renderer? renderer, bool cacheUnchangedMaterials = false)
     {
-        if (renderer == null || RendererStates.ContainsKey(renderer.GetInstanceID()))
+        if (renderer == null)
         {
             return;
+        }
+
+        var rendererId = renderer.GetInstanceID();
+        if (RendererStates.TryGetValue(rendererId, out var existing))
+        {
+            if (existing.Renderer != null && existing.Renderer == renderer)
+            {
+                return;
+            }
+
+            // A destroyed object's ID can be reused before the next full sweep.
+            // Shared materials may still have other users; only forget this renderer.
+            RendererStates.Remove(rendererId);
         }
 
         var originalMaterials = renderer.sharedMaterials;
@@ -611,7 +668,7 @@ internal static class EnvironmentTextureLocalizationService
             return;
         }
 
-        var localizedMaterials = (Material[])originalMaterials.Clone();
+        Material[]? localizedMaterials = null;
         List<int>? localizedMaterialIds = null;
         var changed = false;
         for (var index = 0; index < originalMaterials.Length; index++)
@@ -623,6 +680,7 @@ internal static class EnvironmentTextureLocalizationService
                 continue;
             }
 
+            localizedMaterials ??= (Material[])originalMaterials.Clone();
             localizedMaterials[index] = localized;
             localizedMaterialIds ??= new List<int>();
             var materialId = original.GetInstanceID();
@@ -633,13 +691,13 @@ internal static class EnvironmentTextureLocalizationService
             changed = true;
         }
 
-        if (!changed)
+        if (!changed || localizedMaterials == null)
         {
             return;
         }
 
         renderer.sharedMaterials = localizedMaterials;
-        RendererStates[renderer.GetInstanceID()] = new RendererState(
+        RendererStates[rendererId] = new RendererState(
             renderer,
             originalMaterials,
             localizedMaterialIds ?? new List<int>());
@@ -660,7 +718,7 @@ internal static class EnvironmentTextureLocalizationService
 
         if (MaterialStates.TryGetValue(materialId, out var existing))
         {
-            if (existing.HasOriginal(original))
+            if (existing.HasOriginal(original) && existing.Localized != null)
             {
                 return existing.Localized;
             }
@@ -878,6 +936,19 @@ internal static class EnvironmentTextureLocalizationService
         }
 
         return normalized;
+    }
+
+    private static void PruneObjectStatesOncePerFrame()
+    {
+        var frame = Time.frameCount;
+        if (!ObjectCleanupGate.NeedsCleanup(frame))
+        {
+            return;
+        }
+
+        PruneDestroyedRendererStates();
+        PruneUnusedMaterialStates();
+        ObjectCleanupGate.Complete(frame);
     }
 
     private static void PruneDestroyedRendererStates()

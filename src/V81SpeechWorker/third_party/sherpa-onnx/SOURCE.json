@@ -1,0 +1,10 @@
+{
+  "project": "sherpa-onnx",
+  "version": "1.13.8",
+  "commit": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+  "file": "c-api.h",
+  "url": "https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf/sherpa-onnx/c-api/c-api.h",
+  "sha256": "2A1B95084BE8FD1DEB3228FCAD2FD3F7F0258B64582F7402281EC174C7B7F4CE",
+  "license": "Apache-2.0",
+  "licenseFile": "../../../../licenses/Apache-2.0.txt"
+}

@@ -1,4 +1,5 @@
 * text=auto
+src/V81SpeechWorker/third_party/sherpa-onnx/c-api.h text eol=lf
 *.png binary
 *.dll binary
 *.ttf binary

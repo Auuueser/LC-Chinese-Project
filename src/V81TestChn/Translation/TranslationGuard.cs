@@ -109,6 +109,11 @@ internal static class TranslationGuard
 
     public static bool TryGetSkipReason(Component component, string? value, out string reason)
     {
+        if (PlayerNameSourceService.IsNameComponent(component))
+        {
+            reason = "registered player name";
+            return true;
+        }
         if (string.IsNullOrWhiteSpace(value))
         {
             reason = "empty";
@@ -350,9 +355,10 @@ internal static class TranslationGuard
         return trimmed.Length <= 64 && trimmed.IndexOf('\n') < 0 && trimmed.IndexOf('\r') < 0;
     }
 
-    private static bool IsPlayerNamePath(Component component)
+    internal static bool IsPlayerNamePath(Component component)
     {
-        return TransformPathContains(component.transform, "PlayerName") ||
+        return string.Equals(component.name, "PName", StringComparison.Ordinal) ||
+               TransformPathContains(component.transform, "PlayerName") ||
                TransformPathContains(component.transform, "Player Name") ||
                TransformPathContains(component.transform, "Username") ||
                TransformPathContains(component.transform, "UserName") ||

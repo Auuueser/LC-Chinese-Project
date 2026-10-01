@@ -3,22 +3,22 @@
     "locale":  "zh-CN",
     "generated_from":  "translations-source/clean-translation-draft.zh-CN.json",
     "source_seed_path":  "translations-source/clean-source-seed.json",
-    "source_seed_sha256":  "d0e307634ab2a201c96f541814bfd1341eb7924e23cc87dd4cdbde835d80aeb9",
-    "draft_sha256":  "c77dabbe18914e58c2d97fa3ab7d207b597b6bec94ed3da156318571f8c88877",
+    "source_seed_sha256":  "e8c1427ca4a9a210c77e39894f7b3246d36975eae79fd2cc3ad47ac0fdec58a9",
+    "draft_sha256":  "bdb8a49e6464c5bbba459e9e80d0ea0a1ba3832efae160b47693550e852e9245",
     "runtime_packaged":  true,
-    "draft_entry_count":  1678,
-    "generated_json_entry_count":  1678,
-    "generated_cfg_entry_count":  1108,
+    "draft_entry_count":  1680,
+    "generated_json_entry_count":  1680,
+    "generated_cfg_entry_count":  1110,
     "files":  [
                   {
                       "role":  "runtime-json",
                       "path":  "translations-clean/zh-CN.runtime.json",
-                      "sha256":  "68fc419e4a7b374c75ff9edc02f7d3a619d6a5f218a802b73a10e6525b493bde"
+                      "sha256":  "f8094fac2156794471849da49aee3276f81421d378af8f870e4e6e491d4af060"
                   },
                   {
                       "role":  "runtime-cfg",
                       "path":  "translations-clean/cfg/zh-CN/clean-draft-runtime.cfg",
-                      "sha256":  "8e295714642194768dd4518b859aca37b19c6f0aadbb23ae98eea61fb9d99fe8"
+                      "sha256":  "7a75a47d88daa122eb5b0b348787d28b839f4d40deb5d80edd3d11f6094a4e69"
                   }
               ]
 }
